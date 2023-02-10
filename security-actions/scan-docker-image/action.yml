@@ -38,6 +38,9 @@ inputs:
     - 'false'
 
 outputs:
+  cis-json-report:
+    description: 'docker-cis json report'
+    value: ${{ steps.meta.outputs.cis_json_file }}
   grype-json-report:
     description: 'vulnerability json report'
     value: ${{ steps.grype_analysis.outputs.json }}
@@ -161,6 +164,24 @@ runs:
           ${{ steps.meta.outputs.grype_json_file }}
         if-no-files-found: warn
 
+    - name: Generate docker-cis JSON report
+      uses: docker://ghcr.io/aquasecurity/trivy:0.37.2
+      id: cis_json
+      with:
+        entrypoint: trivy
+        args: "image --input ${{ steps.meta.outputs.scan_image }} --compliance ${{ env.compliance }} -f json --severity ${{ env.severity }} -o ${{ steps.meta.outputs.cis_json_file }}"
+      env:
+        compliance: docker-cis
+        severity: ${{ steps.meta.outputs.global_severity_cutoff }}
+
+    - name: upload docker-cis JSON report
+      uses: actions/upload-artifact@v3
+      with:
+        name: ${{ steps.meta.outputs.cis_json_file }}
+        path: |
+          ${{ steps.meta.outputs.cis_json_file }}
+        if-no-files-found: warn
+
     # Fail based on severity and input parameters
     # Notify grype quick scan results in table format
     # Table format will supress any specified ignore rules
@@ -172,3 +193,13 @@ runs:
         output-format: table
         fail-build: ${{ steps.meta.outputs.global_enforce_build_failure == 'true' && steps.meta.outputs.global_enforce_build_failure || inputs.fail_build }}
         severity-cutoff: ${{ steps.meta.outputs.global_severity_cutoff }}
+
+    - name: Inspect docker-cis report
+      uses: docker://ghcr.io/aquasecurity/trivy:0.37.2
+      with:
+        entrypoint: trivy
+        args: "image --input ${{ steps.meta.outputs.scan_image }} --compliance ${{ env.compliance }} -f table --severity ${{ env.severity }} --exit-code ${{ env.exit-code }}"
+      env:
+        exit-code: ${{ (steps.meta.outputs.global_enforce_build_failure == 'true' || inputs.fail_build == 'true') && '1' || '0' }}
+        compliance: docker-cis
+        severity: ${{ steps.meta.outputs.global_severity_cutoff }}
