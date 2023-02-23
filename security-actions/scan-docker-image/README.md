@@ -2,18 +2,22 @@
 
 ## Action implemented
 
-- [Scan Docker Image](./scan-docker-image/action.yml) is a unified action for container scanning using syft and vulnerability scanning using grype
+- [Scan Docker Image](./scan-docker-image/action.yml) is a unified action for container image scanning. The action produces an SBOM, CVE, and CIS benchmark scanning and reports for a given image.
+  - Tools used:
+    - [syft](https://github.com/anchore/syft) generates a Software Bill of Materials (SBOM)
+    - [grype](https://github.com/anchore/grype) vulnerability scanner for container images
+    - [trivy](https://github.com/aquasecurity/trivy) compliance scanner for docker-cis 
 
 ### Scan Docker Image
 
 - For workflows where artifacts are being pushed to the registry, this needs to be implemented after the build step and before the publish step.
 - For workflows where artifacts are not pushed to the registry, this needs to be implemented after the build step
 
-#### Container Scanning Working
-- Leverages yft action to generate SBOM based on input parameters and uploads them as github workflows
+#### SBOM Generation Working
+- Leverages the syft action to generate an SBOM based on input parameters and uploads it as a github workflow artifact
 
 #### Vulnerability Scanning Working
-- Action performs a scan of the sbom based on user provided grype configuration:
+- Action performs a scan of the sbom based on a user provided grype configuration:
   - First iteration:
     - runs and uploads artifacts in SARIF format and doesn't fail build
     - Additional grype ignore rules are **applied and supressed** in output artifact
@@ -43,7 +47,7 @@
 #### Global parameters
 ```yaml
   global_severity_cutoff:
-    description: 'grype vulnerability severity cutoff'
+    description: 'grype/trivy vulnerability severity cutoff'
     options:
     - 'negligible'
     - 'low'
@@ -103,6 +107,8 @@
 
 - Generates cve vulnerability analysis report based on the spdx sbom file using *grype*
 
+- Generates docker-cis analysis report using *trivy*
+
 - Uploads the security assets as workflow artifacts and retained based on repo / org settings
 
 - Allows for publishing github releases with security assets
@@ -110,6 +116,8 @@
 #### Output parameters
 
 ```yaml
+    cis-json-report:
+      description: 'docker-cis json report'
     grype-sarif-report:
       description: 'vulnerability SARIF report'
     sbom-spdx-report:
