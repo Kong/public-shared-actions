@@ -1,43 +1,44 @@
-#/usr/bin/env bash
+#!/usr/bin/env bash
 
 set -euo pipefail
 
-spdx_ext="sbom.spdx.json"
-cyclonedx_ext="sbom.cyclonedx.json"
-cve_json_ext="cve-report.json"
-cve_sarif_ext="cve-report.sarif"
-cis_json_ext="cis-report.json"
+readonly spdx_ext="sbom.spdx.json"
+readonly cyclonedx_ext="sbom.cyclonedx.json"
+readonly cve_json_ext="cve-report.json"
+readonly cve_sarif_ext="cve-report.sarif"
+readonly cis_json_ext="cis-report.json"
 
 global_severity_cutoff='critical'
 global_enforce_build_failure='false'
 
-
-if ([[ ${IMAGE} != '' ]] && [[ ${DIR} != '' ]]) || ([[ ${IMAGE} != '' ]] && [[ ${FILE} != '' ]]) || ([[ ${DIR} != '' ]] && [[ ${FILE} != '' ]]); then
+if [[ -n ${IMAGE} && -n ${DIR} ]] || [[ -n ${IMAGE} && -n ${FILE} ]] || [[ -n ${DIR} && -n ${FILE} ]]; then
     echo '::error ::Input fields "image", "dir" and "file" are mutually exlcusive'
     exit 1
 fi
 
-if [[ ${IMAGE} == '' ]] && [[ ${DIR} == '' ]] && [[ ${FILE} == '' ]]; then
+if [[ -z ${IMAGE} && -z ${DIR} && -z ${FILE} ]]; then
     echo '::error ::Specify one of "image", "dir" and "file" inputs fields'
     exit 1
 fi
 
 # OCI archive should be passed as image instead of file
-if [[ ${IMAGE} != '' ]] && [[ ${TAG} != '' ]]; then
-    echo "scan_image=${IMAGE}:${TAG}" >> $GITHUB_OUTPUT
-elif [[ ${IMAGE} != '' ]]; then
-    echo "scan_image=${IMAGE}" >> $GITHUB_OUTPUT
+if [[ -n ${IMAGE} ]]; then
+    if [[ -n ${TAG} ]]; then
+        echo "scan_image=${IMAGE}:${TAG}" >> $GITHUB_OUTPUT
+    else
+        echo "scan_image=${IMAGE}" >> $GITHUB_OUTPUT
+    fi
 fi
 
-if [[ ${DIR} != '' ]]; then
+if [[ -n ${DIR} ]]; then
     echo "scan_dir=${DIR}" >> $GITHUB_OUTPUT
 fi
 
-if [[ ${FILE} != '' ]]; then
+if [[ -n ${FILE} ]]; then
     echo "scan_file=${FILE}" >> $GITHUB_OUTPUT
 fi
 
-if [[ ${ASSET_PREFIX} != '' ]]; then
+if [[ -n ${ASSET_PREFIX} ]]; then
     echo "sbom_spdx_file=${ASSET_PREFIX##*/}-${spdx_ext}" >> $GITHUB_OUTPUT
     echo "sbom_cyclonedx_file=${ASSET_PREFIX##*/}-${cyclonedx_ext}" >> $GITHUB_OUTPUT
     echo "grype_json_file=${ASSET_PREFIX##*/}-${cve_json_ext}" >> $GITHUB_OUTPUT
@@ -51,14 +52,14 @@ else
     echo "cis_json_file=${cis_json_ext}" >> $GITHUB_OUTPUT
 fi
 
-if [[ ${global_severity_cutoff} != '' ]]; then
+if [[ -n ${global_severity_cutoff} ]]; then
     echo "global_severity_cutoff=${global_severity_cutoff}" >> $GITHUB_OUTPUT
 else
     echo '::error ::set global_severity_cutoff in $0'
     exit 1
 fi
 
-if [[ ${global_enforce_build_failure} != '' ]]; then
+if [[ -n ${global_enforce_build_failure} ]]; then
     echo "global_enforce_build_failure=${global_enforce_build_failure}" >> $GITHUB_OUTPUT
 else
     echo '::error ::set global_enforce_build_failure in $0'
