@@ -35,7 +35,7 @@ runs:
       with:
         base_sha: ${{ github.event.workflow_run.head_sha }}
 
-    - name: debug inputs
+    - name: Debug inputs
       shell: bash
       run: |
         echo "[Debug] kong_gh_app_id: ${{ inputs.kong_gh_app_id }}"
@@ -84,5 +84,8 @@ runs:
         done;
 
         if [[ $ALL_PASSED == "false" ]]; then
+          echo "Game over!"
           exit 1;
+        else
+          echo "All good!"
         fi;
