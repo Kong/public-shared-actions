@@ -21,7 +21,8 @@ A JSON string of the rules to use for linting. Default: `'{"max_column_width": {
 ```yaml
 uses: Kong/public-shared-actions/code-check-actions/lualint@feat-lualint
 with:
-  KONG_GH_APP_ID: ${{ secrets.KONG_GH_APP_ID }}
-  KONG_GH_APP_PRIVATE_KEY: ${{ secrets.KONG_GH_APP_PRIVATE_KEY }}
-  RULES: '{"max_column_width": {"width": 80}, "one_line_before_else": {}, "eof_blank_line": {}, "table_ctor_comma": {"style":"trailing"}, "func_separation": {}}'
+  kong_gh_app_id: ${{ secrets.KONG_GH_APP_ID }}
+  kong_gh_app_private_key: ${{ secrets.KONG_GH_APP_PRIVATE_KEY }}
+  rules: '{"max_column_width": {"width": 80}, "one_line_before_else": {}, "eof_blank_line": {}, "table_ctor_comma": {"style":"trailing"}, "func_separation": {}}'
+  extra_args: ''
 ```

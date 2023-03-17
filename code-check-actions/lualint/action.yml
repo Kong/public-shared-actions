@@ -35,6 +35,15 @@ runs:
       with:
         base_sha: ${{ github.event.workflow_run.head_sha }}
 
+    - name: debug inputs
+      shell: bash
+      run: |
+        echo "[Debug] kong_gh_app_id: ${{ inputs.kong_gh_app_id }}"
+        echo "[Debug] kong_gh_app_private_key: ${{ inputs.kong_gh_app_private_key }}"
+        echo "[Debug] rules: ${{ inputs.rules }}"
+        echo "[Debug] extra_args: ${{ inputs.extra_args }}"
+        echo "[Debug] all_changed_files: ${{ steps.changed-files.outputs.all_changed_files }}"
+
     - name: Generate token
       id: github-app-token
       uses: tibdex/github-app-token@021a2405c7f990db57f5eae5397423dcc554159c # v1.7.0
