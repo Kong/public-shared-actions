@@ -44,6 +44,7 @@ runs:
 
     - name: Generate release name
       id: generate-release-name
+      shell: bash
       run:
         echo "RELEASE_NAME=lualint_$(uname -m)-unknown-linux-gnu.zip" >> $GITHUB_OUTPUT
 
@@ -56,6 +57,7 @@ runs:
         fileName: ${{ steps.generate-release-name.outputs.RELEASE_NAME }}
 
     - name: Lint all changed lua files
+      shell: bash
       run:
         unzip ${{ steps.generate-release-name.outputs.RELEASE_NAME }};
         chmod +x ./lualint;
