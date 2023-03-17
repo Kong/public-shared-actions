@@ -1,0 +1,77 @@
+name: 'Lualint for GitHub CI'
+
+description: 'Lint all changed lua files using kong/lualint'
+
+inputs:
+  kong_gh_app_id:
+    description: 'The app ID of the GitHub app used to generate a token'
+    required: true
+
+  kong_gh_app_private_key:
+    description: 'The private key of the GitHub app used to generate a token'
+    required: true
+
+  rules:
+    description: 'A JSON string of the rules to use for linting'
+    required: false
+    default: '{"max_column_width": {}, "one_line_before_else": {}, "eof_blank_line": {}, "table_ctor_comma": {}, "func_separation": {}}'
+
+  extra_args:
+    description: 'Extra arguments to pass to lualint'
+    required: false
+    default: ''
+
+runs:
+  using: "composite"
+
+  steps:
+    - uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c
+      with:
+        fetch-depth: 2
+
+    - name: Get changed files
+      id: changed-files
+      uses: tj-actions/changed-files@04124efe7560d15e11ea2ba96c0df2989f68f1f4
+      with:
+        base_sha: ${{ github.event.workflow_run.head_sha }}
+
+    - name: Generate token
+      id: github-app-token
+      uses: tibdex/github-app-token@021a2405c7f990db57f5eae5397423dcc554159c # v1.7.0
+      with:
+        app_id: ${{ inputs.kong_gh_app_id }}
+        private_key: ${{ inputs.kong_gh_app_private_key }}
+
+    - name: Generate release name
+      id: generate-release-name
+      run:
+        echo "RELEASE_NAME=lualint_$(uname -m)-unknown-linux-gnu.zip" >> $GITHUB_OUTPUT
+
+    - name: Download Lualint
+      uses: robinraju/release-downloader@768b85c8d69164800db5fc00337ab917daf3ce68
+      with:
+        repository: "kong/lualint"
+        token: ${{ steps.github-app-token.outputs.token }}
+        latest: true
+        fileName: ${{ steps.generate-release-name.outputs.RELEASE_NAME }}
+
+    - name: Lint all changed lua files
+      run:
+        unzip ${{ steps.generate-release-name.outputs.RELEASE_NAME }};
+        chmod +x ./lualint;
+
+        for file in ${{ steps.changed-files.outputs.all_changed_files }}; do
+          echo "found $file";
+          ALL_PASSED="true";
+
+          if [[ $file == *.lua ]]; then
+            ./lualint run --rules '${{ inputs.rules }}' ${{ inputs.extra_args }} "$file";
+            if [[ $? -ne 0 ]]; then
+              ALL_PASSED="false";
+            fi;
+          fi;
+        done;
+
+        if [[ $ALL_PASSED == "false" ]]; then
+          exit 1;
+        fi;
