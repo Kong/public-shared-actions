@@ -84,8 +84,8 @@ runs:
         done;
 
         if [[ $ALL_PASSED == "false" ]]; then
-          echo "Game over!"
+          echo "Game over!";
           exit 1;
         else
-          echo "All good!"
+          echo "All good!";
         fi;
