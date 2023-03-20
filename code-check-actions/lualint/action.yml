@@ -21,11 +21,16 @@ inputs:
     required: false
     default: ''
 
+  debug:
+    description: 'Set to true to enable debugging output'
+    required: false
+    default: false
+
 runs:
   using: "composite"
 
   steps:
-    - uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c
+    - uses: actions/checkout@v3.4.0
       with:
         fetch-depth: 2
 
@@ -37,6 +42,7 @@ runs:
 
     - name: Debug inputs
       shell: bash
+      if: ${{ inputs.debug }}
       run: |
         echo "[Debug] kong_gh_app_id: ${{ inputs.kong_gh_app_id }}"
         echo "[Debug] kong_gh_app_private_key: ${{ inputs.kong_gh_app_private_key }}"
@@ -72,7 +78,6 @@ runs:
         chmod +x ./lualint;
 
         for file in ${{ steps.changed-files.outputs.all_changed_files }}; do
-          echo "found $file";
           ALL_PASSED="true";
 
           if [[ $file == *.lua ]]; then
@@ -84,7 +89,7 @@ runs:
         done;
 
         if [[ $ALL_PASSED == "false" ]]; then
-          echo "Game over!";
+          echo "Found problems in your code. Please fix.";
           exit 1;
         else
           echo "All good!";
