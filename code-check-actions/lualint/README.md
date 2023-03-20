@@ -26,3 +26,29 @@ with:
   rules: '{"max_column_width": {"width": 80}, "one_line_before_else": {}, "eof_blank_line": {}, "table_ctor_comma": {"style":"trailing"}, "func_separation": {}}'
   extra_args: ''
 ```
+
+## Detailed example
+
+Here is an example that is already used in Kong/atc-router:
+
+```yaml
+name: Lua lint
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  lualint:
+    runs-on: ubuntu-latest
+    name: Lua code style check
+    steps:
+      - uses: Kong/public-shared-actions/code-check-actions/lualint@feat-lualint
+        with:
+          kong_gh_app_id: ${{ vars.KONG_GH_APP_ID }}
+          kong_gh_app_private_key: ${{ secrets.KONG_GH_APP_PRIVATE_KEY }}
+```
