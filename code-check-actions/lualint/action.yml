@@ -97,7 +97,7 @@ runs:
           DIR_DIFF_LINES_TOOL=${{ runner.temp }}/tmp__diff-lines
           git clone https://github.com/pluveto/diff-line $DIR_DIFF_LINES_TOOL
 
-          FILE_IGNORE_RANGE=${{ runner.temp }}/tmp__ignore_ranges.csv
+          FILE_FOCUS_RANGE=${{ runner.temp }}/tmp__focus_ranges.csv
           pushd $DIR_DIFF_LINES_TOOL
             sudo npm install -g typescript commander ts-node child_process @types/node
             npm i
@@ -109,12 +109,12 @@ runs:
             ts-node src/index.ts ./diff-lines \
                 -s ${{ github.event.pull_request.head.sha }} \
                 -t ${{ github.event.pull_request.base.sha }} \
-                -m add -f csv -w $OLD_DIR > $FILE_IGNORE_RANGE;
-            cat $FILE_IGNORE_RANGE;
+                -m add -f csv -w $OLD_DIR > $FILE_FOCUS_RANGE;
+            cat $FILE_FOCUS_RANGE;
           popd
           for file in ${{ steps.changed-files.outputs.all_changed_files }}; do
             if [[ $file == *.lua ]]; then
-              ./lualint run --rules '${{ inputs.rules }}' --ignore $FILE_IGNORE_RANGE ${{ inputs.extra_args }} "$file";
+              ./lualint run --rules '${{ inputs.rules }}' --focus $FILE_FOCUS_RANGE ${{ inputs.extra_args }} "$file";
               if [[ $? -ne 0 ]]; then
                 ALL_PASSED="false";
               fi;
