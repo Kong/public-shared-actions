@@ -91,7 +91,10 @@ runs:
 
         if [[ "${{ inputs.only_changed_lines }}" == "true" ]]; then
           OLD_DIR=$PWD
+
           DIR_DIFF_LINES_TOOL=${{ runner.temp }}/tmp__diff-lines
+          git clone https://github.com/pluveto/diff-line $DIR_DIFF_LINES_TOOL
+
           FILE_IGNORE_RANGE=${{ runner.temp }}/tmp__ignore_ranges.csv
           mkdir $DIR_DIFF_LINES_TOOL
           pushd $DIR_DIFF_LINES_TOOL
