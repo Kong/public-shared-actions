@@ -26,6 +26,11 @@ inputs:
     required: false
     default: false
 
+  only_changed_lines:
+    description: 'Set to true to enable report on changed lines only'
+    required: false
+    default: true
+
 runs:
   using: "composite"
 
@@ -71,25 +76,53 @@ runs:
         latest: true
         fileName: ${{ steps.generate-release-name.outputs.RELEASE_NAME }}
 
+    - name: Setup Node
+      uses: actions/setup-node@v3
+      if: ${{ inputs.only_changed_lines }}
+      with:
+        node-version: 16
+
     - name: Lint all changed lua files
       shell: bash
-      run:
+      run: |
         unzip ${{ steps.generate-release-name.outputs.RELEASE_NAME }};
         chmod +x ./lualint;
+        ALL_PASSED="true";
 
-        for file in ${{ steps.changed-files.outputs.all_changed_files }}; do
-          ALL_PASSED="true";
-
-          if [[ $file == *.lua ]]; then
-            ./lualint run --rules '${{ inputs.rules }}' ${{ inputs.extra_args }} "$file";
-            if [[ $? -ne 0 ]]; then
-              ALL_PASSED="false";
+        if [[ "${{ inputs.only_changed_lines }}" == "true" ]]; then
+          OLD_DIR=$PWD
+          DIR_DIFF_LINES_TOOL=${{ runner.temp }}/tmp__diff-lines
+          FILE_IGNORE_RANGE=${{ runner.temp }}/tmp__ignore_ranges.csv
+          mkdir $DIR_DIFF_LINES_TOOL
+          pushd $DIR_DIFF_LINES_TOOL
+            npm i
+            npm install -g typescript
+            npm install -g ts-node
+            ts-node src/index.ts ./diff-lines \
+                -s ${{ github.event.pull_request.base.sha }} \
+                -t ${{ github.event.pull_request.head.sha }} \
+                -m add -f csv -w $OLD_DIR > $FILE_IGNORE_RANGE;
+          popd
+          for file in ${{ steps.changed-files.outputs.all_changed_files }}; do
+            if [[ $file == *.lua ]]; then
+              ./lualint run --rules '${{ inputs.rules }}' --ignore $FILE_IGNORE_RANGE ${{ inputs.extra_args }} "$file";
+              if [[ $? -ne 0 ]]; then
+                ALL_PASSED="false";
+              fi;
             fi;
-          fi;
-        done;
+          done;
+        else
+          for file in ${{ steps.changed-files.outputs.all_changed_files }}; do
+            if [[ $file == *.lua ]]; then
+              ./lualint run --rules '${{ inputs.rules }}' ${{ inputs.extra_args }} "$file";
+              if [[ $? -ne 0 ]]; then
+                ALL_PASSED="false";
+              fi;
+            fi;
+          done;
+        fi;
 
         if [[ $ALL_PASSED == "false" ]]; then
-          echo "Found problems in your code. Please fix.";
           exit 1;
         else
           echo "All good!";
