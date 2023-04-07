@@ -97,7 +97,7 @@ runs:
 
           FILE_IGNORE_RANGE=${{ runner.temp }}/tmp__ignore_ranges.csv
           pushd $DIR_DIFF_LINES_TOOL
-            npm install -g typescript commander ts-node child_process @types/node
+            sudo npm install -g typescript commander ts-node child_process @types/node
             npm i
 
             ts-node src/index.ts ./diff-lines \
