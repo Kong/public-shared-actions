@@ -102,9 +102,13 @@ runs:
             sudo npm install -g typescript commander ts-node child_process @types/node
             npm i
             npm ls
+
+            echo "head=${{ github.event.pull_request.head.sha }}"
+            echo "base=${{ github.event.pull_request.base.sha }}"
+
             ts-node src/index.ts ./diff-lines \
-                -s ${{ github.event.pull_request.base.sha }} \
-                -t ${{ github.event.pull_request.head.sha }} \
+                -s ${{ github.event.pull_request.head.sha }} \
+                -t ${{ github.event.pull_request.base.sha }} \
                 -m add -f csv -w $OLD_DIR > $FILE_IGNORE_RANGE;
             cat $FILE_IGNORE_RANGE;
           popd
