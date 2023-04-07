@@ -90,6 +90,8 @@ runs:
         ALL_PASSED="true";
 
         if [[ "${{ inputs.only_changed_lines }}" == "true" ]]; then
+          echo "Only lint changed files"
+
           OLD_DIR=$PWD
 
           DIR_DIFF_LINES_TOOL=${{ runner.temp }}/tmp__diff-lines
