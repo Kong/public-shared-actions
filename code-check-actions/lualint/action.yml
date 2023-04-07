@@ -106,6 +106,7 @@ runs:
                 -s ${{ github.event.pull_request.base.sha }} \
                 -t ${{ github.event.pull_request.head.sha }} \
                 -m add -f csv -w $OLD_DIR > $FILE_IGNORE_RANGE;
+            cat $FILE_IGNORE_RANGE;
           popd
           for file in ${{ steps.changed-files.outputs.all_changed_files }}; do
             if [[ $file == *.lua ]]; then
