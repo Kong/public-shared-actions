@@ -1,0 +1,32 @@
+name: Test Shared Actions
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches:
+    - main
+  release:
+    types: [published]
+
+
+jobs:
+  test-scan-docker-image:
+    name: Test Scan Docker Image
+    runs-on: ubuntu-22.04
+    steps:
+    - uses: actions/checkout@v3
+    - uses: ./security-actions/scan-docker-image
+      with:
+        image: kong/kong-gateway-dev:latest # no particular reason for the choice of image or tag, just an image for tests
+        upload_to_workflow: true
+  test-scan-docker-image-upload-release:
+    name: Test Scan Docker Image - with upload (release) params
+    runs-on: ubuntu-22.04
+    steps:
+    - uses: actions/checkout@v3
+    - uses: ./security-actions/scan-docker-image
+      with:
+        image: kong/kong-gateway-dev:latest # no particular reason for the choice of image or tag, just an image for tests
+        upload_to_workflow: true
+        upload_to_release: true

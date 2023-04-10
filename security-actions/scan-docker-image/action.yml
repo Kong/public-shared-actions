@@ -39,7 +39,7 @@ inputs:
   upload_to_workflow:
     description: 'upload SBOM artifact generated in a particular workflow'
     required: false
-    default: false
+    default: true # to be reverted once https://github.com/anchore/sbom-action/pull/411 is merged
     type: choice
     options:
     - 'true'
