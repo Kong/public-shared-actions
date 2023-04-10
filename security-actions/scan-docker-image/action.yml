@@ -36,6 +36,22 @@ inputs:
     options:
     - 'true'
     - 'false'
+  upload_to_workflow:
+    description: 'upload SBOM artifact generated in a particular workflow'
+    required: false
+    default: false
+    type: choice
+    options:
+    - 'true'
+    - 'false'
+  upload_to_release:
+    description: 'upload release SBOM artifacts'
+    required: false
+    default: false
+    type: choice
+    options:
+    - 'true'
+    - 'false'
 
 outputs:
   cis-json-report:
@@ -82,8 +98,8 @@ runs:
         format: spdx-json
         artifact-name: ${{ steps.meta.outputs.sbom_spdx_file }}
         output-file: ${{ steps.meta.outputs.sbom_spdx_file }}
-        upload-artifact: true
-        upload-release-assets: false
+        upload-artifact: ${{ inputs.upload_sbom_artifact }}
+        upload-release-assets: ${{ inputs.upload_release_sbom_artifacts }}
         dependency-snapshot: false
 
     - name: Generate CycloneDX SBOM Using Syft
@@ -98,8 +114,8 @@ runs:
         format: cyclonedx-json
         artifact-name: ${{ steps.meta.outputs.sbom_cyclonedx_file }}
         output-file: ${{ steps.meta.outputs.sbom_cyclonedx_file }}
-        upload-artifact: true
-        upload-release-assets: false
+        upload-artifact: ${{ inputs.upload_to_workflow }}
+        upload-release-assets: ${{ inputs.upload_to_release }}
         dependency-snapshot: false
     
     - name: Check SBOM files existence
