@@ -88,7 +88,7 @@ runs:
     - name: Lint all changed lua files
       shell: bash
       run: |
-        [[ $ACTIONS_STEP_DEBUG ]] && set -x
+        [[ $RUNNER_DEBUG ]] && set -x
         unzip ${{ steps.generate-release-name.outputs.RELEASE_NAME }};
         chmod +x ./lualint;
         ALL_PASSED="true";
