@@ -97,7 +97,7 @@ runs:
 
           OLD_DIR=$PWD
 
-          DIR_DIFF_LINES_TOOL=${{ env.GITHUB_ACTION_PATH }}/diff-line
+          DIR_DIFF_LINES_TOOL=$GITHUB_ACTION_PATH/diff-line
 
           FILE_FOCUS_RANGE=${{ runner.temp }}/tmp__focus_ranges.csv
           pushd $DIR_DIFF_LINES_TOOL
