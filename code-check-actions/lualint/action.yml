@@ -55,6 +55,9 @@ runs:
         echo "[Debug] extra_args: ${{ inputs.extra_args }}"
         echo "[Debug] all_changed_files: ${{ steps.changed-files.outputs.all_changed_files }}"
 
+        echo "[Debug] head_branch: ${{ github.event.pull_request.head.sha }}"
+        echo "[Debug] base_branch: ${{ github.event.pull_request.base.sha }}"
+
     - name: Generate token
       id: github-app-token
       uses: tibdex/github-app-token@021a2405c7f990db57f5eae5397423dcc554159c # v1.7.0
@@ -94,17 +97,13 @@ runs:
 
           OLD_DIR=$PWD
 
-          DIR_DIFF_LINES_TOOL=${{ runner.temp }}/tmp__diff-lines
-          git clone https://github.com/pluveto/diff-line $DIR_DIFF_LINES_TOOL
+          DIR_DIFF_LINES_TOOL=./diff-line
 
           FILE_FOCUS_RANGE=${{ runner.temp }}/tmp__focus_ranges.csv
           pushd $DIR_DIFF_LINES_TOOL
             sudo npm install -g typescript commander ts-node child_process @types/node
             npm i
             npm ls
-
-            echo "head=${{ github.event.pull_request.head.sha }}"
-            echo "base=${{ github.event.pull_request.base.sha }}"
 
             ts-node src/index.ts ./diff-lines \
                 -s ${{ github.event.pull_request.head.sha }} \

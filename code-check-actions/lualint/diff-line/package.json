@@ -1,0 +1,24 @@
+{
+  "name": "diff-line",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/node": "^18.15.11",
+    "parse-diff": "^0.11.1"
+  },
+  "scripts": {
+    "build": "tsc",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node dist/index.js"
+  },
+  "dependencies": {
+    "child_process": "^1.0.2",
+    "commander": "^10.0.0",
+    "ts-node": "^10.9.1",
+    "typescript": "^5.0.3"
+  }
+}
