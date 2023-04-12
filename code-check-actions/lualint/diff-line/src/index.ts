@@ -77,12 +77,12 @@ function getRanges(changes: parseDiff.Change[]) {
     let endLine = 0;
     changes.forEach((change) => {
         if (change.type === 'add') {
-            endLine = change.ln;
+            endLine = change.ln + 1;
             if (startLine === 0) {
                 startLine = endLine;
             }
         } else if (change.type === 'del') {
-            endLine = change.ln;
+            endLine = change.ln + 1;
             if (startLine === 0) {
                 startLine = endLine;
             }
