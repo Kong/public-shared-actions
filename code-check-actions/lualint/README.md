@@ -2,6 +2,13 @@
 
 This action lints all changed lua files using [kong/lualint](https://github.com/kong/lualint).
 
+## User tracking
+
+Currently, these repos are using this action:
+
+* [Kong/atc-router](https://github.com/Kong/atc-router/) (State: PR)
+* [Kong/lua-resty-lmdb](https://github.com/Kong/lua-resty-lmdb/) (State: PR)
+
 ## Inputs
 
 ### `kong_gh_app_id`
