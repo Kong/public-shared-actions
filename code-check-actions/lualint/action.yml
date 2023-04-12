@@ -110,10 +110,12 @@ runs:
                 -s ${{ github.event.pull_request.head.sha }} \
                 -t ${{ github.event.pull_request.base.sha }} \
                 -m add -f csv -w $OLD_DIR > $FILE_FOCUS_RANGE;
-            cat $FILE_FOCUS_RANGE;
+            [[ $RUNNER_DEBUG ]] && echo "Focus ranges:" && cat $FILE_FOCUS_RANGE;
           popd
+
           for file in ${{ steps.changed-files.outputs.all_changed_files }}; do
             if [[ $file == *.lua ]]; then
+              [[ $RUNNER_DEBUG ]] echo "Linting $file"
               ./lualint run --rules '${{ inputs.rules }}' --focus $FILE_FOCUS_RANGE ${{ inputs.extra_args }} "$file";
               if [[ $? -ne 0 ]]; then
                 ALL_PASSED="false";
