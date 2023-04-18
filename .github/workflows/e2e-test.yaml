@@ -27,4 +27,3 @@ jobs:
     - uses: ./security-actions/scan-docker-image
       with:
         image: kong/kong-gateway-dev:latest # no particular reason for the choice of image or tag, just an image for tests
-        upload_to_workflow: true
