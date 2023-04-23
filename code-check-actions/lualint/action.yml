@@ -69,7 +69,7 @@ runs:
       id: generate-release-name
       shell: bash
       run:
-        echo "RELEASE_NAME=lualint_$(uname -m)-unknown-linux-gnu.zip" >> $GITHUB_OUTPUT
+        echo "RELEASE_NAME=lualint_$(uname -m)-unknown-linux-gnu" >> $GITHUB_OUTPUT
 
     - name: Download Lualint
       uses: robinraju/release-downloader@768b85c8d69164800db5fc00337ab917daf3ce68
@@ -89,7 +89,7 @@ runs:
       shell: bash
       run: |
         [[ $RUNNER_DEBUG ]] && set -x
-        unzip ${{ steps.generate-release-name.outputs.RELEASE_NAME }};
+        mv ${{ steps.generate-release-name.outputs.RELEASE_NAME }} lualint;
         chmod +x ./lualint;
         ALL_PASSED="true";
 
