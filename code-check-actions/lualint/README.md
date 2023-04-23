@@ -8,6 +8,7 @@ Currently, these repos are using this action:
 
 * [Kong/atc-router](https://github.com/Kong/atc-router/) (State: PR)
 * [Kong/lua-resty-lmdb](https://github.com/Kong/lua-resty-lmdb/) (State: PR)
+* [Kong/lua-resty-events](https://github.com/Kong/lua-resty-events/) (State: Merged)
 
 ## Inputs
 
