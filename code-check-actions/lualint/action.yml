@@ -49,8 +49,6 @@ runs:
       shell: bash
       if: ${{ inputs.debug }}
       run: |
-        echo "[Debug] kong_gh_app_id: ${{ inputs.kong_gh_app_id }}"
-        echo "[Debug] kong_gh_app_private_key: ${{ inputs.kong_gh_app_private_key }}"
         echo "[Debug] rules: ${{ inputs.rules }}"
         echo "[Debug] extra_args: ${{ inputs.extra_args }}"
         echo "[Debug] all_changed_files: ${{ steps.changed-files.outputs.all_changed_files }}"
