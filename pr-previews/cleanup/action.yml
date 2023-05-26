@@ -46,11 +46,11 @@ runs:
             echo "${pkgName}@${verToRemove}: remove dist tag"
             npm dist-tag rm "${pkgName}" "pr-${prNumber}" || true
 
-            # deprecate and unpublish version, ignore error
-            echo "${pkgName}@${verToRemove}: deprecate"
-            npm deprecate --force "${pkgName}@${verToRemove}" "Deprecated PR preview" || true
+            # deprecate version, ignore error (looks like we do not need this step, keep it commented for now)
+            # echo "${pkgName}@${verToRemove}: deprecate"
+            # npm deprecate --force "${pkgName}@${verToRemove}" "Deprecated PR preview" || true
 
-            # unpublish
+            # unpublish, ignore error
             echo "${pkgName}@${verToRemove}: unpublish"
             npm unpublish --force "${pkgName}@${verToRemove}" || true
           done
