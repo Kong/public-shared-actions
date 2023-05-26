@@ -23,7 +23,7 @@ runs:
           openPrs=$(gh pr list --state open --json number|jq  'map(.number|tostring)' )
           echo "open PRs: ${openPrs}"
 
-          current=0
+          current=1
 
           # get the list of the "-pr." published version for the packages
           prVersions=($(npm view "${pkgName}" --json| jq -r '.versions'|grep '\-pr.'|tac|sed 's/[,\"]//g'))
