@@ -33,3 +33,11 @@ updates:
     commit-message:
       prefix: "github-actions"
       include: "scope"
+  
+  - package-ecosystem: "github-actions"
+    directory: "/code-check-actions/rustcheck"
+    schedule:
+      interval: "daily"
+    commit-message:
+      prefix: "github-actions"
+      include: "scope"
