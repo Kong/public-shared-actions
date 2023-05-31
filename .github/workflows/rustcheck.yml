@@ -22,8 +22,7 @@ jobs:
         with:
           repository: ${{env.RUST_TEST_REPOSITORY}}
           path: ${{env.RUST_TEST_REPOSITORY}}
-      - id: rust_checks
-        uses: ./code-check-actions/rustcheck
+      - uses: ./code-check-actions/rustcheck
         with:
           asset_prefix: ${{env.RUST_TEST_REPOSITORY}}
           dir: ${{ github.workspace }}/${{env.RUST_TEST_REPOSITORY}}

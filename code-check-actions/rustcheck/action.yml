@@ -7,7 +7,7 @@ inputs:
     required: false
     default: ''
   dir: 
-    description: 'Speicify a directory to be checked and scanned.
+    description: 'Speicify a directory to be checked and scanned'
     required: false
     default: '.'
   fail_build:
@@ -43,27 +43,6 @@ runs:
         toolchain: stable
         components: rustfmt, clippy
 
-    # # fails with an error code / succeeds
-    - uses: actions-rs/cargo@v1
-      continue-on-error: true
-      with:
-        command: "fmt"
-        args: "--manifest-path ${{ inputs.dir }}"
-
-    # fails with an error code / succeeds
-    - uses: actions-rs/cargo@v1
-      continue-on-error: true
-      with:
-        command: check
-        args: "--manifest-path ${{ inputs.dir }} --workspace --all-features --lib --bins"
-  
-    # Wont fail on any lint groups but will always warn
-    - uses: actions-rs/cargo@v1
-      continue-on-error: true
-      with:
-        command: clippy # Runs all default clippy::all lints for warn mode
-        args: "--manifest-path ${{ inputs.dir }} -- -W clippy:all -W clippy::cargo -W clippy::pedantic" 
-
     - name: Set Scan Job Metadata
       shell: bash
       id: meta
@@ -72,6 +51,28 @@ runs:
         FILE: ${{ inputs.file }}
         ASSET_PREFIX: ${{ inputs.asset_prefix }}
       run: $GITHUB_ACTION_PATH/scripts/scan-metadata.sh
+    
+     # fails with an error code / succeeds
+    # - uses: actions-rs/cargo@v1
+    #   continue-on-error: true
+    #   with:
+    #     command: "fmt"
+    #     args: "--all --manifest-path ${{ steps.meta.outputs.lint_path }}"
+
+    # fails with an error code / succeeds
+    # Run as part of clippy
+    # - uses: actions-rs/cargo@v1
+    #   continue-on-error: true
+    #   with:
+    #     command: check
+    #     args: "--manifest-path ${{ steps.meta.outputs.lint_path }}"
+
+    # Wont fail on any lint groups but will always warn
+    - uses: actions-rs/cargo@v1
+      continue-on-error: true
+      with:
+        command: clippy # Runs all default clippy::all lints for warn mode
+        args: "--manifest-path ${{ steps.meta.outputs.lint_path }} -- -W clippy::all -W clippy::cargo -W clippy::pedantic"
 
     # Must upload artifact for output file parameter to have effect
     - name: Generate SPDX SBOM Using Syft
