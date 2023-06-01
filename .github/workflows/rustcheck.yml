@@ -26,3 +26,4 @@ jobs:
         with:
           asset_prefix: ${{env.RUST_TEST_REPOSITORY}}
           dir: ${{ github.workspace }}/${{env.RUST_TEST_REPOSITORY}}
+          token: ${{secrets.GITHUB_TOKEN}}

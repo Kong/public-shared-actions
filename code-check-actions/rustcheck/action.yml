@@ -18,6 +18,9 @@ inputs:
     options:
     - 'true'
     - 'false'
+  token:
+    description: 'A Github PAT'
+    required: true
 
 outputs:
   grype-json-report:
@@ -67,12 +70,21 @@ runs:
     #     command: check
     #     args: "--manifest-path ${{ steps.meta.outputs.lint_path }}"
 
-    # Wont fail on any lint groups but will always warn
+    # fail on any correctness lint groups 
+    # always warn other lint groups
     - uses: actions-rs/cargo@v1
       continue-on-error: true
       with:
         command: clippy # Runs all default clippy::all lints for warn mode
-        args: "--manifest-path ${{ steps.meta.outputs.lint_path }} -- -W clippy::all -W clippy::cargo -W clippy::pedantic"
+        args: "--manifest-path ${{ steps.meta.outputs.lint_path }} -- -D clippy::correctness -W clippy::all -W clippy::cargo -W clippy::pedantic"
+
+    # - uses: auguwu/clippy-action@1.1.0
+    #   with:
+    #     token: ${{ inputs.token }}
+    #     working-directory: ${{ steps.meta.outputs.lint_path }}
+    #     warn: "all,cargo,pedantic"
+    #     deny: "correctness"
+    #     forbid: "restriction,nursery"
 
     # Must upload artifact for output file parameter to have effect
     - name: Generate SPDX SBOM Using Syft
