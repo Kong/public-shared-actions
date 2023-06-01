@@ -1,0 +1,29 @@
+name: Rust checks
+
+on:
+  pull_request:
+    branches:
+    - main
+  workflow_dispatch: {}
+
+jobs:
+  test-rust-checks:
+    env:
+      RUST_TEST_REPOSITORY: "Kong/atc-router"
+    outputs:
+      grype-report: ${{ steps.rust_checks.outputs.grype-sarif-report }}
+      sbom-spdx-report: ${{ steps.rust_checks.outputs.sbom-spdx-report }}
+      sbom-cyclonedx-report: ${{ steps.rust_checks.outputs.sbom-cyclonedx-report }}
+    runs-on: ubuntu-latest
+    name: Rust scan and vulnerability SCA checks
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/checkout@v3
+        with:
+          repository: ${{env.RUST_TEST_REPOSITORY}}
+          path: ${{env.RUST_TEST_REPOSITORY}}
+      - uses: ./code-check-actions/rustcheck
+        with:
+          asset_prefix: ${{env.RUST_TEST_REPOSITORY}}
+          dir: ${{ github.workspace }}/${{env.RUST_TEST_REPOSITORY}}
+          token: ${{secrets.GITHUB_TOKEN}}
