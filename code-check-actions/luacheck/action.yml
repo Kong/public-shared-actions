@@ -1,0 +1,17 @@
+name: Luacheck satic analysis
+description: Static analysis of Lua
+author: 'Kong'
+inputs:
+  args:
+    description: 'arguments for Luacheck'
+    required: false
+    default: '.' # Scans workspace dir
+    
+runs:
+  using: composite
+  steps:
+
+    - name: Run Luacheck for static analysis
+      uses: lunarmodules/luacheck@v1
+      with:
+        args: "${{ inputs.args }}"
