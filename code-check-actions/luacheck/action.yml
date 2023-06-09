@@ -12,6 +12,6 @@ runs:
   steps:
 
     - name: Run Luacheck for static analysis
-      uses: lunarmodules/luacheck@v1
+      uses: lunarmodules/luacheck@fcbdeacad00e643e0d78c56b9ba6d8b3c7fa584f
       with:
         args: "${{ inputs.args }}"
