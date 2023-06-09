@@ -40,7 +40,7 @@ runs:
   using: composite
   steps:
   
-    - uses: actions-rs/toolchain@v1
+    - uses: actions-rs/toolchain@b2417cde72dcf67f306c0ae8e0828a81bf0b189f
       with:
         profile: default
         toolchain: stable
@@ -72,7 +72,7 @@ runs:
 
     # fail on any correctness lint groups 
     # always warn other lint groups
-    - uses: actions-rs/cargo@v1
+    - uses: actions-rs/cargo@ae10961054e4aa8b4aa7dffede299aaf087aa33b
       continue-on-error: true
       with:
         command: clippy # Runs all default clippy::all lints for warn mode
