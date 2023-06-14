@@ -16,9 +16,9 @@ on:
 jobs:
   test-luacheck:
     env:
-      LUA_TEST_REPOSITORY: "Kong/lua-resty-lmdb"
+      LUA_TEST_REPOSITORY: "Kong/kong-ee"
     runs-on: ubuntu-latest
-    name: Test Lua code analysis check
+    name: Luacheck code analysis
     steps:
       - uses: actions/checkout@v3
       - uses: actions/checkout@v3
@@ -27,4 +27,4 @@ jobs:
           path: ${{env.LUA_TEST_REPOSITORY}}
       - uses: ./code-check-actions/luacheck
         with:
-          args: '--no-default-config --config ${{env.LUA_TEST_REPOSITORY}}/.luacheckrc ${{env.LUA_TEST_REPOSITORY}}'
+          additional_args: '--no-default-config --config ${{env.LUA_TEST_REPOSITORY}}/.luacheckrc ${{env.LUA_TEST_REPOSITORY}}'
