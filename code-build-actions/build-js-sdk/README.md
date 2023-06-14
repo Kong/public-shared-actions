@@ -2,7 +2,7 @@
 
 This action builds a JavaScript SDK and updates an existing PR with the generated files
 
-#### Example
+## Example
 
 ```yaml
 name: Generate SDK Packages
@@ -22,7 +22,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Build JS SDK
-        uses: Kong/shared-actions/build-js-sdk@main
+        uses: Kong/public-shared-actions/build-js-sdk@main
   
 ```
 
