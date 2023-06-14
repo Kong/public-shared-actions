@@ -1,4 +1,4 @@
-name: Rust checks
+name: Rust SCA and Lint
 
 on:
   release:
@@ -14,7 +14,7 @@ on:
   workflow_dispatch: {}
 
 jobs:
-  test-rust-checks:
+  test-rust-sca:
     env:
       RUST_TEST_REPOSITORY: "Kong/atc-router"
     outputs:
@@ -22,7 +22,7 @@ jobs:
       sbom-spdx-report: ${{ steps.rust_checks.outputs.sbom-spdx-report }}
       sbom-cyclonedx-report: ${{ steps.rust_checks.outputs.sbom-cyclonedx-report }}
     runs-on: ubuntu-latest
-    name: Rust scan and vulnerability SCA checks
+    name: Rust code analysis and SCA checks
     steps:
       - uses: actions/checkout@v3
       - uses: actions/checkout@v3
@@ -33,4 +33,3 @@ jobs:
         with:
           asset_prefix: ${{env.RUST_TEST_REPOSITORY}}
           dir: ${{ github.workspace }}/${{env.RUST_TEST_REPOSITORY}}
-          token: ${{secrets.GITHUB_TOKEN}}

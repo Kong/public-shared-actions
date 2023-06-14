@@ -1,0 +1,26 @@
+name:  Semgrep SAST CI
+description: Semgrep SAST CI
+author: 'Kong'
+inputs:
+additional_args:
+    description: 'Additional args to semgrep ci command '
+    required: false
+    default: '.'
+runs:
+  using: 'docker'
+  image: 'returntocorp/semgrep'
+  steps:
+
+    - name: Semgrep SAST Scan
+      run: semgrep ci --config auto --sarif -o semgrep_${{github.sha}}.sarif --suppress --no-autofix --no-strict --no-error ${{ inputs.additional_args }}
+      continue-on-error: true
+
+    - name: Upload SARIF file
+      if: ${{ github.event.repository.visibility == "public" }}
+      uses: github/codeql-action/upload-sarif@v2
+      with:
+        # Path to SARIF file relative to the root of the repository
+        sarif_file: semgrep_${{github.sha}}.sarif
+        # Optional category for the results
+        # Used to differentiate multiple results for one commit
+        category: sast_semgrep

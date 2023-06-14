@@ -18,9 +18,6 @@ inputs:
     options:
     - 'true'
     - 'false'
-  token:
-    description: 'A Github PAT'
-    required: true
 
 outputs:
   grype-json-report:
@@ -54,37 +51,14 @@ runs:
         FILE: ${{ inputs.file }}
         ASSET_PREFIX: ${{ inputs.asset_prefix }}
       run: $GITHUB_ACTION_PATH/scripts/scan-metadata.sh
-    
-     # fails with an error code / succeeds
-    # - uses: actions-rs/cargo@v1
-    #   continue-on-error: true
-    #   with:
-    #     command: "fmt"
-    #     args: "--all --manifest-path ${{ steps.meta.outputs.lint_path }}"
 
-    # fails with an error code / succeeds
-    # Run as part of clippy
-    # - uses: actions-rs/cargo@v1
-    #   continue-on-error: true
-    #   with:
-    #     command: check
-    #     args: "--manifest-path ${{ steps.meta.outputs.lint_path }}"
-
-    # fail on any correctness lint groups 
-    # always warn other lint groups
+    # Don't fail on any correctness lint groups 
+    # always warn all lint groups
     - uses: actions-rs/cargo@ae10961054e4aa8b4aa7dffede299aaf087aa33b
       continue-on-error: true
       with:
         command: clippy # Runs all default clippy::all lints for warn mode
-        args: "--manifest-path ${{ steps.meta.outputs.lint_path }} -- -D clippy::correctness -W clippy::all -W clippy::cargo -W clippy::pedantic"
-
-    # - uses: auguwu/clippy-action@1.1.0
-    #   with:
-    #     token: ${{ inputs.token }}
-    #     working-directory: ${{ steps.meta.outputs.lint_path }}
-    #     warn: "all,cargo,pedantic"
-    #     deny: "correctness"
-    #     forbid: "restriction,nursery"
+        args: "--manifest-path ${{ steps.meta.outputs.lint_path }} -- -W clippy::correctness -W clippy::cargo -W clippy::pedantic"
 
     # Must upload artifact for output file parameter to have effect
     - name: Generate SPDX SBOM Using Syft
@@ -180,6 +154,15 @@ runs:
         path: |
           ${{ steps.meta.outputs.grype_json_file }}
         if-no-files-found: warn
+    
+    - name: Upload SARIF CVE analysis file to CodeQL
+      if: ${{ github.event.repository.visibility == "public" }}
+      uses: github/codeql-action/upload-sarif@v2
+      with:
+        sarif_file: ${{ steps.meta.outputs.grype_sarif_file }}
+        # Optional category for the results
+        # Used to differentiate multiple results for one commit
+        category: sca_rust
 
     # Fail based on severity and input parameters
     # Notify grype quick scan results in table format

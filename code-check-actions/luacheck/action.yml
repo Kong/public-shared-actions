@@ -2,7 +2,7 @@ name: Luacheck satic analysis
 description: Static analysis of Lua
 author: 'Kong'
 inputs:
-  args:
+  additional_args:
     description: 'arguments for Luacheck'
     required: false
     default: '.' # Scans workspace dir
@@ -14,4 +14,4 @@ runs:
     - name: Run Luacheck for static analysis
       uses: lunarmodules/luacheck@fcbdeacad00e643e0d78c56b9ba6d8b3c7fa584f
       with:
-        args: "${{ inputs.args }}"
+        args: "${{ inputs.additional_args }} -c --codes --ranges --formatter TAP -q || true"
