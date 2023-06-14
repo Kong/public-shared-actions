@@ -15,7 +15,7 @@ Currently, these repos are using this action:
 ## Inputs
 
 ```yaml
-args: 
+additional_args: 
     description: 'Arguments to luacheck'
     required: 'false'
     default: '.' # Default: Run luacheck on workspace dir 
@@ -24,16 +24,17 @@ args:
 ## Action status
 The status outcome of the action will depend based on the follwing:
 
-- Exit code is 0 if no warnings or errors occurred.
+<!-- - Exit code is 0 if no warnings or errors occurred.
 - Exit code is 1 if some warnings occurred but there were no syntax errors or invalid inline options.
 - Exit code is 2 if there were some syntax errors or invalid inline options.
 - Exit code is 3 if some files couldn’t be checked, typically due to an incorrect file name.
-- Exit code is 4 if there was a critical error (invalid CLI arguments, config, or cache file).
+- Exit code is 4 if there was a critical error (invalid CLI arguments, config, or cache file). -->
 
+- Always exit with 0 even when there are warnings / errors and be non-blocking
 ## Example usage
 
 ```yaml
-uses: Kong/public-shared-actions/code-check-actions/luacheck@main
+uses: public-shared-actions/code-check-actions/luacheck@main
 
 ```
 
@@ -56,12 +57,19 @@ jobs:
     name: Lua code analysis check
     steps:
       - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
       - name: Get changed files
         id: changed-files
-        uses: tj-actions/changed-files@04124efe7560d15e11ea2ba96c0df2989f68f1f4
+        uses: tj-actions/changed-files@04124efe7560d15e11ea2ba96c0df2989f68f1f4ith
         with:
-          base_sha: ${{ github.event.workflow_run.head_sha }}
+          files: |
+            **.lua
+            **.rockspec
+
       - uses: Kong/public-shared-actions/code-check-actions/luacheck@main
+        if: steps.changed-files-excluded.outputs.any_changed == 'true'
         with:
             args: "${{ steps.changed-files.outputs.all_changed_files }}"
 ```
