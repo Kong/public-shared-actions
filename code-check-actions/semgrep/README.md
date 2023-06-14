@@ -12,14 +12,6 @@ Currently, these repos are using this action:
 
 []
 
-## Inputs
-
-```yaml
-additional_args: 
-    description: 'Arguments to Semgrep'
-    required: 'false'
-    default: '.' # Default: Run Semgrep on workspace dir 
-```
 ## Example usage
 
 ```yaml
