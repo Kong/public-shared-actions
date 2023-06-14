@@ -1,4 +1,4 @@
-name: Rust SCA and Lint
+name: Rust SCA and Lint Test
 
 on:
   release:
@@ -15,6 +15,12 @@ on:
 
 jobs:
   test-rust-sca:
+    permissions:
+      # required for all workflows
+      security-events: write
+      # only required for workflows in private repositories
+      actions: read
+      contents: read
     env:
       RUST_TEST_REPOSITORY: "${{github.repository_owner}}/atc-router"
     outputs:

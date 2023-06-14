@@ -18,8 +18,14 @@ on:
 
 jobs:
   test-semgrep-sast:
+    permissions:
+      # required for all workflows
+      security-events: write
+      # only required for workflows in private repositories
+      actions: read
+      contents: read
     env:
-      TEST_REPOSITORY: ${{ github.event_name == "workflow_dispatch" && github.event.inputs.repository_name || format('{0}-kong-ee', github.repository_owner) }}
+      TEST_REPOSITORY: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.repository_name || format('{0}/kong-ee', github.repository_owner) }}
     runs-on: ubuntu-latest
     name: Luacheck code analysis
     steps:

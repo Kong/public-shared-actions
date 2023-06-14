@@ -42,6 +42,12 @@ on:
 
 jobs:
   test-semgrep-sast:
+    permissions:
+      # required for all workflows
+      security-events: write
+      # only required for workflows in private repositories
+      actions: read
+      contents: read
     runs-on: ubuntu-latest
     name: Semgrep SAST checks
     steps:

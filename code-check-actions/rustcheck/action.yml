@@ -156,7 +156,7 @@ runs:
         if-no-files-found: warn
     
     - name: Upload SARIF CVE analysis file to CodeQL
-      if: ${{ github.event.repository.visibility == "public" }}
+      if: ${{ github.event.repository.visibility == 'public' }}
       uses: github/codeql-action/upload-sarif@v2
       with:
         sarif_file: ${{ steps.meta.outputs.grype_sarif_file }}

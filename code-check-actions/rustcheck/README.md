@@ -56,6 +56,12 @@ on:
 
 jobs:
   test-rust-sca-checks:
+    permissions:
+      # required for all workflows
+      security-events: write
+      # only required for workflows in private repositories
+      actions: read
+      contents: read
     outputs:
       grype-report: ${{ steps.rust_checks.outputs.grype-sarif-report }}
       sbom-spdx-report: ${{ steps.rust_checks.outputs.sbom-spdx-report }}
