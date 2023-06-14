@@ -2,16 +2,16 @@ name:  Semgrep SAST CI
 description: Semgrep SAST CI
 author: 'Kong'
 inputs:
-additional_args:
+  additional_args:
     description: 'Additional args to semgrep ci command '
     required: false
     default: '.'
 runs:
-  using: 'docker'
-  image: 'returntocorp/semgrep'
+  using: 'composite'
   steps:
 
     - name: Semgrep SAST Scan
+      uses: 'returntocorp/semgrep'
       run: semgrep ci --config auto --sarif -o semgrep_${{github.sha}}.sarif --suppress --no-autofix --no-strict --no-error ${{ inputs.additional_args }}
       continue-on-error: true
 
