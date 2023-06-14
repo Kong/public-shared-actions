@@ -34,6 +34,7 @@ jobs:
       - uses: actions/checkout@v3
         with:
           repository: ${{env.RUST_TEST_REPOSITORY}}
+          token: ${{secrets.SCIMIA_BOT_GITHUB_TOKEN}}
           path: ${{env.RUST_TEST_REPOSITORY}}
       - uses: ./code-check-actions/rustcheck
         with:
