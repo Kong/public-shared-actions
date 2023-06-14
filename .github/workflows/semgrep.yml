@@ -14,13 +14,12 @@ on:
   workflow_dispatch:
     inputs:
       repository_name:
-        required: false
-        default: "Kong/kong-ee"
+        required: true
 
 jobs:
   test-semgrep-sast:
     env:
-      TEST_REPOSITORY: {{ github.event_name == "workflow_dispatch" ? github.event.inputs.repository_name : "Kong/kong-ee" }}
+      TEST_REPOSITORY: ${{ github.event_name == "workflow_dispatch" && github.event.inputs.repository_name || format('{0}-kong-ee', github.repository_owner) }}
     runs-on: ubuntu-latest
     name: Luacheck code analysis
     steps:

@@ -16,7 +16,7 @@ on:
 jobs:
   test-rust-sca:
     env:
-      RUST_TEST_REPOSITORY: "Kong/atc-router"
+      RUST_TEST_REPOSITORY: "${{github.repository_owner}}/atc-router"
     outputs:
       grype-report: ${{ steps.rust_checks.outputs.grype-sarif-report }}
       sbom-spdx-report: ${{ steps.rust_checks.outputs.sbom-spdx-report }}

@@ -16,7 +16,7 @@ on:
 jobs:
   test-luacheck:
     env:
-      LUA_TEST_REPOSITORY: "Kong/kong-ee"
+      LUA_TEST_REPOSITORY: "${{github.repository_owner}}/kong-ee"
     runs-on: ubuntu-latest
     name: Luacheck code analysis
     steps:
