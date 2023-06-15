@@ -65,12 +65,16 @@ runs:
       continue-on-error: true
       with:
         command: clippy # Runs all default clippy::all lints for warn mode
-        args: "--manifest-path ${{ steps.meta.outputs.lint_path }} --message-format=json -- -W clippy::correctness -W clippy::cargo -W clippy::pedantic"
-        #| clippy-sarif | tee rust_clippy_${{github.sha}}.sarif | sarif-fmt
+        args: "--manifest-path ${{ steps.meta.outputs.lint_path }} --message-format=json -- -W clippy::correctness -W clippy::cargo -W clippy::pedantic > result.json"
+    
+    - name: Convert and Print SARIF
+      shell: bash
+      run: |
+        cat results.json | clippy-sarif | tee rust_clippy_${{github.sha}}.sarif | sarif-fmt
         
     - name: Upload Rust Linting SARIF file to CodeQL
       if: ${{ github.event.repository.visibility == 'public' }}
-      uses: github/codeql-action/upload-sarif@v1
+      uses: github/codeql-action/upload-sarif@v2
       with:
         sarif_file: rust_clippy_${{github.sha}}.sarif
         category: clippy_rust
