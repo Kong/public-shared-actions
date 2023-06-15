@@ -39,7 +39,7 @@ runs:
   
     - uses: actions-rs/toolchain@b2417cde72dcf67f306c0ae8e0828a81bf0b189f
       with:
-        profile: minimal
+        profile: default
         toolchain: stable
         components: rustfmt, clippy
 
