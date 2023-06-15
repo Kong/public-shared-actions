@@ -20,10 +20,6 @@ if [[ -n ${DIR} ]]; then
     echo "lint_path=${DIR}/Cargo.toml" >> $GITHUB_OUTPUT
 fi
 
-if [[ -n ${FILE} ]]; then
-    echo "scan_file=${FILE}" >> $GITHUB_OUTPUT
-fi
-
 if [[ -n ${ASSET_PREFIX} ]]; then
     echo "sbom_spdx_file=${ASSET_PREFIX##*/}-${spdx_ext}" >> $GITHUB_OUTPUT
     echo "sbom_cyclonedx_file=${ASSET_PREFIX##*/}-${cyclonedx_ext}" >> $GITHUB_OUTPUT
