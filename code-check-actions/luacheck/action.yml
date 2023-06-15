@@ -33,19 +33,26 @@ runs:
 #       shell: bash
 #       run: | 
 #         cat luacheck_${{github.sha}}.xml
-   
-    - name: Luacheck Report
-      uses: EnricoMi/publish-unit-test-result-action@v2
-      if: always()
-      with:
-        files: |
-          luacheck_${{github.sha}}.xml
-        check_name: Luacheck Results
-        coomment_mode: failures
     
-#     - name: Luacheck Test Report
-#       uses: dorny/test-reporter@v1
-#       if: success() || failure()    # run this step even if previous step failed
+#       - name: Luacheck Report
+#         uses: airtower-luna/convert-to-sarif@v1.0.1
+#         with:
+#           tool: 'CppCheck'
+#           input_file: 'test/test.xml'
+#           sarif_file: 'test.sarif'
+   
+#     - name: Luacheck Report
+#       uses: EnricoMi/publish-unit-test-result-action@v2
+#       if: always()
 #       with:
-#         name: Luacheck                        # Name of the check run which will be created
-#         path: luacheck_${{github.sha}}.xml    # Path to test results
+#         files: |
+#           luacheck_${{github.sha}}.xml
+#         check_name: Luacheck Results
+#         coomment_mode: failures
+    
+    - name: Luacheck Test Report
+      uses: dorny/test-reporter@v1
+      if: success() || failure()    # run this step even if previous step failed
+      with:
+        name: Luacheck                        # Name of the check run which will be created
+        path: luacheck_${{github.sha}}.xml    # Path to test results
