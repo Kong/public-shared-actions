@@ -5,6 +5,10 @@ inputs:
   additional_args:
     description: 'arguments for Luacheck'
     required: false
+    default: '' # Scans workspace dir
+  files:
+    description: ' List of files, directories and rockspecs to check'
+    required: false
     default: '.' # Scans workspace dir
     
 runs:
@@ -14,4 +18,4 @@ runs:
     - name: Run Luacheck for static analysis
       uses: lunarmodules/luacheck@fcbdeacad00e643e0d78c56b9ba6d8b3c7fa584f
       with:
-        args: "${{ inputs.additional_args }} -c --codes --ranges --formatter TAP -q || true"
+        args: "${{ inputs.additional_args }} -c --codes --ranges --formatter TAP -q ${{ inputs.additional_args }} || true"
