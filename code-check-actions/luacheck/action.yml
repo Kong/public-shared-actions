@@ -19,17 +19,31 @@ runs:
       uses: lunarmodules/luacheck@fcbdeacad00e643e0d78c56b9ba6d8b3c7fa584f
       continue-on-error: true
       with:
-        args: "${{ inputs.additional_args }} -c --codes --ranges --formatter TAP -q ${{ inputs.files }} > luacheck_${{github.sha}}.TAP"
+        args: "${{ inputs.additional_args }} -c --codes --ranges --formatter JUnit -q ${{ inputs.files }} > luacheck_${{github.sha}}.xml"
     
     - name: Upload Luacheck results to artifacts
       uses: actions/upload-artifact@v3
       with:
         name: luacheck_results.zip
         path: |
-          luacheck_${{github.sha}}.TAP
+          luacheck_${{github.sha}}.xml
         if-no-files-found: warn
 
-    - name: Print Luacheck results
-      shell: bash
-      run: | 
-        cat luacheck_${{github.sha}}.TAP
+#     - name: Print Luacheck results
+#       shell: bash
+#       run: | 
+#         cat luacheck_${{github.sha}}.xml
+   
+    - name: Luacheck Report
+      uses: EnricoMi/publish-unit-test-result-action@v2
+      if: always()
+      with:
+        files: |
+          luacheck_${{github.sha}}.xml
+    
+#     - name: Luacheck Test Report
+#       uses: dorny/test-reporter@v1
+#       if: success() || failure()    # run this step even if previous step failed
+#       with:
+#         name: Luacheck                        # Name of the check run which will be created
+#         path: luacheck_${{github.sha}}.xml    # Path to test results
