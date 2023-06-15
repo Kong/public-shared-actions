@@ -48,7 +48,6 @@ runs:
       id: meta
       env:
         DIR: ${{ inputs.dir }}
-        FILE: ${{ inputs.file }}
         ASSET_PREFIX: ${{ inputs.asset_prefix }}
       run: $GITHUB_ACTION_PATH/scripts/scan-metadata.sh
 
