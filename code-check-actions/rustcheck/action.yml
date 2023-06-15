@@ -70,7 +70,7 @@ runs:
     - name: Run Cargo Clippy
       shell: bash
       run: |
-        cargo clippy --manifest-path ${{ steps.meta.outputs.lint_path }} --message-format=json -- -W clippy::correctness -W clippy::cargo -W clippy::pedantic | clippy-sarif | tee rust_clippy_${{github.sha}}.sarif | sarif-fmt
+        cargo clippy --manifest-path ${{ steps.meta.outputs.lint_path }} --message-format=json -- -D clippy::correctness -W clippy::cargo -W clippy::pedantic | clippy-sarif | tee rust_clippy_${{github.sha}}.sarif | sarif-fmt
     
 #     - name: Convert and Print SARIF
 #       shell: bash
