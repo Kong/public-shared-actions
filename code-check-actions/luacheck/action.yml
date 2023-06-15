@@ -19,16 +19,16 @@ runs:
       uses: lunarmodules/luacheck@fcbdeacad00e643e0d78c56b9ba6d8b3c7fa584f
       continue-on-error: true
       with:
-        args: "${{ inputs.additional_args }} -c --codes --ranges --formatter TAP -q ${{ inputs.files }} > luacheck_${{ github.ref }}_${{github.sha}}.TAP"
+        args: "${{ inputs.additional_args }} -c --codes --ranges --formatter TAP -q ${{ inputs.files }} > luacheck_${{github.sha}}.TAP"
     
     - name: Upload Luacheck results to artifacts
       uses: actions/upload-artifact@v3
       with:
         path: |
-          luacheck_${{ github.ref }}_${{github.sha}}.TAP
+          luacheck_${{github.sha}}.TAP
         if-no-files-found: warn
 
     - name: Print Luacheck results
       shell: bash
       run: | 
-        cat luacheck_${{ github.ref }}_${{github.sha}}.TAP
+        cat luacheck_${{github.sha}}.TAP
