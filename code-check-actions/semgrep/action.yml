@@ -17,6 +17,7 @@ runs:
         args: "semgrep ci --config auto --sarif -o semgrep_${{github.sha}}.sarif --suppress-errors --no-autofix ${{ inputs.additional_config }} "
     
     - name: Print SARIF
+      shell: bash
       run: |
         cat semgrep_${{github.sha}}.sarif
       
