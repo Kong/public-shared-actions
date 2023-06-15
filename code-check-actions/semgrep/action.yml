@@ -2,8 +2,8 @@ name:  Semgrep SAST CI
 description: Semgrep SAST CI
 author: 'Kong'
 inputs:
-  additional_args:
-    description: 'Additional args to semgrep ci command '
+  additional_config:
+    description: 'Provide additional config to semgrep ci command using --config'
     required: false
     default: ''
 runs:
@@ -12,8 +12,9 @@ runs:
 
     - name: Semgrep SAST Scan
       uses: docker://returntocorp/semgrep
+      continue-on-error: true
       with:
-        args: "semgrep ci --config auto --sarif -o semgrep_${{github.sha}}.sarif --suppress-errors --no-autofix ${{ inputs.additional_args }}"
+        args: "semgrep ci ${{ inputs.additional_config }} --sarif -o semgrep_${{github.sha}}.sarif --suppress-errors --no-autofix"
 
     - name: Upload SARIF file
       if: ${{ github.event.repository.visibility == 'public' }}
