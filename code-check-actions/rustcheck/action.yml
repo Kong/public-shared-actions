@@ -51,13 +51,13 @@ runs:
         ASSET_PREFIX: ${{ inputs.asset_prefix }}
       run: $GITHUB_ACTION_PATH/scripts/scan-metadata.sh
     
-#     - uses: Swatinem/rust-cache@v1
+    - uses: Swatinem/rust-cache@v1
 
-#     - uses: actions-rs/cargo@ae10961054e4aa8b4aa7dffede299aaf087aa33b
-#       continue-on-error: true
-#       with:
-#         command: install
-#         args: "clippy-sarif sarif-fmt"
+    - uses: actions-rs/cargo@ae10961054e4aa8b4aa7dffede299aaf087aa33b
+      continue-on-error: true
+      with:
+        command: install
+        args: "clippy-sarif sarif-fmt"
        
     # Don't fail on any correctness lint groups 
     # always warn all lint groups
