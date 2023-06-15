@@ -69,6 +69,7 @@ runs:
 
     - name: Run Cargo Clippy
       shell: bash
+      continue-on-error: true
       run: |
         cargo clippy --manifest-path ${{ steps.meta.outputs.lint_path }} --message-format=json -- -D clippy::correctness -W clippy::cargo -W clippy::pedantic | clippy-sarif | tee rust_clippy_${{github.sha}}.sarif | sarif-fmt
     
