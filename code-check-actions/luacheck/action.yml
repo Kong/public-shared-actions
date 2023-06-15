@@ -41,6 +41,7 @@ runs:
         files: |
           luacheck_${{github.sha}}.xml
         check_name: Luacheck Results
+        coomment_mode: failures
     
 #     - name: Luacheck Test Report
 #       uses: dorny/test-reporter@v1
