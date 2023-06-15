@@ -55,4 +55,5 @@ runs:
       if: success() || failure()    # run this step even if previous step failed
       with:
         name: Luacheck                        # Name of the check run which will be created
+        reporter: java-junit
         path: luacheck_${{github.sha}}.xml    # Path to test results
