@@ -61,16 +61,21 @@ runs:
        
     # Don't fail on any correctness lint groups 
     # always warn all lint groups
-    - uses: actions-rs/cargo@ae10961054e4aa8b4aa7dffede299aaf087aa33b
-      continue-on-error: true
-      with:
-        command: clippy # Runs all default clippy::all lints for warn mode
-        args: "--manifest-path ${{ steps.meta.outputs.lint_path }} --message-format=json -- -W clippy::correctness -W clippy::cargo -W clippy::pedantic > result.json"
-    
-    - name: Convert and Print SARIF
+#     - uses: actions-rs/cargo@ae10961054e4aa8b4aa7dffede299aaf087aa33b
+#       continue-on-error: true
+#       with:
+#         command: clippy # Runs all default clippy::all lints for warn mode
+#         args: "--manifest-path ${{ steps.meta.outputs.lint_path }} --message-format=json -- -W clippy::correctness -W clippy::cargo -W clippy::pedantic > result.json"
+
+    - name: Run Cargo Clippy
       shell: bash
       run: |
-        cat results.json | clippy-sarif | tee rust_clippy_${{github.sha}}.sarif | sarif-fmt
+        cargo clippy --manifest-path ${{ steps.meta.outputs.lint_path }} --message-format=json -- -W clippy::correctness -W clippy::cargo -W clippy::pedantic | clippy-sarif | tee rust_clippy_${{github.sha}}.sarif | sarif-fmt
+    
+#     - name: Convert and Print SARIF
+#       shell: bash
+#       run: |
+#         cat results.json | clippy-sarif | tee rust_clippy_${{github.sha}}.sarif | sarif-fmt
         
     - name: Upload Rust Linting SARIF file to CodeQL
       if: ${{ github.event.repository.visibility == 'public' }}
