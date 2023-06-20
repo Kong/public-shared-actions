@@ -111,7 +111,7 @@ runs:
     
     # Don't fail during report generation
     - name: Vulnerability analysis of SBOM
-      uses: anchore/scan-action@v3.3.4
+      uses: anchore/scan-action@v3.3.5
       id: grype_analysis_sarif
       if: ${{ steps.sbom_report.outputs.files_exists == 'true' }}
       with:
@@ -123,7 +123,7 @@ runs:
     # Don't fail during report generation
     # JSON format will report  any ignored rules
     - name: Vulnerability analysis of SBOM
-      uses: anchore/scan-action@v3.3.4
+      uses: anchore/scan-action@v3.3.5
       id: grype_analysis_json
       if: ${{ steps.sbom_report.outputs.files_exists == 'true' }}
       with:
@@ -136,7 +136,7 @@ runs:
       uses: andstor/file-existence-action@v2
       id: grype_report
       with:
-        files: "${{ steps.grype_analysis_sarif.outputs.sarif }}, ${{ steps.grype_analysis_json.outputs.report }}"
+        files: "${{ steps.grype_analysis_sarif.outputs.sarif }}, ${{ steps.grype_analysis_json.outputs.json }}"
         fail: true
     
     # Grype CVE Action generates an ./results.sarif or ./results.report and no way to customize output file name
@@ -145,7 +145,7 @@ runs:
       shell: bash
       run: |
         mv ${{ steps.grype_analysis_sarif.outputs.sarif }} ${{ steps.meta.outputs.grype_sarif_file }}
-        mv ${{ steps.grype_analysis_json.outputs.report }} ${{ steps.meta.outputs.grype_json_file }}
+        mv ${{ steps.grype_analysis_json.outputs.json }} ${{ steps.meta.outputs.grype_json_file }}
     
     - name: Upload grype analysis report
       uses: actions/upload-artifact@v3
