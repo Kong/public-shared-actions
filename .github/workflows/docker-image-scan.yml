@@ -1,8 +1,6 @@
 name: Docker Scan Test
 
 on:
-  release:
-    types: [published]
   pull_request:
     branches:
     - main
@@ -12,8 +10,12 @@ on:
     tags:
     - '*'
 
+env:
+  HAS_ACCESS_TO_GITHUB_TOKEN: ${{ github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository }}
+
 jobs:
   test-scan-docker-image:
+    if: ${{ env.HAS_ACCESS_TO_GITHUB_TOKEN == 'true' }}
     name: Test Scan Docker Image
     runs-on: ubuntu-22.04
     env:
