@@ -1,5 +1,11 @@
 name: Cleanup PR preview packages
 description: Deprecate and unpublish PR preview package versions for closed PRs
+inputs:
+  package:
+    description: Package to cleanup PR versions
+    required: true
+  openPRs:
+    description: List of open PRs in the repo
 
 
 runs:
@@ -8,50 +14,69 @@ runs:
     - name: Get PR Info
       shell: bash
       run: |
+        pkgName=${{ inputs.package }}
+        openPRs=${{ inputs.openPRs }}
 
+        echo " "
+        echo "package: ${pkgName}"
+        echo "openPRs: ${openPRs}"
 
-        # get the list of packages in the mono-repository in reverse order
-        packages=$(lerna ls --l --json|jq -r '.[].name'| tac)
+        current=1
+        canDelete="true"
 
-        # loop trough the list of the packages
-        for pkgName in $(echo ${packages})
+        # get the list of the "-pr." published version for the packages
+        pkgDetails=$(npm view "${pkgName}" --json)
+        prVersions=($(echo ${pkgDetails}| jq -r '.versions' | grep '\-pr.'| sed 's/[,\"]//g'))
+
+        distTags=$(echo ${pkgDetails}|jq -r '."dist-tags"')
+
+        total="${#prVersions[@]}"
+
+        for verToRemove in "${prVersions[@]}"
         do
           echo " "
-          echo "package: ${pkgName}"
+          echo "$((current++))/${total}"
 
-          # get the array of numbers for open PRs
-          openPrs=$(gh pr list --state open --json number|jq  'map(.number|tostring)' )
-          echo "open PRs: ${openPrs}"
+          verDetails=$(npm view "${pkgName}@${verToRemove}" --json)
 
-          current=1
+          # validate that the version doesn't belong to open PR
+          echo "${pkgName}@${verToRemove}"
+          prNumber=$(echo ${verToRemove} | sed 's/.*\-pr\.//g'| cut -d'.' -f 1)
 
-          # get the list of the "-pr." published version for the packages
-          prVersions=($(npm view "${pkgName}" --json| jq -r '.versions'|grep '\-pr.'|tac|sed 's/[,\"]//g'))
-          total="${#prVersions[@]}"
-
-          for verToRemove in "${prVersions[@]}"
-          do
-
-            echo " "
-            echo "$((current++))/${total}"
-
-            # validate that the version doesn't belong to open PR
-            prNumber=$(echo ${verToRemove} | sed 's/.*\-pr\.//g'| cut -d'.' -f 1)
-            if [[ ! -z $(echo ${openPrs} | grep "\"${prNumber}\"") ]]; then
-              echo "${pkgName}@${verToRemove}: belongs to open PR, skip..."
+          if [[ ! -z $(echo ${openPRs} | grep "\"${prNumber}\"") ]]; then
+            if [[ ! -z $(echo ${distTags}|grep "${verToRemove}") ]]; then
+              echo "${pkgName}@${verToRemove}: belongs to open PR and tagged as PR preview, skip..."
               continue
             fi
+          fi
 
-            # remove dist tag if present
-            echo "${pkgName}@${verToRemove}: remove dist tag"
-            npm dist-tag rm "${pkgName}" "pr-${prNumber}" || true
+          if [[ $(echo ${verDetails}|jq -r ".deprecated") == null ]]; then
+            if [[ ! -z $(echo ${distTags}|grep "${verToRemove}") ]]; then
+              # remove dist tag if present
+              echo "${pkgName}@${verToRemove}: remove dist tag"
+              npm dist-tag rm "${pkgName}" "pr-${prNumber}" || true
+            fi
 
-            # deprecate version, ignore error
-            echo "${pkgName}@${verToRemove}: deprecate"
-            npm deprecate --force "${pkgName}@${verToRemove}" "Deprecated PR preview" || true
+            # deprecate and unpublish version, ignore error
+            echo "*** deprecating: ${pkgName}@${verToRemove}"
+            res=$(npm deprecate "${pkgName}@${verToRemove}" "Deprecated PR preview" 2>&1)
+            echo "deprecate:>>>>${res}<<<<"
+            if [[ ! -z $(echo "${res}"|grep " E429") ]]; then
+              echo "Rate limit reached, exiting..."
+              exit 1
+            fi
 
-            # unpublish, ignore error
-            echo "${pkgName}@${verToRemove}: unpublish"
-            npm unpublish --force "${pkgName}@${verToRemove}" || true
-          done
+          else
+              echo "*** ${pkgName}@${verToRemove}: already deprecated, skip..."
+          fi
+
+          if [[ "${canDelete}" == "true" ]]; then
+            echo "*** unpublishing: ${pkgName}@${verToRemove}"
+            res=$(npm unpublish --force "${pkgName}@${verToRemove}" 2>&1)
+            echo "unpublish:>>>>>${res}<<<<"
+            if [[ ! -z $(echo "${res}"|grep " E429") ]]; then
+              echo "Rate limit reached, exiting..."
+              exit 1
+            fi
+          fi
         done
