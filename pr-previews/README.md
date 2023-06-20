@@ -63,6 +63,11 @@ Deprecates and Unpublishes PR preview packages for closed PRs. To be executed fr
 
   - name: Cleanup
     uses: Kong/shared-actions/pr-previews/cleanup@main
+    with:
+      # package to cleanup PR preview versions for
+      package: "@kong-ui/core"
+      # list of open PRs (when PR preview is for one of the open PRs - it's not getting deprecated or unpublished)
+      openPRs: "[23,123,434]"
     env:
       NPM_TOKEN: ${{ secrets.NPM_TOKEN_PRIVATE_PUBLISH }}
 

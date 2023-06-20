@@ -85,8 +85,9 @@ runs:
             if [[ ! -z $(echo "${res}"|grep " E405") ]]; then
               echo "error 405 detected, skip unpublish attempts..."
               canDelete="false"
-            else
-              echo "unpublish skipped ..."
             fi
+          else
+            echo "unpublish skipped ..."
           fi
+
         done
