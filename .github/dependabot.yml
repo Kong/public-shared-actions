@@ -25,3 +25,27 @@ updates:
     commit-message:
       prefix: "docker"
       include: "scope"
+  
+  - package-ecosystem: "github-actions"
+    directory: "/code-check-actions/luacheck"
+    schedule:
+      interval: "daily"
+    commit-message:
+      prefix: "github-actions"
+      include: "scope"
+  
+  - package-ecosystem: "github-actions"
+    directory: "/code-check-actions/rustcheck"
+    schedule:
+      interval: "daily"
+    commit-message:
+      prefix: "github-actions"
+      include: "scope"
+  
+  - package-ecosystem: "github-actions"
+    directory: "/code-build-actions/build-sdk-js"
+    schedule:
+      interval: "daily"
+    commit-message:
+      prefix: "github-actions"
+      include: "scope"

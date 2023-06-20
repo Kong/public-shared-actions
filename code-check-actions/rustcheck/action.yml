@@ -1,33 +1,15 @@
-name: Scan Docker Image
-description: Generates SBOM and vulnerabiity report on specified docker image
+name:  Rust Source Code Lints
+description: Rust linting and SCA using grype on specified rust source code
 author: 'Kong'
 inputs:
   asset_prefix:
-    description: 'prefix for generated scan artifacts'
+    description: 'prefix for generated artifacts'
     required: false
     default: ''
   dir: 
-    description: 'Speicify a directory to be scanned. This is mutually exclusive to file and image'
+    description: 'Speicify a directory to be checked and scanned'
     required: false
-    default: ''
-  file:
-    description: 'Specify a file to be scanned. This is mutually exclusive to dir and image'
-    required: false
-    default: ''
-  image:
-    description: 'specify an image to be scanned. Specify registry credentials if the image is remote. Takes priority over dir and file'
-    required: false
-    default: ''
-  tag:
-    description: 'specify a docker image tag / release tag / ref to be scanned'
-    required: false
-    default: ''
-  registry_username:
-    description: 'docker username to login against private docker registry'
-    required: false
-  registry_password:
-    description: 'docker password to login against private docker registry'
-    required: false
+    default: '.'
   fail_build:
     description: 'fail the build if the vulnerability is above the severity cutoff'
     required: false
@@ -36,11 +18,11 @@ inputs:
     options:
     - 'true'
     - 'false'
+  token:
+    description: 'A Github PAT'
+    required: true
 
 outputs:
-  cis-json-report:
-    description: 'docker-cis json report'
-    value: ${{ steps.meta.outputs.cis_json_file }}
   grype-json-report:
     description: 'vulnerability json report'
     value: ${{ steps.grype_analysis.outputs.json }}
@@ -57,17 +39,52 @@ outputs:
 runs:
   using: composite
   steps:
+  
+    - uses: actions-rs/toolchain@b2417cde72dcf67f306c0ae8e0828a81bf0b189f
+      with:
+        profile: default
+        toolchain: stable
+        components: rustfmt, clippy
 
     - name: Set Scan Job Metadata
       shell: bash
       id: meta
       env:
-        IMAGE: ${{ inputs.image }}
-        TAG: ${{ inputs.tag }}
         DIR: ${{ inputs.dir }}
         FILE: ${{ inputs.file }}
         ASSET_PREFIX: ${{ inputs.asset_prefix }}
       run: $GITHUB_ACTION_PATH/scripts/scan-metadata.sh
+    
+     # fails with an error code / succeeds
+    # - uses: actions-rs/cargo@v1
+    #   continue-on-error: true
+    #   with:
+    #     command: "fmt"
+    #     args: "--all --manifest-path ${{ steps.meta.outputs.lint_path }}"
+
+    # fails with an error code / succeeds
+    # Run as part of clippy
+    # - uses: actions-rs/cargo@v1
+    #   continue-on-error: true
+    #   with:
+    #     command: check
+    #     args: "--manifest-path ${{ steps.meta.outputs.lint_path }}"
+
+    # fail on any correctness lint groups 
+    # always warn other lint groups
+    - uses: actions-rs/cargo@ae10961054e4aa8b4aa7dffede299aaf087aa33b
+      continue-on-error: true
+      with:
+        command: clippy # Runs all default clippy::all lints for warn mode
+        args: "--manifest-path ${{ steps.meta.outputs.lint_path }} -- -D clippy::correctness -W clippy::all -W clippy::cargo -W clippy::pedantic"
+
+    # - uses: auguwu/clippy-action@1.1.0
+    #   with:
+    #     token: ${{ inputs.token }}
+    #     working-directory: ${{ steps.meta.outputs.lint_path }}
+    #     warn: "all,cargo,pedantic"
+    #     deny: "correctness"
+    #     forbid: "restriction,nursery"
 
     # Must upload artifact for output file parameter to have effect
     - name: Generate SPDX SBOM Using Syft
@@ -164,31 +181,6 @@ runs:
           ${{ steps.meta.outputs.grype_json_file }}
         if-no-files-found: warn
 
-    - name: Check docker OCI tar existence
-      uses: andstor/file-existence-action@v2
-      id: docker_tar
-      with:
-        files: "${{ steps.meta.outputs.scan_image }}"
-
-    - name: Generate docker-cis JSON report
-      uses: docker://ghcr.io/aquasecurity/trivy:0.37.2
-      id: cis_json
-      with:
-        entrypoint: trivy
-        args: "image ${{ env.input }} ${{ steps.meta.outputs.scan_image }} --compliance ${{ env.compliance }} -f json --severity ${{ env.severity }} -o ${{ steps.meta.outputs.cis_json_file }}"
-      env:
-        compliance: docker-cis
-        severity: ${{ steps.meta.outputs.global_severity_cutoff }}
-        input: ${{ steps.docker_tar.outputs.files_exists == 'true' && '--input' || '' }}
-
-    - name: upload docker-cis JSON report
-      uses: actions/upload-artifact@v3
-      with:
-        name: ${{ steps.meta.outputs.cis_json_file }}
-        path: |
-          ${{ steps.meta.outputs.cis_json_file }}
-        if-no-files-found: warn
-
     # Fail based on severity and input parameters
     # Notify grype quick scan results in table format
     # Table format will supress any specified ignore rules
@@ -200,14 +192,3 @@ runs:
         output-format: table
         fail-build: ${{ steps.meta.outputs.global_enforce_build_failure == 'true' && steps.meta.outputs.global_enforce_build_failure || inputs.fail_build }}
         severity-cutoff: ${{ steps.meta.outputs.global_severity_cutoff }}
-
-    - name: Inspect docker-cis report
-      uses: docker://ghcr.io/aquasecurity/trivy:0.37.2
-      with:
-        entrypoint: trivy
-        args: "image ${{ env.input }} ${{ steps.meta.outputs.scan_image }} --compliance ${{ env.compliance }} -f table --severity ${{ env.severity }} --exit-code ${{ env.exit-code }}"
-      env:
-        exit-code: ${{ (steps.meta.outputs.global_enforce_build_failure == 'true' || inputs.fail_build == 'true') && '1' || '0' }}
-        compliance: docker-cis
-        severity: ${{ steps.meta.outputs.global_severity_cutoff }}
-        input: ${{ steps.docker_tar.outputs.files_exists == 'true' && '--input' || '' }}
