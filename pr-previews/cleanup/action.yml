@@ -59,7 +59,7 @@ runs:
 
             # deprecate and unpublish version, ignore error
             echo "*** deprecating: ${pkgName}@${verToRemove}"
-            res=$(npm deprecate "${pkgName}@${verToRemove}" "Deprecated PR preview" 2>&1)
+            res=$(npm deprecate "${pkgName}@${verToRemove}" "Deprecated PR preview" 2>&1 || true)
             echo "deprecate:>>>>${res}<<<<"
             if [[ ! -z $(echo "${res}"|grep " E429") ]]; then
               echo "Rate limit reached, exiting..."
@@ -72,7 +72,7 @@ runs:
 
           if [[ "${canDelete}" == "true" ]]; then
             echo "*** unpublishing: ${pkgName}@${verToRemove}"
-            res=$(npm unpublish --force "${pkgName}@${verToRemove}" 2>&1)
+            res=$(npm unpublish --force "${pkgName}@${verToRemove}" 2>&1 || true)
             echo "unpublish:>>>>>${res}<<<<"
             if [[ ! -z $(echo "${res}"|grep " E429") ]]; then
               echo "Rate limit reached, exiting..."
