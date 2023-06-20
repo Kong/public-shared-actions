@@ -71,7 +71,7 @@ runs:
 
     # Must upload artifact for output file parameter to have effect
     - name: Generate SPDX SBOM Using Syft
-      uses: anchore/sbom-action@v0.13.4
+      uses: anchore/sbom-action@v0.14.2
       id: sbom_spdx
       with:
         image: ${{ steps.meta.outputs.scan_image }}
@@ -87,7 +87,7 @@ runs:
         dependency-snapshot: false
 
     - name: Generate CycloneDX SBOM Using Syft
-      uses: anchore/sbom-action@v0.13.4
+      uses: anchore/sbom-action@v0.14.2
       id: sbom_cyclonedx
       with:
         image: ${{ steps.meta.outputs.scan_image }}
