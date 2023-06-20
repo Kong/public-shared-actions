@@ -1,6 +1,6 @@
 # PR preview actions
 
-Set of action for deal with PR previews and PR preview consumptions.
+Set of action for deal with PR previews of NPM packages and  consumption of those PR previews.
 
 ## Action implemented
 
