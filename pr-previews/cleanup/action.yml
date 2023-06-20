@@ -78,5 +78,15 @@ runs:
               echo "Rate limit reached, exiting..."
               exit 1
             fi
+
+            # this is stupid of NPMJS - they do not allow to delete specific version if
+            # any other version of the package is dependant of other package. so we wont
+            # try to unpublish if we detect 405 response once
+            if [[ ! -z $(echo "${res}"|grep " E405") ]]; then
+              echo "error 405 detected, skip unpublish attempts..."
+              canDelete="false"
+            else
+              echo "unpublish skipped ..."
+            fi
           fi
         done
