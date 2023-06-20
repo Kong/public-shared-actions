@@ -41,3 +41,11 @@ updates:
     commit-message:
       prefix: "github-actions"
       include: "scope"
+  
+  - package-ecosystem: "github-actions"
+    directory: "/code-build-actions/build-sdk-js"
+    schedule:
+      interval: "daily"
+    commit-message:
+      prefix: "github-actions"
+      include: "scope"
