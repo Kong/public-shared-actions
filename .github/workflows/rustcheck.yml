@@ -11,8 +11,12 @@ on:
     - '*'
   workflow_dispatch: {}
 
+env:
+  HAS_ACCESS_TO_GITHUB_TOKEN: ${{ github.event_name != 'pull_request' || (github.event.pull_request.head.repo.full_name == github.repository && github.actor != 'dependabot[bot]') }}
+
 jobs:
   test-rust-checks:
+    if: ${{ env.HAS_ACCESS_TO_GITHUB_TOKEN == 'true' }}
     env:
       RUST_TEST_REPOSITORY: "Kong/atc-router"
     outputs:
