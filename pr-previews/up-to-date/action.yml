@@ -1,0 +1,124 @@
+name: 'PR Up To Date'
+description: 'Is/was the PR associated with the workflow commit up to date? Works for open PRs and Squash Merges.'
+
+inputs:
+  github_token:
+    description: 'GitHub Token'
+    required: true
+
+outputs:
+  status:
+    description: 'Up to Date Status'
+    value: ${{ steps.up-to-date.outputs.status }}
+
+runs:
+  using: composite
+  steps:
+    - name: Get PR Info
+      id: 'pr-info'
+      shell: bash
+      run: |
+        # get the SHA of the latest commit to the branch of the pull request OR the SHA of the commit that triggered the workflow
+        # if the event is a pull request, github.sha will return the hidden pre-merge commit SHA (and we want the latest commit SHA)
+        # https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#pull_request
+        # https://github.com/orgs/community/discussions/25191#discussioncomment-3246770
+        sha=${{ github.event.pull_request.head.sha || github.sha }}
+
+        # curl the GH API for the pull request info associated with the commit SHA
+        # https://docs.github.com/en/rest/commits/commits#list-pull-requests-associated-with-a-commit
+        response=$(curl \
+          -H "Accept: application/vnd.github+json" \
+          -H "Authorization: Bearer ${{ inputs.github_token }} " \
+          https://api.github.com/repos/${{ github.repository }}/commits/$sha/pulls)
+
+        echo "$response"
+
+        # check the response for error messages and data length to ensure that info was returned
+        error_message=$(echo $response | jq 'try .message catch null')
+        data_length=$(echo $response | jq 'try length catch 0')
+
+        # set the merge_commit_sha and head_commit_sha variables from the response info
+        if [[ "$error_message" == null && "$data_length" -gt 0 ]]; then
+          echo "has_info=true" >> $GITHUB_OUTPUT
+          echo "merge_commit_sha=$(echo $response | jq '.[0].merge_commit_sha')" >> $GITHUB_OUTPUT
+          echo "head_commit_sha=$(echo $response | jq '.[0].head.sha')" >> $GITHUB_OUTPUT
+        else
+          echo "has_info=false" >> $GITHUB_OUTPUT
+        fi
+
+    - name: Check if Up to Date
+      id: 'up-to-date'
+      shell: bash
+      run: |
+        # if a request error occurred or no pull request info was returned, skip logic and return false
+        if [ ${{ steps.pr-info.outputs.has_info }} == true ]; then
+          # get the base_ref (target branch of the pull request) OR the ref_name (current branch that triggered the workflow)
+          # https://docs.github.com/en/actions/learn-github-actions/contexts#github-context
+          base_ref=${{ github.base_ref || github.ref_name }}
+
+          # if the event is a pull request, get the hidden pre-merge commit SHA as the merge_commit
+          # if the event is a push to the base branch, use the merge_commit_sha from the PR info request as the merge_commit
+          if [ ${{ github.event_name }} == 'pull_request' ]; then
+            merge_commit=${{ github.sha }}
+          else
+            merge_commit=${{ steps.pr-info.outputs.merge_commit_sha }}
+          fi
+          head_commit=${{ steps.pr-info.outputs.head_commit_sha }}
+
+          # git fetch the histories of the assigned base_ref and the head_commit (from the PR info request)
+          git fetch origin $base_ref
+          git fetch origin $head_commit
+
+          # use git rev-parse to get the head and previous commit SHAs of the base branch
+          base_head=$(git rev-parse origin/$base_ref)
+          base_prev=$(git rev-parse origin/${base_ref}~1)
+
+          # use git merge-base to get the merge commit's merge base SHA and the PR head commit's merge base SHA
+          merge_base=$(git merge-base $merge_commit origin/$base_ref)
+          head_base=$(git merge-base $head_commit origin/$base_ref)
+
+          echo "**"
+          echo "BASE BRANCH: $base_ref"
+          echo "BASE BRANCH HEAD: $base_head"
+          echo "BASE BRANCH PREVIOUS: $base_prev"
+          echo "**"
+          echo "PR MERGE COMMIT: $merge_commit"
+          echo "PR HEAD COMMIT: $head_commit"
+          echo "**"
+          echo "PR MERGE BASE: $merge_base"
+          echo "PR HEAD BASE: $head_base"
+          echo "**"
+
+          if [ ${{ github.event_name }} == 'push' ]; then
+            # if the PR head commit and its merge base SHAs are the same, the event was a default merge and status will return false
+            # https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/configuring-pull-request-merges/about-merge-methods-on-github
+            if [ $head_base == $head_commit ]; then
+              echo "EVENT WAS NOT A SQUASH MERGE"
+              echo "status=false" >> $GITHUB_OUTPUT
+            # a squash merge will pass this check because its PR branch's head commit merge base SHA will remain as the base branch's head commit SHA (from the most recent sync)
+            # a rebase merge will also pass this check, but would require only 1 commit in its history to pass the subsequent check; else it will return false
+            else
+              # if the PR head commit's merge base SHA matches the base branch's previous commit SHA...
+              if [ $head_base == $base_prev ]; then
+                # this means that no other commits have merged on top of the PR's merge base (before the squashed merge commit) and the PR WAS UP TO DATE!
+                echo "PR WAS UP TO DATE"
+                echo "status=true" >> $GITHUB_OUTPUT
+              else
+                echo "PR WAS OUT OF DATE"
+                echo "status=false" >> $GITHUB_OUTPUT
+              fi
+            fi
+          elif [ ${{ github.event_name }} == 'pull_request' ]; then
+            # if the merge base SHA of the branch's head commit is the current base branch's head commit SHA, the PR IS UP TO DATE!
+            if [ $head_base == $base_head ]; then
+              echo "PR IS UP TO DATE"
+              echo "status=true" >> $GITHUB_OUTPUT
+            else
+              echo "PR IS OUT OF DATE"
+              echo "status=false" >> $GITHUB_OUTPUT
+            fi
+          fi
+        else
+          echo "COMMIT HAS NO ASSOCIATED PR INFO"
+          echo "status=false" >> $GITHUB_OUTPUT
+        fi
