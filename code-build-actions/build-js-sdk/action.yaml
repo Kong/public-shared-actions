@@ -46,7 +46,7 @@ runs:
         cp -r ../openapi-generator-config/templates-js .
     - name: "Generate Node SDK"
       shell: bash
-      working-directory: ${{ github.action_path }}/code-build-actions/build-js-sdk
+      working-directory: ${{ github.action_path }}
       run: |
         yarn generate --generator-key client --cwd ${{inputs.sdk_output_directory}}
     - name: "Clean up generator files"
