@@ -44,6 +44,7 @@ runs:
       shell: bash
       working-directory: ${{inputs.sdk_output_directory}}
       run: |
+        ls
         shopt -s extglob
         rm -r !(${{inputs.oas_file_location}})
         cp ../openapi-generator-config/openapitools-js.json openapitools.json
@@ -58,6 +59,7 @@ runs:
       shell: bash
       working-directory: ${{inputs.sdk_output_directory}}/src
       run: |
+        ls
         rm -rf openapitools.json templates-js .openapi-generator-ignore .openapi-generator git_push.sh
     - name: Commit SDK changes to the PR
       uses: EndBug/add-and-commit@v9
