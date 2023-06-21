@@ -22,7 +22,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Build JS SDK
-        uses: Kong/public-shared-actions/build-js-sdk@main
+        uses: Kong/public-shared-actions/code-build-actions/build-js-sdk
   
 ```
 

@@ -1,11 +1,12 @@
 name: Build JS SDK
+author: Kong
 description: >
   This action builds a JavaScript SDK and updates an existing PR with the generated files
 inputs: 
   dry-run:
     description: 'If true, the action will not push the changes to the PR'
     required: false
-    default: false
+    default: 'false'
   token:
     description: 'A Github Token'
     required: true
@@ -19,10 +20,6 @@ inputs:
 runs:
   using: composite
   steps:
-    - name: Enter the app directory
-      shell: bash
-      run: |
-        cd ${{ inputs.app_directory }}
     - name: Checkout OpenAPI Tools
       uses: actions/checkout@v3
       with:
@@ -35,9 +32,10 @@ runs:
         node-version: "18.x"
         registry-url: "https://registry.npmjs.org"
     - name: Install Dependencies
+      working-directory: ${{ github.action_path }}/code-build-actions/build-js-sdk
       shell: bash
       run: |
-        npm install -g @openapitools/openapi-generator-cli@2.5.2
+        yarn install --frozen-lockfile
     - name: Create generator config
       shell: bash
       working-directory: ${{inputs.sdk_output_directory}}
@@ -48,9 +46,9 @@ runs:
         cp -r ../openapi-generator-config/templates-js .
     - name: "Generate Node SDK"
       shell: bash
-      working-directory: ${{inputs.sdk_output_directory}}
+      working-directory: ${{ github.action_path }}/code-build-actions/build-js-sdk
       run: |
-        openapi-generator-cli generate --generator-key client
+        yarn generate --generator-key client --cwd ${{inputs.sdk_output_directory}}
     - name: "Clean up generator files"
       shell: bash
       working-directory: ${{inputs.sdk_output_directory}}/src
@@ -58,7 +56,7 @@ runs:
         rm -rf openapitools.json templates-js .openapi-generator-ignore .openapi-generator git_push.sh
     - name: Commit SDK changes to the PR
       uses: EndBug/add-and-commit@v9
-      if: ${{ !inputs.dry-run }}
+      if: ${{ !contains(inputs.dry-run, 'false') }}
       with:
         cwd: ${{inputs.sdk_output_directory}}
         add: src

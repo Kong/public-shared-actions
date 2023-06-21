@@ -1,0 +1,15 @@
+{
+  "name": "@kong/build-js-sdk",
+  "version": "1.0.0",
+  "description": "This action builds a JavaScript SDK and updates an existing PR with the generated files",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "generate": "openapi-generator-cli generate"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@openapitools/openapi-generator-cli": "2.5.2"
+  }
+}
