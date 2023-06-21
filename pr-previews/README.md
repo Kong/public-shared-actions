@@ -21,7 +21,7 @@ If PR preview of dependant package is found - action will throw an error
 
 ```yaml
   - name: Validate No PR preview references
-    uses: Kong/shared-actions/pr-previews/validate@main
+    uses: Kong/public-shared-actions/pr-previews/validate@main
 ```
 
 To be used `on pullrequest` to prevent merging PRs that references PR previews of depended packages
@@ -45,7 +45,7 @@ If action returns `true` this means that the code in PR was `up-to-date` wih mai
 
   - name: Check if PR Up to Date
     id: 'up-to-date'
-    uses: Kong/shared-actions/pr-previews/up-to-date@main
+    uses: Kong/public-shared-actions/pr-previews/up-to-date@main
     with:
       github_token: ${{ secrets.GITHUB_TOKEN }}
 ```
@@ -62,7 +62,7 @@ Deprecates and Unpublishes PR preview packages for closed PRs. To be executed fr
     uses: actions/checkout@v3
 
   - name: Cleanup
-    uses: Kong/shared-actions/pr-previews/cleanup@main
+    uses: Kong/public-shared-actions/pr-previews/cleanup@main
     with:
       # package to cleanup PR preview versions for
       package: "@kong-ui/core"
