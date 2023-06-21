@@ -52,6 +52,7 @@ runs:
       shell: bash
       working-directory: ${{ github.action_path }}
       run: |
+        ls ${{inputs.sdk_output_directory}}
         yarn generate --generator-key client --input-spec ${{inputs.oas_file_location}}
     - name: "Clean up generator files"
       shell: bash
