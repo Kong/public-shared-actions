@@ -17,6 +17,10 @@ inputs:
     description: 'The directory where the SDK will be generated'
     required: false
     default: 'sdk'
+  oas_file_location:
+    description: 'The location of the OAS file'
+    required: false
+    default: 'openapi.yaml'
 runs:
   using: composite
   steps:
@@ -36,19 +40,19 @@ runs:
       shell: bash
       run: |
         yarn install --frozen-lockfile
-    - name: Create generator config
+    - name: Copy generator config from Kong repository
       shell: bash
       working-directory: ${{inputs.sdk_output_directory}}
       run: |
         shopt -s extglob
-        rm -r !(openapi.yaml)
+        rm -r !(${{inputs.oas_file_location}})
         cp ../openapi-generator-config/openapitools-js.json openapitools.json
         cp -r ../openapi-generator-config/templates-js .
-    - name: "Generate Node SDK"
+    - name: Generate Node SDK
       shell: bash
       working-directory: ${{ github.action_path }}
       run: |
-        yarn generate --generator-key client --cwd ${{inputs.sdk_output_directory}}
+        yarn generate --generator-key client --input-spec ${{inputs.oas_file_location}}
     - name: "Clean up generator files"
       shell: bash
       working-directory: ${{inputs.sdk_output_directory}}/src

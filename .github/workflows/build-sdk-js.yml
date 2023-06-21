@@ -28,4 +28,5 @@ jobs:
           dry-run: 'true'
           app_directory: ${{ github.workspace }}
           sdk_output_directory: ${{github.workspace}}/sdk
+          oas_file_location:  ${{github.workspace}}/sdk/openapi.yaml
           token: ${{secrets.GITHUB_TOKEN}}
