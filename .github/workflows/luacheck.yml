@@ -14,16 +14,15 @@ on:
 jobs:
   test-luacheck:
     env:
-      LUA_TEST_REPOSITORY: "${{github.repository_owner}}/kong-ee"
+      TEST_REPOSITORY: "${{github.repository_owner}}/atc-router"
     runs-on: ubuntu-latest
     name: Luacheck code analysis
     steps:
       - uses: actions/checkout@v3
       - uses: actions/checkout@v3
         with:
-          repository: ${{env.LUA_TEST_REPOSITORY}}
-          token: ${{secrets.SCIMIA_BOT_GITHUB_TOKEN}}
-          path: ${{env.LUA_TEST_REPOSITORY}}
+          repository: ${{env.TEST_REPOSITORY}}
+          path: ${{env.TEST_REPOSITORY}}
       - uses: ./code-check-actions/luacheck
         with:
-          additional_args: '--no-default-config --config ${{env.LUA_TEST_REPOSITORY}}/.luacheckrc ${{env.LUA_TEST_REPOSITORY}}'
+          additional_args: '--no-default-config --config ${{env.TEST_REPOSITORY}}/.luacheckrc ${{env.TEST_REPOSITORY}}'

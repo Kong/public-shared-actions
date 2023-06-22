@@ -14,36 +14,38 @@ Currently, these repos are using this action:
 
 ## Example usage
 
-```yaml
-uses: public-shared-actions/code-check-actions/semgrep@main
-
-```
-
 ## Detailed example
 
 ```yaml
-name: Semgrep SAST checks
+name: Semgrep
 
 on:
+  pull_request: {}
   push:
-    branches:
-      - main
-  pull_request:
-    branches:
-      - main
+    branches: 
+    - master
+    - main
+  workflow_dispatch: {}
+
 
 jobs:
-  test-semgrep-sast:
+  semgrep:
+    name: SAST
+    runs-on: ubuntu-20.04
     permissions:
       # required for all workflows
       security-events: write
       # only required for workflows in private repositories
       actions: read
       contents: read
-    runs-on: ubuntu-latest
-    name: Semgrep SAST checks
+
+    if: (github.actor != 'dependabot[bot]')
+
     steps:
       - uses: actions/checkout@v3
-      - id: sast_check
-        uses: Kong/public-shared-actions/code-check-actions/semgrep@main
+      - uses: Kong/public-shared-actions/code-check-actions/semgrep@main
+        with:
+          additional_config: '--config p/rust'
+            
+
 ```

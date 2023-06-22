@@ -44,32 +44,42 @@ uses: public-shared-actions/code-check-actions/rustcheck@main
 ## Detailed example
 
 ```yaml
-name: Rust Lint and SCA Checks
+name: Rust Code Quality
 
 on:
+  pull_request: {}
+  workflow_dispatch: {}
   push:
     branches:
       - main
-  pull_request:
-    branches:
-      - main
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
-  test-rust-sca-checks:
+  rust:
+    name: Rust Clippy & SCA
+    runs-on: ubuntu-20.04
+    
     permissions:
       # required for all workflows
       security-events: write
+      checks: write
+      pull-requests: write
       # only required for workflows in private repositories
       actions: read
       contents: read
-    outputs:
-      grype-report: ${{ steps.rust_checks.outputs.grype-sarif-report }}
-      sbom-spdx-report: ${{ steps.rust_checks.outputs.sbom-spdx-report }}
-      sbom-cyclonedx-report: ${{ steps.rust_checks.outputs.sbom-cyclonedx-report }}
-    runs-on: ubuntu-latest
-    name: Rust Lint and SCA checks
+  
+    if: (github.actor != 'dependabot[bot]')
+    
     steps:
-      - uses: actions/checkout@v3
-      - id: rust_checks
-        uses: Kong/public-shared-actions/code-check-actions/rustcheck@main
+    - name: Checkout source code
+      uses: actions/checkout@v3
+
+    - name: Rust Check
+      uses: Kong/public-shared-actions/code-check-actions/rustcheck@main
+      with:
+        asset_prefix: 'atc-router'
+        token: ${{ secrets.GITHUB_TOKEN }}
 ```

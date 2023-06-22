@@ -41,35 +41,46 @@ uses: public-shared-actions/code-check-actions/luacheck@main
 ## Detailed example
 
 ```yaml
-name: Luacheck
+name: Lua Code Quality
 
 on:
+  pull_request: {}
+  workflow_dispatch: {}
   push:
     branches:
       - main
-  pull_request:
-    branches:
-      - main
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
-  luacheck:
-    runs-on: ubuntu-latest
-    name: Lua code analysis check
+  lua:
+    name: Lua Lint
+    runs-on: ubuntu-20.04
+    permissions:
+      contents: read
+      issues: read
+      checks: write
+      pull-requests: write
+    if: (github.actor != 'dependabot[bot]')
+
     steps:
-      - uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
-
-      - name: Get changed files
-        id: changed-files
-        uses: tj-actions/changed-files@04124efe7560d15e11ea2ba96c0df2989f68f1f4ith
-        with:
-          files: |
-            **.lua
-            **.rockspec
-
-      - uses: Kong/public-shared-actions/code-check-actions/luacheck@main
-        if: steps.changed-files-excluded.outputs.any_changed == 'true'
-        with:
-            args: "${{ steps.changed-files.outputs.all_changed_files }}"
+    - name: Checkout source code
+      uses: actions/checkout@v3
+    
+    # Optional step to run on only changed files
+    - name: Get changed files
+      id: changed-files
+      uses: tj-actions/changed-files@v36
+      with: 
+        files: |
+          **.lua
+    
+    - name: Lua Check
+      if: steps.changed-files.outputs.any_changed == 'true'
+      uses: Kong/public-shared-actions/code-check-actions/luacheck@main
+      with:
+        additional_args: '--no-default-config --config .luacheckrc'
+        files: ${{ steps.changed-files.outputs.all_changed_files }}
 ```
