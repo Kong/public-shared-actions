@@ -25,6 +25,7 @@ runs:
       if: always()
       uses: actions/upload-artifact@v3
       with:
+        name: luacheck_results.zip
         path: |
           luacheck_${{github.sha}}.xml
         if-no-files-found: warn
