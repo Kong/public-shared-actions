@@ -6,6 +6,14 @@ inputs:
     description: 'Provide additional config to semgrep ci command using --config'
     required: false
     default: ''
+  codeql_upload:
+    description: 'Toggle to upload results to Github code scanning for public repositories'
+    required: false
+    default: true
+    type: choice
+    options:
+    - 'true'
+    - 'false'
 runs:
   using: 'composite'
   steps:
@@ -27,7 +35,7 @@ runs:
         if-no-files-found: warn
 
     - name: Upload SARIF to Github Code Scanning
-      if: ${{ always() && github.event.repository.visibility == 'public' }}
+      if: ${{ always() && inputs.codeql_upload == 'true' && github.event.repository.visibility == 'public' }}
       uses: github/codeql-action/upload-sarif@v2
       with:
         # Path to SARIF file relative to the root of the repository

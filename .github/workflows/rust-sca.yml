@@ -1,37 +1,38 @@
-name: Semgrep
+name: Rust SCA Test
 
 on:
-  pull_request: {}
-  push:
-    branches: 
-    - master
+  pull_request:
+    branches:
     - main
+  push:
+    branches:
+    - main
+    tags:
+    - '*'
   workflow_dispatch: {}
 
-
 jobs:
-  semgrep:
-    name: SAST
-    runs-on: ubuntu-20.04
+  test-rust-sca:
     permissions:
       # required for all workflows
       security-events: write
+      checks: write
+      pull-requests: write
       # only required for workflows in private repositories
       actions: read
       contents: read
     env:
       TEST_REPOSITORY: "${{github.repository_owner}}/atc-router"
-    if: (github.actor != 'dependabot[bot]')
-
+    runs-on: ubuntu-latest
+    name: Rust code analysis and SCA checks
     steps:
       - uses: actions/checkout@v3
       - uses: actions/checkout@v3
         with:
           repository: ${{env.TEST_REPOSITORY}}
-          token: ${{secrets.GITHUB_TOKEN}}
           path: ${{env.TEST_REPOSITORY}}
-      - uses: ./code-check-actions/semgrep
+      - uses: ./security-actions/scan-rust
         with:
-          additional_config: '--config p/rust'
+          asset_prefix: ${{env.TEST_REPOSITORY}}
+          dir: ${{ github.workspace }}/${{env.TEST_REPOSITORY}}
           codeql_upload: false
-            

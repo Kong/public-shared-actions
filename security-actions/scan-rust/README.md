@@ -1,18 +1,11 @@
-# Rust Directory Scan - Github Action
+# Rust SCA
 
-This action uses syft and grype for SCA. It will only support scanning source code directories / files and will not support the container images
+This action uses grype for source code analysis. It will only support scanning source code directories / files and will not support the container images
 
 
 The action runs the following:
-- Installs rust and tools like clippy
-- Runs `rust clippy` for linting in Warn Mode
-- SCA and CVE analysis using Syft and Grype
+- SCA and CVE analysis using Grype
 - Uploads SCA results to Github Security for public repiositories
-## User tracking
-
-Currently, these repos are using this action:
-
-[]
 
 ## Inputs
 
@@ -36,15 +29,13 @@ fail_build:
 ```
 
 ## Outputs:
-- Push: the report is available as Github CheckPR's
-- PR: Github check and Inline PR annotations
-- Code Scanning results: Grype SARIF for CVE for public results
-
+- SARIF upload to github code scanning for public repositories
+- Console log workflow output / Github check for reporting
 
 ## Detailed example
 
 ```yaml
-name: Rust Code Quality
+name: Rust SCA
 
 on:
   pull_request: {}
@@ -59,7 +50,7 @@ concurrency:
 
 jobs:
   rust:
-    name: Rust Clippy & SCA
+    name: Rust SCA
     runs-on: ubuntu-20.04
     
     permissions:
@@ -77,9 +68,8 @@ jobs:
     - name: Checkout source code
       uses: actions/checkout@v3
 
-    - name: Rust Check
-      uses: Kong/public-shared-actions/code-check-actions/rustcheck@main
+    - name: Source Code analysis
+      uses: Kong/public-shared-actions/security-actions/scan-rust@main
       with:
         asset_prefix: 'atc-router'
-        token: ${{ secrets.GITHUB_TOKEN }}
 ```

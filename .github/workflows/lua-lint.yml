@@ -12,7 +12,7 @@ on:
   workflow_dispatch: {}
 
 jobs:
-  test-luacheck:
+  test-lua-lint:
     env:
       TEST_REPOSITORY: "${{github.repository_owner}}/atc-router"
     runs-on: ubuntu-latest
@@ -23,6 +23,6 @@ jobs:
         with:
           repository: ${{env.TEST_REPOSITORY}}
           path: ${{env.TEST_REPOSITORY}}
-      - uses: ./code-check-actions/luacheck
+      - uses: ./code-check-actions/lua-lint
         with:
           additional_args: '--no-default-config --config ${{env.TEST_REPOSITORY}}/.luacheckrc ${{env.TEST_REPOSITORY}}'
