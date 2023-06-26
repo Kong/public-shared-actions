@@ -86,7 +86,7 @@ runs:
     
     # Don't fail during report generation
     - name: Vulnerability analysis of SBOM
-      uses: anchore/scan-action@v3.3.5
+      uses: anchore/scan-action@v3.3.6
       continue-on-error: true
       id: scan
       with:
@@ -124,7 +124,7 @@ runs:
     # Notify grype quick scan results in table format
     # Table format will supress any specified ignore rules
     - name: Vulnerability Report
-      uses: anchore/scan-action@v3.3.5
+      uses: anchore/scan-action@v3.3.6
       with:
         path: ${{ steps.meta.outputs.scan_dir }}
         output-format: table
