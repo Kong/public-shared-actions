@@ -30,7 +30,7 @@ jobs:
           repository: ${{env.TEST_REPOSITORY}}
           token: ${{secrets.GITHUB_TOKEN}}
           path: ${{env.TEST_REPOSITORY}}
-      - uses: ./code-check-actions/semgrep
+      - uses: ./security-actions/semgrep
         with:
           additional_config: '--config p/rust'
           codeql_upload: false

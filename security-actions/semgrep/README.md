@@ -33,7 +33,7 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
-      - uses: Kong/public-shared-actions/code-check-actions/semgrep@main
+      - uses: Kong/public-shared-actions/security-actions/semgrep@main
         with:
           additional_config: '--config p/rust'
             
