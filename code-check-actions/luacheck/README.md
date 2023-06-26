@@ -15,53 +15,62 @@ Currently, these repos are using this action:
 ## Inputs
 
 ```yaml
-args: 
+additional_args: 
     description: 'Arguments to luacheck'
     required: 'false'
     default: '.' # Default: Run luacheck on workspace dir 
 ```
 
-## Action status
-The status outcome of the action will depend based on the follwing:
+## Outputs
+- Depending on the event, refer [publishing](https://github.com/EnricoMi/publish-unit-test-result-action#publishing-test-results)
 
-- Exit code is 0 if no warnings or errors occurred.
-- Exit code is 1 if some warnings occurred but there were no syntax errors or invalid inline options.
-- Exit code is 2 if there were some syntax errors or invalid inline options.
-- Exit code is 3 if some files couldn’t be checked, typically due to an incorrect file name.
-- Exit code is 4 if there was a critical error (invalid CLI arguments, config, or cache file).
+## Action status
+- Always exit with 0 even when there are warnings / errors and be non-blocking
 
 ## Example usage
 
 ```yaml
-uses: Kong/public-shared-actions/code-check-actions/luacheck@main
-
-```
-
-## Detailed example
-
-```yaml
-name: Luacheck
+name: Lua Code Quality
 
 on:
+  pull_request: {}
+  workflow_dispatch: {}
   push:
     branches:
       - main
-  pull_request:
-    branches:
-      - main
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
-  luacheck:
-    runs-on: ubuntu-latest
-    name: Lua code analysis check
+  lua:
+    name: Lua Lint
+    runs-on: ubuntu-20.04
+    permissions:
+      contents: read
+      issues: read
+      checks: write
+      pull-requests: write
+    if: (github.actor != 'dependabot[bot]')
+
     steps:
-      - uses: actions/checkout@v3
-      - name: Get changed files
-        id: changed-files
-        uses: tj-actions/changed-files@04124efe7560d15e11ea2ba96c0df2989f68f1f4
-        with:
-          base_sha: ${{ github.event.workflow_run.head_sha }}
-      - uses: Kong/public-shared-actions/code-check-actions/luacheck@main
-        with:
-            args: "${{ steps.changed-files.outputs.all_changed_files }}"
+    - name: Checkout source code
+      uses: actions/checkout@v3
+    
+    # Optional step to run on only changed files
+    - name: Get changed files
+      id: changed-files
+      uses: tj-actions/changed-files@v36
+      with: 
+        files: |
+          **.lua
+    
+    - name: Lua Check
+      if: steps.changed-files.outputs.any_changed == 'true'
+      uses: Kong/public-shared-actions/code-check-actions/luacheck@main
+      with:
+        additional_args: '--no-default-config --config .luacheckrc'
+        files: ${{ steps.changed-files.outputs.all_changed_files }}
 ```
+
