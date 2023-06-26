@@ -32,7 +32,8 @@ runs:
       continue-on-error: true
       with:
         token: ${{ inputs.token }}
-        args: --manifest-path ${{ steps.meta.outputs.manifest_path }} -- -W clippy::correctness -W clippy::cargo -W clippy::pedantic
+        # Explicitly report all findings as warnings to not fail the reporiting status check
+        args: --manifest-path ${{ steps.meta.outputs.manifest_path }} -- -W clippy::correctness -W clippy::cargo -W clippy::suspicious -W clippy::style
         name: Rust Clippy Report
 
     # - uses: actions-rs/cargo@ae10961054e4aa8b4aa7dffede299aaf087aa33b

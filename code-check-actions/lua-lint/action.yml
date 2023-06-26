@@ -49,5 +49,6 @@ runs:
         check_name: Luacheck Report
         comment_mode: always
         action_fail: false
+        fail_on: 'nothing' # Explicitly don't fail reporting check based on test results
 
   
