@@ -53,6 +53,8 @@ runs:
               continue
             fi
           fi
+          echo "dos not belong to openPR, continue working..."
+          exit 0
 
           if [[ $(echo ${verDetails}|jq -r ".deprecated") == null ]]; then
             if [[ ! -z $(echo ${distTags}|grep "${verToRemove}") ]]; then
