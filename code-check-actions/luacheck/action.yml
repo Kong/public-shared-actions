@@ -1,13 +1,13 @@
-name: Luacheck satic analysis
+name: Luacheck
 description: Static analysis of Lua
 author: 'Kong'
 inputs:
   additional_args:
-    description: 'arguments for Luacheck'
+    description: 'Arguments for Luacheck'
     required: false
     default: '' # Scans workspace dir
   files:
-    description: ' List of files, directories and rockspecs to check'
+    description: 'List of files, directories and rockspecs to check'
     required: false
     default: '.' # Scans workspace dir
     
@@ -21,11 +21,10 @@ runs:
       with:
         args: "${{ inputs.additional_args }} -c --codes --ranges --formatter JUnit -q ${{ inputs.files }} > luacheck_${{github.sha}}.xml"
     
-    - name: Upload Luacheck results to artifacts
+    - name: Upload results to workflow
       if: always()
       uses: actions/upload-artifact@v3
       with:
-        name: luacheck_results.zip
         path: |
           luacheck_${{github.sha}}.xml
         if-no-files-found: warn
@@ -39,6 +38,7 @@ runs:
     # random workflow in the GH UI. to prevent this, we can force the check-run to be created in a separate
     # check-suite, which is created automatically if we use the credentials of a GitHub App
     # Ref: https://github.com/EnricoMi/publish-unit-test-result-action/issues/181
+    # Publishing: https://github.com/EnricoMi/publish-unit-test-result-action#publishing-test-results
     - name: Luacheck Report
       uses: EnricoMi/publish-unit-test-result-action@v2
       if: always()
