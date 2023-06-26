@@ -21,24 +21,13 @@ additional_args:
     default: '.' # Default: Run luacheck on workspace dir 
 ```
 
+## Outputs
+- Depending on the event, refer [publishing](https://github.com/EnricoMi/publish-unit-test-result-action#publishing-test-results)
+
 ## Action status
-The status outcome of the action will depend based on the follwing:
-
-<!-- - Exit code is 0 if no warnings or errors occurred.
-- Exit code is 1 if some warnings occurred but there were no syntax errors or invalid inline options.
-- Exit code is 2 if there were some syntax errors or invalid inline options.
-- Exit code is 3 if some files couldn’t be checked, typically due to an incorrect file name.
-- Exit code is 4 if there was a critical error (invalid CLI arguments, config, or cache file). -->
-
 - Always exit with 0 even when there are warnings / errors and be non-blocking
+
 ## Example usage
-
-```yaml
-uses: public-shared-actions/code-check-actions/luacheck@main
-
-```
-
-## Detailed example
 
 ```yaml
 name: Lua Code Quality
@@ -84,3 +73,4 @@ jobs:
         additional_args: '--no-default-config --config .luacheckrc'
         files: ${{ steps.changed-files.outputs.all_changed_files }}
 ```
+

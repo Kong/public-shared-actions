@@ -34,12 +34,12 @@ fail_build:
   - 'true'
   - 'false'
 ```
-## Example usage
 
-```yaml
-uses: public-shared-actions/code-check-actions/rustcheck@main
+## Outputs:
+- Push: the report is available as Github CheckPR's
+- PR: Github check and Inline PR annotations
+- Code Scanning results: Grype SARIF for CVE for public results
 
-```
 
 ## Detailed example
 

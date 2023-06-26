@@ -2,18 +2,8 @@
 
 This action uses Semgrep CI command to scan all supported platforms on a specified scan path
 
-
 The action runs the following:
 - Self detects config rules from semgrep registry
-
-## User tracking
-
-Currently, these repos are using this action:
-
-[]
-
-## Example usage
-
 ## Detailed example
 
 ```yaml
