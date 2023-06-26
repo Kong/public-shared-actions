@@ -1,0 +1,42 @@
+name:  Semgrep SAST
+description: Semgrep SAST
+author: 'Kong'
+inputs:
+  additional_config:
+    description: 'Provide additional config to semgrep ci command using --config'
+    required: false
+    default: ''
+runs:
+  using: 'composite'
+  steps:
+
+    - name: SAST Scan
+      uses: docker://returntocorp/semgrep
+      continue-on-error: true
+      with:
+        args: "semgrep ci --config auto --sarif -o semgrep_${{github.sha}}.sarif --suppress-errors --no-autofix ${{ inputs.additional_config }}"
+    
+    # Upload grype cve reports
+    - name: Upload Semgrep SARIF to Workflow
+      if: always()
+      uses: actions/upload-artifact@v3
+      with:
+        name: semgrep_sast.zip
+        path: |
+          semgrep_${{github.sha}}.sarif
+        if-no-files-found: warn
+
+    - name: Upload SARIF to Github Code Scanning
+      if: ${{ always() && github.event.repository.visibility == 'public' }}
+      uses: github/codeql-action/upload-sarif@v2
+      with:
+        # Path to SARIF file relative to the root of the repository
+        sarif_file: semgrep_${{github.sha}}.sarif
+        # Optional category for the results
+        # Used to differentiate multiple results for one commit
+        category: sast_semgrep
+    
+    # - name: Print SAST results - SARIF
+    #   shell: bash
+    #   run: |
+    #     cat semgrep_${{github.sha}}.sarif

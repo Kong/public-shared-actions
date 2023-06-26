@@ -4,13 +4,10 @@ This action uses syft and grype for SCA. It will only support scanning source co
 
 
 The action runs the following:
-- Installs rust and tools like clippy and fmt
-- Runs `rust fmt`
-- Runs `rust check`
-- Runs `rust clippy` for all standard lint groups in Warn Mode
-- SBOM in spdx and cyclonedx.
-- CVE sarif and json 
-
+- Installs rust and tools like clippy
+- Runs `rust clippy` for linting in Warn Mode
+- SCA and CVE analysis using Syft and Grype
+- Uploads SCA results to Github Security for public repiositories
 ## User tracking
 
 Currently, these repos are using this action:
@@ -20,54 +17,69 @@ Currently, these repos are using this action:
 ## Inputs
 
 ```yaml
-args: 
-    description: 'Arguments to luacheck'
-    required: 'false'
-    default: '.' # Default: Run luacheck on workspace dir 
+asset_prefix:
+    description: 'prefix for generated artifacts'
+    required: false
+    default: ''
+dir: 
+  description: 'Speicify a directory to be checked and scanned'
+  required: false
+  default: '.'
+fail_build:
+  description: 'fail the build if the vulnerability is above the severity cutoff'
+  required: false
+  default: false
+  type: choice
+  options:
+  - 'true'
+  - 'false'
 ```
 
-## Action status
-The status outcome of the action will depend based on the follwing:
+## Outputs:
+- Push: the report is available as Github CheckPR's
+- PR: Github check and Inline PR annotations
+- Code Scanning results: Grype SARIF for CVE for public results
 
-- Exit code is 0 if no warnings or errors occurred.
-- Exit code is 1 if some warnings occurred but there were no syntax errors or invalid inline options.
-- Exit code is 2 if there were some syntax errors or invalid inline options.
-- Exit code is 3 if some files couldn’t be checked, typically due to an incorrect file name.
-- Exit code is 4 if there was a critical error (invalid CLI arguments, config, or cache file).
-
-## Example usage
-
-```yaml
-uses: Kong/public-shared-actions/code-check-actions/rustcheck@main
-
-```
 
 ## Detailed example
 
 ```yaml
-name: Test Rust Lint and SCA Checks
+name: Rust Code Quality
 
 on:
+  pull_request: {}
+  workflow_dispatch: {}
   push:
     branches:
       - main
-  pull_request:
-    branches:
-      - main
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
-  test-rust-checks:
-    outputs:
-      grype-report: ${{ steps.rust_checks.outputs.grype-sarif-report }}
-      sbom-spdx-report: ${{ steps.rust_checks.outputs.sbom-spdx-report }}
-      sbom-cyclonedx-report: ${{ steps.rust_checks.outputs.sbom-cyclonedx-report }}
-    runs-on: ubuntu-latest
-    name: Rust scan and vulnerability SCA checks
+  rust:
+    name: Rust Clippy & SCA
+    runs-on: ubuntu-20.04
+    
+    permissions:
+      # required for all workflows
+      security-events: write
+      checks: write
+      pull-requests: write
+      # only required for workflows in private repositories
+      actions: read
+      contents: read
+  
+    if: (github.actor != 'dependabot[bot]')
+    
     steps:
-      - uses: actions/checkout@v3
-      - id: rust_checks
-        uses: Kong/public-shared-actions/code-check-actions/rustcheck@main
-        with:
-          asset_prefix: ${{ env.DOCKER_BASE_IMAGE_NAME }}
-          dir: ${{ github.workspace }}
+    - name: Checkout source code
+      uses: actions/checkout@v3
+
+    - name: Rust Check
+      uses: Kong/public-shared-actions/code-check-actions/rustcheck@main
+      with:
+        asset_prefix: 'atc-router'
+        token: ${{ secrets.GITHUB_TOKEN }}
 ```

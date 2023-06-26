@@ -1,38 +1,36 @@
-name: Rust SCA and Lint Test
+name: Semgrep
 
 on:
-  pull_request:
-    branches:
-    - main
+  pull_request: {}
   push:
-    branches:
+    branches: 
+    - master
     - main
-    tags:
-    - '*'
   workflow_dispatch: {}
 
+
 jobs:
-  test-rust-sca:
+  semgrep:
+    name: SAST
+    runs-on: ubuntu-20.04
     permissions:
       # required for all workflows
       security-events: write
-      checks: write
-      pull-requests: write
       # only required for workflows in private repositories
       actions: read
       contents: read
     env:
       TEST_REPOSITORY: "${{github.repository_owner}}/atc-router"
-    runs-on: ubuntu-latest
-    name: Rust code analysis and SCA checks
+    if: (github.actor != 'dependabot[bot]')
+
     steps:
       - uses: actions/checkout@v3
       - uses: actions/checkout@v3
         with:
           repository: ${{env.TEST_REPOSITORY}}
-          path: ${{env.TEST_REPOSITORY}}
-      - uses: ./code-check-actions/rustcheck
-        with:
-          asset_prefix: ${{env.TEST_REPOSITORY}}
           token: ${{secrets.GITHUB_TOKEN}}
-          dir: ${{ github.workspace }}/${{env.TEST_REPOSITORY}}
+          path: ${{env.TEST_REPOSITORY}}
+      - uses: Scimia/public-shared-actions/code-check-actions/semgrep@main
+        with:
+          additional_config: '--config p/rust'
+            
