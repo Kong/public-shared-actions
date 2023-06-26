@@ -47,7 +47,7 @@ runs:
           echo "${pkgName}@${verToRemove}"
           prNumber=$(echo ${verToRemove} | sed 's/.*\-pr\.//g'| cut -d'.' -f 1)
 
-          if [[ ! -z $(echo ${openPRs} ||sed 's/\"//g'| sed 's/[\[\]]/,/g' | grep ",${prNumber},") ]]; then
+          if [[ ! -z $(echo ${openPRs} | sed 's/\"//g'| sed 's/\[/,/g' | sed 's/\]/,/g' | grep ",${prNumber},") ]]; then
             if [[ ! -z $(echo ${distTags}|grep "${verToRemove}") ]]; then
               echo "${pkgName}@${verToRemove}: belongs to open PR and tagged as PR preview, skip..."
               continue
