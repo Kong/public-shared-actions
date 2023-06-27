@@ -26,7 +26,11 @@ runs:
 
         # get the list of the "-pr." published version for the packages
         pkgDetails=$(npm view "${pkgName}" --json)
-        prVersions=($(echo ${pkgDetails}| jq -r '.versions' | grep '\-pr.'| sed 's/[,\"]//g'))
+        prVersions=($(echo ${pkgDetails}| jq -r '.versions' | grep '\-pr.'| tac | sed 's/[,\"]//g'))
+        if [[ -z "${prVersions}" ]]; then
+          echo "No preview versions found, exiting..."
+          exit 0
+        fi
 
         distTags=$(echo ${pkgDetails}|jq -r '."dist-tags"')
 
@@ -43,7 +47,7 @@ runs:
           echo "${pkgName}@${verToRemove}"
           prNumber=$(echo ${verToRemove} | sed 's/.*\-pr\.//g'| cut -d'.' -f 1)
 
-          if [[ ! -z $(echo ${openPRs} | grep "\"${prNumber}\"") ]]; then
+          if [[ ! -z $(echo ${openPRs} | sed 's/\"//g'| sed 's/\[/,/g' | sed 's/\]/,/g' | grep ",${prNumber},") ]]; then
             if [[ ! -z $(echo ${distTags}|grep "${verToRemove}") ]]; then
               echo "${pkgName}@${verToRemove}: belongs to open PR and tagged as PR preview, skip..."
               continue
