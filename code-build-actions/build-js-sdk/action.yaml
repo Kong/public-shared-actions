@@ -1,11 +1,12 @@
 name: Build JS SDK
+author: Kong
 description: >
   This action builds a JavaScript SDK and updates an existing PR with the generated files
 inputs: 
   dry-run:
     description: 'If true, the action will not push the changes to the PR'
     required: false
-    default: false
+    default: 'false'
   token:
     description: 'A Github Token'
     required: true
@@ -16,13 +17,13 @@ inputs:
     description: 'The directory where the SDK will be generated'
     required: false
     default: 'sdk'
+  oas_file_location:
+    description: 'The location of the OAS file'
+    required: false
+    default: 'openapi.yaml'
 runs:
   using: composite
   steps:
-    - name: Enter the app directory
-      shell: bash
-      run: |
-        cd ${{ inputs.app_directory }}
     - name: Checkout OpenAPI Tools
       uses: actions/checkout@v3
       with:
@@ -35,30 +36,34 @@ runs:
         node-version: "18.x"
         registry-url: "https://registry.npmjs.org"
     - name: Install Dependencies
+      working-directory: ${{ github.action_path }}
       shell: bash
       run: |
-        npm install -g @openapitools/openapi-generator-cli@2.5.2
-    - name: Create generator config
+        yarn install --frozen-lockfile
+    - name: Copy generator config from Kong repository
       shell: bash
       working-directory: ${{inputs.sdk_output_directory}}
       run: |
+        ls
         shopt -s extglob
-        rm -r !(openapi.yaml)
+        rm -r !(${{inputs.oas_file_location}})
         cp ../openapi-generator-config/openapitools-js.json openapitools.json
         cp -r ../openapi-generator-config/templates-js .
-    - name: "Generate Node SDK"
+    - name: Generate Node SDK
       shell: bash
-      working-directory: ${{inputs.sdk_output_directory}}
+      working-directory: ${{ github.action_path }}
       run: |
-        openapi-generator-cli generate --generator-key client
+        ls ${{inputs.sdk_output_directory}}
+        yarn generate --generator-key client --input-spec ${{inputs.oas_file_location}}
     - name: "Clean up generator files"
       shell: bash
       working-directory: ${{inputs.sdk_output_directory}}/src
       run: |
+        ls
         rm -rf openapitools.json templates-js .openapi-generator-ignore .openapi-generator git_push.sh
     - name: Commit SDK changes to the PR
       uses: EndBug/add-and-commit@v9
-      if: ${{ !inputs.dry-run }}
+      if: ${{ !contains(inputs.dry-run, 'false') }}
       with:
         cwd: ${{inputs.sdk_output_directory}}
         add: src
