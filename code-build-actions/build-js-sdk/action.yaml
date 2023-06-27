@@ -50,7 +50,7 @@ runs:
       shell: bash
       working-directory: ${{inputs.sdk_output_directory}}
       run: |
-        openapi-generator-cli generate --generator-key client
+        openapi-generator-cli generate --generator-key client -o src
     - name: "Clean up generator files"
       shell: bash
       working-directory: ${{inputs.sdk_output_directory}}/src
