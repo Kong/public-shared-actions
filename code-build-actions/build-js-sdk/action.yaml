@@ -5,7 +5,7 @@ inputs:
   dry-run:
     description: 'If true, the action will not push the changes to the PR'
     required: false
-    default: false
+    default: 'false'
   token:
     description: 'A Github Token'
     required: true
@@ -58,7 +58,7 @@ runs:
         rm -rf openapitools.json templates-js .openapi-generator-ignore .openapi-generator git_push.sh
     - name: Commit SDK changes to the PR
       uses: EndBug/add-and-commit@v9
-      if: ${{ !inputs.dry-run }}
+      if: ${{ inputs.dry-run != 'true' }}
       with:
         cwd: ${{inputs.sdk_output_directory}}
         add: src
