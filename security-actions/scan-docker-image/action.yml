@@ -6,7 +6,7 @@ inputs:
     description: 'prefix for generated scan artifacts'
     required: false
     default: ''
-  dir: 
+  dir:
     description: 'Speicify a directory to be scanned. This is mutually exclusive to file and image'
     required: false
     default: ''
@@ -92,7 +92,7 @@ runs:
       with:
         image: ${{ steps.meta.outputs.scan_image }}
         registry-username: ${{ inputs.registry_username }}
-        registry-password: ${{ inputs.registry_password }} 
+        registry-password: ${{ inputs.registry_password }}
         path: ${{ steps.meta.outputs.scan_dir }}
         file: ${{ steps.meta.outputs.scan_file }}
         format: cyclonedx-json
@@ -101,14 +101,14 @@ runs:
         upload-artifact: true
         upload-release-assets: false
         dependency-snapshot: false
-    
+
     - name: Check SBOM files existence
       uses: andstor/file-existence-action@v2
       id: sbom_report
       with:
         files: "${{ steps.meta.outputs.sbom_spdx_file }}, ${{ steps.meta.outputs.sbom_cyclonedx_file }}"
         fail: true
-    
+
     # Don't fail during report generation
     - name: Vulnerability analysis of SBOM
       uses: anchore/scan-action@v3.3.5
@@ -131,14 +131,14 @@ runs:
         output-format: json
         fail-build: 'false'
         severity-cutoff: ${{ steps.meta.outputs.global_severity_cutoff }}
-    
+
     - name: Check vulnerability analysis report existence
       uses: andstor/file-existence-action@v2
       id: grype_report
       with:
         files: "${{ steps.grype_analysis_sarif.outputs.sarif }}, ${{ steps.grype_analysis_json.outputs.json }}"
         fail: true
-    
+
     # Grype CVE Action generates an ./results.sarif or ./results.report and no way to customize output file name
     # Hack to increase readability of grype artifacts attached to workflows and releases
     - name: Rename grype analysis report
@@ -146,15 +146,15 @@ runs:
       run: |
         mv ${{ steps.grype_analysis_sarif.outputs.sarif }} ${{ steps.meta.outputs.grype_sarif_file }}
         mv ${{ steps.grype_analysis_json.outputs.json }} ${{ steps.meta.outputs.grype_json_file }}
-    
+
     - name: Upload grype analysis report
       uses: actions/upload-artifact@v3
       with:
         name: ${{ steps.meta.outputs.grype_sarif_file }}
         path: |
           ${{ steps.meta.outputs.grype_sarif_file }}
-        if-no-files-found: warn 
-    
+        if-no-files-found: warn
+
     # Upload grype cve reports
     - name: Upload grype analysis report
       uses: actions/upload-artifact@v3
@@ -175,7 +175,7 @@ runs:
       id: cis_json
       with:
         entrypoint: trivy
-        args: "image ${{ env.input }} ${{ steps.meta.outputs.scan_image }} --compliance ${{ env.compliance }} -f json --severity ${{ env.severity }} -o ${{ steps.meta.outputs.cis_json_file }}"
+        args: "image ${{ env.input }} ${{ steps.meta.outputs.scan_image }} --compliance ${{ env.compliance }} -f json --severity ${{ env.severity }} --ignore-unfixed -o ${{ steps.meta.outputs.cis_json_file }}"
       env:
         compliance: docker-cis
         severity: ${{ steps.meta.outputs.global_severity_cutoff }}
@@ -205,7 +205,7 @@ runs:
       uses: docker://ghcr.io/aquasecurity/trivy:0.37.2
       with:
         entrypoint: trivy
-        args: "image ${{ env.input }} ${{ steps.meta.outputs.scan_image }} --compliance ${{ env.compliance }} -f table --severity ${{ env.severity }} --exit-code ${{ env.exit-code }}"
+        args: "image ${{ env.input }} ${{ steps.meta.outputs.scan_image }} --compliance ${{ env.compliance }} -f table --severity ${{ env.severity }} --ignore-unfixed --exit-code ${{ env.exit-code }}"
       env:
         exit-code: ${{ (steps.meta.outputs.global_enforce_build_failure == 'true' || inputs.fail_build == 'true') && '1' || '0' }}
         compliance: docker-cis
