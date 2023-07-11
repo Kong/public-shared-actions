@@ -11,7 +11,7 @@ runs:
 
         for pkg in $(find ./ -name package.json ! -path '*/node_modules/*' ! -path '*/__template__/*')
         do
-          inPackage=$(jq -r '{dependencies: .dependencies, devDependencies: .devDependencies, peerDependencies: .peerDependencies}' ${pkg} |  jq .[] | cut -d":" -f2|grep -E "\-pr\.[0-9]+\." || true)
+          inPackage=$(jq -r '{dependencies: .dependencies, devDependencies: .devDependencies, peerDependencies: .peerDependencies}' ${pkg} | jq '.[]' | cut -d":" -f2 | grep -E "(\-pr\.[0-9]+\.|@pr\-[0-9]+)" || true)
           if [[ "${inPackage}" != "" ]]; then
             if [[ "${previewPkgsDetected}" != "" ]]; then
               previewPkgsDetected="${previewPkgsDetected}\n"
