@@ -17,9 +17,15 @@ manifest_dir:
 ```
 
 ## Outputs:
-- Push: Commit check summary
-- PR: Github check Summary and PR annotations
 
+- All Clippy Findings are reported as `Warnings` on the github check `Rust Clippy Report`
+
+- On Push: Commit check summary
+- On PR: Github check Summary and PR annotations
+
+## Action Output
+- Report findings as warnings and be non-blocking
+- The failure mode of build is not configurable based on shared action outcome
 
 ## Detailed example
 
