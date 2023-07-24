@@ -6,12 +6,6 @@ This action analyzes all changed lua files using [lunarmodules/luacheck](https:/
 
 This action looks for any `cli` arguments and a deafult `.luacheckrc` config to derive the final configuaration as mentioned in [docs](https://luacheck.readthedocs.io/en/stable/cli.html#command-line-options)
 
-## User tracking
-
-Currently, these repos are using this action:
-
-[]
-
 ## Inputs
 
 ```yaml
@@ -24,8 +18,9 @@ additional_args:
 ## Outputs
 - Depending on the event, refer [publishing](https://github.com/EnricoMi/publish-unit-test-result-action#publishing-test-results)
 
-## Action status
+## Action Output
 - Always exit with 0 even when there are warnings / errors and be non-blocking
+- The failure mode of build is not configurable based on shared action outcome
 
 ## Example usage
 

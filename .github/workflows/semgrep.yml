@@ -34,4 +34,5 @@ jobs:
         with:
           additional_config: '--config p/rust'
           codeql_upload: false
+          fail_on_findings: true
             

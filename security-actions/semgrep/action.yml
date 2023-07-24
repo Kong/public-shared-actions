@@ -14,15 +14,24 @@ inputs:
     options:
     - 'true'
     - 'false'
+  fail_on_findings:
+    description: 'Fail build / job on semgrep findings/errors'
+    required: false
+    default: false
+    type: choice
+    options:
+    - 'true'
+    - 'false'
 runs:
   using: 'composite'
   steps:
 
     - name: SAST Scan
       uses: docker://returntocorp/semgrep
+      id: semgrep
       continue-on-error: true
       with:
-        args: "semgrep ci --config auto --sarif -o semgrep_${{github.sha}}.sarif --suppress-errors --no-autofix ${{ inputs.additional_config }}"
+        args: "semgrep ci --config auto --sarif -o semgrep_${{github.sha}}.sarif --no-autofix ${{ inputs.additional_config }}"
     
     # Upload grype cve reports
     - name: Upload Semgrep SARIF to Workflow
@@ -44,7 +53,9 @@ runs:
         # Used to differentiate multiple results for one commit
         category: sast_semgrep
     
-    # - name: Print SAST results - SARIF
-    #   shell: bash
-    #   run: |
-    #     cat semgrep_${{github.sha}}.sarif
+    - name: Fail on findings
+      if: ${{ always() && inputs.fail_on_findings == 'true' && steps.semgrep.outcome == 'failure' }}
+      shell: bash
+      run: |
+        echo "::error::Semgrep has detected findings. For findings, check workflow artifact: semgrep_${{github.sha}}.sarif / Github Security analysis"
+        exit 1
