@@ -57,5 +57,5 @@ runs:
       if: ${{ always() && inputs.fail_on_findings == 'true' && steps.semgrep.outcome == 'failure' }}
       shell: bash
       run: |
-        echo "::error::Semgrep has detected findings. For findings, check workflow artifact: semgrep_${{github.sha}}.sarif / Github Security analysis"
+        echo "::error::Semgrep has detected findings. For findings, check workflow artifact: semgrep_sast.zip / Github Security analysis"
         exit 1
