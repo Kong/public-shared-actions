@@ -46,7 +46,6 @@ runs:
         do
           echo " "
           echo "$((current++))/${total}"
-          continue
 
           verDetails=$(npm view "${pkgName}@${verToRemove}" --json)
 
