@@ -24,7 +24,7 @@ runs:
         echo "package: ${pkgName}"
         echo "openPRs: ${openPRs}"
 
-        oldestDate=$(date -j -v-${{ inputs.days }}d +%s)
+        oldestDate=$(date -v-${{ inputs.days }}d +%s)
         echo "oldestDate:${oldestDate}"
 
         current=1
