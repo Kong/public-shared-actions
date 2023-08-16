@@ -4,6 +4,9 @@ inputs:
   package:
     description: Package to cleanup PR versions
     required: true
+  days:
+    description: Only clean up the versions that are days-to-cleanup newer
+    default: 40
   openPRs:
     description: List of open PRs in the repo
 
@@ -20,6 +23,9 @@ runs:
         echo " "
         echo "package: ${pkgName}"
         echo "openPRs: ${openPRs}"
+
+        oldestDate=$(date -j -v-${{ inputs.days }}d +%s)
+        echo "oldestDate:${oldestDate}"
 
         current=1
         canDelete="true"
