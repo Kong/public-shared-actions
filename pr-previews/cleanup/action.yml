@@ -32,7 +32,7 @@ runs:
 
         # get the list of the "-pr." published version for the packages
         pkgDetails=$(npm view "${pkgName}" --json)
-        prVersions=($(echo ${pkgDetails}| jq -r '.versions' | grep '\-pr.'| tac | sed 's/[,\"]//g'))
+        prVersions=($(echo ${pkgDetails} | jq -r '.time' | jq -r 'to_entries' | jq '[.[] | select(.value |.[0:19] +"Z" | fromdateiso8601 > ${oldestDate})]'| jq '[.[] | .key]'| grep "\-pr." | tac | sed 's/[,\"]//g'))
         if [[ -z "${prVersions}" ]]; then
           echo "No preview versions found, exiting..."
           exit 0
@@ -46,6 +46,7 @@ runs:
         do
           echo " "
           echo "$((current++))/${total}"
+          continue
 
           verDetails=$(npm view "${pkgName}@${verToRemove}" --json)
 
