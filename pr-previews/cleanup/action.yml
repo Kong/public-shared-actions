@@ -47,6 +47,11 @@ runs:
           echo " "
           echo "$((current++))/${total}"
 
+          if [[ -z "$(echo ${pkgDetails} | jq -r '.versions'|grep ${verToRemove})" ]]; then
+            echo "Version already removed, skip..."
+            continue
+          fi
+
           verDetails=$(npm view "${pkgName}@${verToRemove}" --json)
 
           # validate that the version doesn't belong to open PR
