@@ -18,8 +18,8 @@ jobs:
     runs-on: ubuntu-latest
     name: Luacheck code analysis
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
         with:
           repository: ${{env.TEST_REPOSITORY}}
           path: ${{env.TEST_REPOSITORY}}

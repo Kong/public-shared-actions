@@ -18,7 +18,7 @@ jobs:
     env:
       IMAGE: kong/kong-gateway-dev:latest #particular reason for the choice of image: test multi arch image sbom
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
 
     - name: Install regctl
       uses: regclient/actions/regctl-installer@main
