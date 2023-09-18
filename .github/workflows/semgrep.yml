@@ -1,0 +1,38 @@
+name: Semgrep
+
+on:
+  pull_request: {}
+  push:
+    branches: 
+    - master
+    - main
+  workflow_dispatch: {}
+
+
+jobs:
+  semgrep:
+    name: SAST
+    runs-on: ubuntu-20.04
+    permissions:
+      # required for all workflows
+      security-events: write
+      # only required for workflows in private repositories
+      actions: read
+      contents: read
+    env:
+      TEST_REPOSITORY: "${{github.repository_owner}}/atc-router"
+    if: (github.actor != 'dependabot[bot]')
+
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/checkout@v3
+        with:
+          repository: ${{env.TEST_REPOSITORY}}
+          token: ${{secrets.GITHUB_TOKEN}}
+          path: ${{env.TEST_REPOSITORY}}
+      - uses: ./security-actions/semgrep
+        with:
+          additional_config: '--config p/rust'
+          codeql_upload: false
+          fail_on_findings: false
+            
