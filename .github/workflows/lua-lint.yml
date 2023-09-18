@@ -1,0 +1,28 @@
+name: Luacheck Test
+
+on:
+  pull_request:
+    branches:
+    - main
+  push:
+    branches:
+    - main
+    tags:
+    - '*'
+  workflow_dispatch: {}
+
+jobs:
+  test-lua-lint:
+    env:
+      TEST_REPOSITORY: "${{github.repository_owner}}/atc-router"
+    runs-on: ubuntu-latest
+    name: Luacheck code analysis
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/checkout@v3
+        with:
+          repository: ${{env.TEST_REPOSITORY}}
+          path: ${{env.TEST_REPOSITORY}}
+      - uses: ./code-check-actions/lua-lint
+        with:
+          additional_args: '--no-default-config --config ${{env.TEST_REPOSITORY}}/.luacheckrc ${{env.TEST_REPOSITORY}}'

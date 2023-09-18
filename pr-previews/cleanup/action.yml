@@ -4,6 +4,9 @@ inputs:
   package:
     description: Package to cleanup PR versions
     required: true
+  days:
+    description: Only clean up the versions that are days-to-cleanup newer
+    default: 40
   openPRs:
     description: List of open PRs in the repo
 
@@ -21,12 +24,19 @@ runs:
         echo "package: ${pkgName}"
         echo "openPRs: ${openPRs}"
 
+        oldestDate=$(date -d '-${{ inputs.days }} day' +%s)
+        echo "oldestDate:${oldestDate}"
+
         current=1
         canDelete="true"
 
         # get the list of the "-pr." published version for the packages
         pkgDetails=$(npm view "${pkgName}" --json)
-        prVersions=($(echo ${pkgDetails}| jq -r '.versions' | grep '\-pr.'| sed 's/[,\"]//g'))
+        prVersions=($(echo ${pkgDetails} | jq -r '.time' | jq -r 'to_entries' | jq --arg jq_oldestDate ${oldestDate} '[.[] | select(.value |.[0:19] +"Z" | fromdateiso8601 > ($jq_oldestDate|tonumber))]' | jq '[.[] | .key]'| grep "\-pr." | tac | sed 's/[,\"]//g'))
+        if [[ -z "${prVersions}" ]]; then
+          echo "No preview versions found, exiting..."
+          exit 0
+        fi
 
         distTags=$(echo ${pkgDetails}|jq -r '."dist-tags"')
 
@@ -37,13 +47,18 @@ runs:
           echo " "
           echo "$((current++))/${total}"
 
+          if [[ -z "$(echo ${pkgDetails} | jq -r '.versions'|grep ${verToRemove})" ]]; then
+            echo "Version already removed, skip..."
+            continue
+          fi
+
           verDetails=$(npm view "${pkgName}@${verToRemove}" --json)
 
           # validate that the version doesn't belong to open PR
           echo "${pkgName}@${verToRemove}"
           prNumber=$(echo ${verToRemove} | sed 's/.*\-pr\.//g'| cut -d'.' -f 1)
 
-          if [[ ! -z $(echo ${openPRs} | grep "\"${prNumber}\"") ]]; then
+          if [[ ! -z $(echo ${openPRs} | sed 's/\"//g'| sed 's/\[/,/g' | sed 's/\]/,/g' | grep ",${prNumber},") ]]; then
             if [[ ! -z $(echo ${distTags}|grep "${verToRemove}") ]]; then
               echo "${pkgName}@${verToRemove}: belongs to open PR and tagged as PR preview, skip..."
               continue

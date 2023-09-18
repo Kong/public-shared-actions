@@ -1,0 +1,95 @@
+name: Rust SCA
+description: Rust SCA using grype
+author: 'Kong'
+inputs:
+  asset_prefix:
+    description: 'prefix for generated artifacts'
+    required: false
+    default: ''
+  dir: 
+    description: 'Speicify a scan directory that must contain cargo.lock and cargo.toml'
+    required: false
+    default: '.'
+  fail_build:
+    description: 'fail the build if the vulnerability is above the severity cutoff'
+    required: false
+    default: false
+    type: choice
+    options:
+    - 'true'
+    - 'false'
+  codeql_upload:
+    description: 'Toggle to upload results to Github code scanning for public repositories'
+    required: false
+    default: true
+    type: choice
+    options:
+    - 'true'
+    - 'false'
+
+outputs:
+  grype-json-report:
+    description: 'vulnerability json report'
+    value: ${{ steps.grype_analysis.outputs.json }}
+  grype-sarif-report:
+    description: 'vulnerability sarif report'
+    value: ${{ steps.grype_analysis.outputs.sarif }}
+
+runs:
+  using: composite
+  steps:
+
+    - name: Set Scan Job Metadata
+      shell: bash
+      id: meta
+      env:
+        DIR: ${{ inputs.dir }}
+        ASSET_PREFIX: ${{ inputs.asset_prefix }}
+      run: $GITHUB_ACTION_PATH/scripts/scan-metadata.sh
+    
+    # Don't fail during report generation
+    - name: Vulnerability analysis of SBOM
+      uses: anchore/scan-action@v3.3.5
+      continue-on-error: true
+      id: scan
+      with:
+        path: ${{ steps.meta.outputs.scan_dir }}
+        output-format: sarif
+        fail-build: 'false'
+        severity-cutoff: ${{ steps.meta.outputs.global_severity_cutoff }}
+        add-cpes-if-none: true
+    
+    - name: Publish SARIF to github code scanning
+      if: ${{ always() && inputs.codeql_upload == 'true' && github.event.repository.visibility == 'public' }}
+      continue-on-error: true
+      uses: github/codeql-action/upload-sarif@v2
+      with:
+        sarif_file: ${{ steps.scan.outputs.sarif }}
+        category: sca_rust
+    
+    # Grype CVE Action generates an ./results.sarif or ./results.report and no way to customize output file name
+    # Hack to increase readability of grype artifacts attached to workflows and releases
+    - name: Rename grype analysis report
+      shell: bash
+      run: |
+        mv ${{ steps.scan.outputs.sarif }} ${{ steps.meta.outputs.grype_sarif_file }}
+
+    - name: Publish SARIF to github workflow artifact
+      if: always()
+      uses: actions/upload-artifact@v3
+      with:
+        name: ${{ steps.meta.outputs.grype_sarif_file }}
+        path: |
+          ${{ steps.meta.outputs.grype_sarif_file }}
+        if-no-files-found: warn
+
+    # Fail based on severity and input parameters
+    # Notify grype quick scan results in table format
+    # Table format will supress any specified ignore rules
+    - name: Vulnerability Report
+      uses: anchore/scan-action@v3.3.5
+      with:
+        path: ${{ steps.meta.outputs.scan_dir }}
+        output-format: table
+        fail-build: ${{ steps.meta.outputs.global_enforce_build_failure == 'true' && steps.meta.outputs.global_enforce_build_failure || inputs.fail_build }}
+        severity-cutoff: ${{ steps.meta.outputs.global_severity_cutoff }}

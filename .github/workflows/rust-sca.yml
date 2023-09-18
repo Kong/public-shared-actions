@@ -1,0 +1,38 @@
+name: Rust SCA Test
+
+on:
+  pull_request:
+    branches:
+    - main
+  push:
+    branches:
+    - main
+    tags:
+    - '*'
+  workflow_dispatch: {}
+
+jobs:
+  test-rust-sca:
+    permissions:
+      # required for all workflows
+      security-events: write
+      checks: write
+      pull-requests: write
+      # only required for workflows in private repositories
+      actions: read
+      contents: read
+    env:
+      TEST_REPOSITORY: "${{github.repository_owner}}/atc-router"
+    runs-on: ubuntu-latest
+    name: Rust code analysis and SCA checks
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/checkout@v3
+        with:
+          repository: ${{env.TEST_REPOSITORY}}
+          path: ${{env.TEST_REPOSITORY}}
+      - uses: ./security-actions/scan-rust
+        with:
+          asset_prefix: ${{env.TEST_REPOSITORY}}
+          dir: ${{ github.workspace }}/${{env.TEST_REPOSITORY}}
+          codeql_upload: false
