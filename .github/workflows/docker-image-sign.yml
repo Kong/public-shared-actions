@@ -1,0 +1,70 @@
+name: Docker Sign Test
+
+on:
+  pull_request:
+    branches:
+    - main
+  push:
+    branches:
+    - main
+    tags:
+    - '*'
+
+jobs:
+  test-sign-docker-image:
+    if: ${{ github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository }}
+    name: Test Sign Docker Image
+    runs-on: ubuntu-22.04
+    env:
+      IMAGE: kongcloud/security-test-repo-pub:ubuntu_23_10 #particular reason for the choice of image: test multi arch image
+      TAGS: kongcloud/security-test-repo-pub:ubuntu_23_10, kongcloud/security-test-repo-pub:ubuntu
+    steps:
+
+    - uses: actions/checkout@v3
+
+    - name: Install regctl
+      uses: regclient/actions/regctl-installer@main
+
+    - name: Login to DockerHub
+      if: success()
+      uses: docker/login-action@v3
+      with:
+        username: ${{ secrets.GHA_DOCKERHUB_PULL_USER }}
+        password: ${{ secrets.GHA_KONG_ORG_DOCKERHUB_PUBLIC_TOKEN }}
+
+    - name: Parse Architecture Specific Image Manifest Digests
+      id: image_manifest_metadata
+      run: |
+        manifest_list_exists="$(
+          if regctl manifest get "${IMAGE}" --format raw-body --require-list -v panic &> /dev/null; then
+            echo true
+          else
+            echo false
+          fi
+        )"
+        echo "manifest_list_exists=$manifest_list_exists"
+        echo "manifest_list_exists=$manifest_list_exists" >> $GITHUB_OUTPUT
+
+        manifest_sha="$(regctl image digest "${IMAGE}" || echo '')"
+        amd64_sha="$(regctl image digest "${IMAGE}" --platform linux/amd64 || echo '')"
+        arm64_sha="$(regctl image digest "${IMAGE}" --platform linux/arm64 || echo '')"
+
+        echo "manifest_sha=$manifest_sha"
+        echo "manifest_sha=$manifest_sha" >> $GITHUB_OUTPUT
+        echo "amd64_sha=$amd64_sha"
+        echo "amd64_sha=$amd64_sha" >> $GITHUB_OUTPUT
+        echo "arm64_sha=$arm64_sha"
+        echo "arm64_sha=$arm64_sha" >> $GITHUB_OUTPUT
+
+    - name: Sign Image digest
+      id: sign_image
+      if: steps.image_manifest_metadata.outputs.manifest_sha != ''
+      uses: ./security-actions/sign-docker-image
+      with:
+        cosign_output_prefix: ubuntu-23-10
+        signature_registry: kongcloud/security-test-repo-sig-pub
+        tags: ${{ env.TAGS }} 
+        image_digest: ${{ steps.image_manifest_metadata.outputs.manifest_sha }}
+        multi_platform: true
+        rekor_transparency: true
+        
