@@ -13,6 +13,7 @@
 #### Workflow / Job Permissions for Keyless OIDC Signing:
 ```yaml
 permissions:
+  packages: write
   id-token: write # needed for signing the images with GitHub OIDC Token
 ```
 

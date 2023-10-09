@@ -9,9 +9,16 @@ on:
     - main
     tags:
     - '*'
+  workflow_dispatch: {}
 
 jobs:
   test-sign-docker-image:
+
+    permissions:
+      contents: read
+      packages: write # needed to upload to packages to registry
+      id-token: write # needed for signing the images with GitHub OIDC Token
+
     if: ${{ github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository }}
     name: Test Sign Docker Image
     runs-on: ubuntu-22.04
@@ -24,13 +31,6 @@ jobs:
 
     - name: Install regctl
       uses: regclient/actions/regctl-installer@main
-
-    - name: Login to DockerHub
-      if: success()
-      uses: docker/login-action@v3
-      with:
-        username: ${{ secrets.GHA_DOCKERHUB_PULL_USER }}
-        password: ${{ secrets.GHA_KONG_ORG_DOCKERHUB_PUBLIC_TOKEN }}
 
     - name: Parse Architecture Specific Image Manifest Digests
       id: image_manifest_metadata
@@ -67,4 +67,5 @@ jobs:
         image_digest: ${{ steps.image_manifest_metadata.outputs.manifest_sha }}
         multi_platform: true
         rekor_transparency: true
-        
+        registry_username: ${{ secrets.GHA_DOCKERHUB_PUSH_USER }}
+        registry_password: ${{ secrets.GHA_KONG_ORG_DOCKERHUB_PUSH_TOKEN }}
