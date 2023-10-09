@@ -1,0 +1,107 @@
+name: Sign Docker Image
+description: Keyeless Image signing with transaprency and uploads to registry for specified docker image
+author: 'Kong'
+inputs:
+  cosign_output_prefix:
+    description: 'cosign output prefix. Ex: certificate and signature of signed artifacts'
+    required: true
+  signature_registry:
+    description: 'Separate registry to store image signature to avoid polluting image registry'
+    required: false
+    default: ''
+  image_registries:
+    description: 'Space separated image registries that have same digest'
+    required: true
+  image_digest:
+    description: 'specify single sha256 digest associated with the specified image_registries'
+    required: true
+  multi_platform:
+    description: 'Is the image multi arch?'
+    required: false
+    default: false
+  rekor_transparency:
+    description: 'Use rekor during publishing / verification transaprency for private repositories'
+    default: true
+    required: false
+  registry_username:
+    description: 'docker username to login against private docker registry'
+    required: false
+  registry_password:
+    description: 'docker password to login against private docker registry'
+    required: false
+  # fail_build:
+  #   description: 'fail the build if the vulnerability is above the severity cutoff'
+  #   required: false
+  #   default: false
+  #   type: choice
+  #   options:
+  #   - 'true'
+  #   - 'false'
+
+#outputs:
+  # sbom-cyclonedx-report:
+  #   description: 'SBOM cyclonedx report'
+  #   value: ${{ steps.meta.outputs.sbom_cyclonedx_file }}
+
+runs:
+  using: composite
+  steps:
+
+    - name: Set Sign Job Metadata
+      shell: bash
+      id: meta
+      env:
+        ASSET_PREFIX: ${{ inputs.cosign_output_prefix }}
+      run: $GITHUB_ACTION_PATH/scripts/cosign-metadata.sh
+    
+    - name: Install Cosign
+      uses: sigstore/cosign-installer@v3.1.1
+
+    - name: Check install!
+      run: cosign version
+    
+    - name: Login to Container Registry
+      uses: docker/login-action@v2.1.0
+      with:
+        username: ${{ inputs.registry_username }}
+        password: ${{ inputs.registry_password }}
+    
+    - name: Sign the images with GitHub OIDC Token 
+      env:
+        COSIGN_REPOSITORY: ${{ inputs.signature_registry }}
+        IMAGE_REGISTRIES: ${{ inputs.image_registries }} # Space separated image registries that have same digest
+        IMAGE_DIGEST: ${{ inputs.image_digest }} # Single Digest associated with the registry images
+        RECURSIVE: ${{ inputs.multi_platform == 'true' && '--recursive' || '' }}
+        CERTIFICATE: ${{ steps.meta.outputs.certificate_file }}
+        SIGNATURE: ${{ steps.meta.outputs.signature_file }}
+        AUTO_CONFIRM: "--yes"
+        REKOR_TRANSPARENCY: ${{ inputs.REKOR_TRANSPARENCY == 'true' && 'true' || 'false' }}
+      run: |
+        for IMAGE_REG in ${{ env.IMAGE_REGISTRIES }}; do
+          cosign sign ${AUTO_CONFIRM} \ 
+          -a "repo=${{ github.repository }}" \
+          -a "workflow=${{ github.workflow }}" \
+          -a "sha=${{ github.sha }}" \
+          ${{ env.RECURSIVE }} \
+          --output-certificate ${{ env.CERTIFICATE }} \
+          --output-signature ${{ env.SIGNATURE }} \
+          --tlog-upload ${{ env.REKOR_TRANSPARENCY }} \
+          "${IMAGE_REG}@${{ env.IMAGE_DIGEST }}"
+        done
+  
+    # - name: Check SBOM files existence
+    #   uses: andstor/file-existence-action@v2
+    #   id: sbom_report
+    #   with:
+    #     files: "${{ steps.meta.outputs.sbom_spdx_file }}, ${{ steps.meta.outputs.sbom_cyclonedx_file }}"
+    #     fail: true
+   
+    # - name: Upload grype analysis report
+    #   uses: actions/upload-artifact@v3
+    #   with:
+    #     name: ${{ steps.meta.outputs.grype_sarif_file }}
+    #     path: |
+    #       ${{ steps.meta.outputs.grype_sarif_file }}
+    #     if-no-files-found: warn
+
+    
