@@ -1,0 +1,112 @@
+name: Sign Docker Image
+description: Keyeless Image signing with transaprency and uploads to registry for specified docker image
+author: 'Kong'
+inputs:
+  local_save_cosign_assets:
+    description: 'Save cosign output assets locally on disk. Ex: certificate and signature of signed artifacts'
+    required: false
+    default: false
+  cosign_output_prefix:
+    description: 'cosign file prefix for storing local signatures and certificates. Works when input local_save_cosign_assets is enabled'
+    required: false
+    default: ''
+  signature_registry:
+    description: 'Separate registry to store image signature to avoid polluting image registry'
+    required: false
+    default: ''
+  tags:
+    description: 'Comma separated <image>:<tag> that have same digest'
+    required: true
+  image_digest:
+    description: 'specify single sha256 digest associated with the specified image_registries'
+    required: true
+  rekor_transparency:
+    description: 'Use rekor during publishing / verification of transaprency publicly. When false, the input local_save_cosign_assets must be enabled to generate signatures and certs locally for verification'
+    default: true
+    required: false
+  registry_username:
+    description: 'docker username to login against private docker registry'
+    required: false
+  registry_password:
+    description: 'docker password to login against private docker registry'
+    required: false
+
+#outputs:
+  # sbom-cyclonedx-report:
+  #   description: 'SBOM cyclonedx report'
+  #   value: ${{ steps.meta.outputs.sbom_cyclonedx_file }}
+
+runs:
+  using: composite
+  steps:
+
+    - name: Set Cosign metadata
+      shell: bash
+      id: meta
+      env:
+        LOCAL_SAVE_COSIGN_ASSETS: ${{ inputs.local_save_cosign_assets }}
+        ASSET_PREFIX: ${{ inputs.cosign_output_prefix }}
+        REKOR_TRANSPARENCY: ${{ inputs.rekor_transparency }}
+      run: $GITHUB_ACTION_PATH/scripts/cosign-metadata.sh
+    
+    - name: Install Cosign
+      uses: sigstore/cosign-installer@v3.1.1
+
+    - name: Check install!
+      shell: bash
+      run: cosign version
+    
+    - name: Setup image namespace for signing, strip off the tag
+      shell: bash
+      env: 
+        INPUT_TAGS: ${{ inputs.tags }}
+      run: |
+        set -euox pipefail
+
+        TAGS="${INPUT_TAGS//,/ }"
+
+        IMAGE_REPOS=$(for tag in \
+          `echo "${TAGS}"`; do
+          echo -n "${tag}" | awk -F ":" '{print $1}' -;done|sort -u)
+        
+          echo $IMAGE_REPOS
+
+          echo 'IMAGES<<EOF' >> $GITHUB_ENV
+          echo $IMAGE_REPOS >> $GITHUB_ENV
+          echo 'EOF' >> $GITHUB_ENV
+
+    - name: Login to Container Registry
+      uses: docker/login-action@v2.1.0
+      if: ${{ inputs.registry_username != '' && inputs.registry_password != '' }}
+      with:
+        username: ${{ inputs.registry_username }}
+        password: ${{ inputs.registry_password }}
+
+    - name: Sign the images with GitHub OIDC Token 
+      id: sign
+      env:
+        COSIGN_REPOSITORY: ${{ inputs.signature_registry }}
+        COSIGN_ARGS: ${{ steps.meta.outputs.cosign_signing_args}}
+        IMAGE_REGISTRIES: ${{ env.IMAGES }} # Space separated image registries that have same digest
+        IMAGE_DIGEST: ${{ inputs.image_digest }} # Single Digest associated with the registry images 
+      shell: bash
+      run: |
+        set -euox pipefail
+        for img in $IMAGES; do
+          cosign sign ${{ env.COSIGN_ARGS }} \
+          -a "repo=${{ github.repository }}" \
+          -a "workflow=${{ github.workflow }}" \
+          -a "sha=${{ github.sha }}" \
+          "$img"@${{ env.IMAGE_DIGEST }}
+        done
+
+     # Upload Cosign Artifacts (public cert and signatures)
+    - name: Upload Cosign Artifacts
+      uses: actions/upload-artifact@v3
+      if: ${{ inputs.local_save_cosign_assets == 'true' && inputs.cosign_output_prefix != '' }}
+      with:
+        name: signed-image-assets
+        path: |
+          ${{inputs.cosign_output_prefix}}*.crt
+          ${{inputs.cosign_output_prefix}}.sig*
+        if-no-files-found: warn
