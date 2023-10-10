@@ -106,6 +106,7 @@ runs:
       uses: actions/upload-artifact@v3
       if: ${{ inputs.local_save_cosign_assets == 'true' && inputs.cosign_output_prefix != '' }}
       with:
+        name: signed-image-assets
         path: |
           ${{inputs.cosign_output_prefix}}*.crt
           ${{inputs.cosign_output_prefix}}.sig*
