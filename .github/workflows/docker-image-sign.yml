@@ -32,7 +32,7 @@ jobs:
     - name: Install regctl
       uses: regclient/actions/regctl-installer@main
 
-    - name: Parse Architecture Specific Image Manifest Digests
+    - name: Parse Image Manifest Digest
       id: image_manifest_metadata
       run: |
         manifest_list_exists="$(
@@ -46,15 +46,9 @@ jobs:
         echo "manifest_list_exists=$manifest_list_exists" >> $GITHUB_OUTPUT
 
         manifest_sha="$(regctl image digest "${IMAGE}" || echo '')"
-        amd64_sha="$(regctl image digest "${IMAGE}" --platform linux/amd64 || echo '')"
-        arm64_sha="$(regctl image digest "${IMAGE}" --platform linux/arm64 || echo '')"
 
         echo "manifest_sha=$manifest_sha"
         echo "manifest_sha=$manifest_sha" >> $GITHUB_OUTPUT
-        echo "amd64_sha=$amd64_sha"
-        echo "amd64_sha=$amd64_sha" >> $GITHUB_OUTPUT
-        echo "arm64_sha=$arm64_sha"
-        echo "arm64_sha=$arm64_sha" >> $GITHUB_OUTPUT
 
     - name: Sign Image digest
       id: sign_image
@@ -67,5 +61,6 @@ jobs:
         image_digest: ${{ steps.image_manifest_metadata.outputs.manifest_sha }}
         multi_platform: true
         rekor_transparency: true
+        local_save_cosign_assets: true
         registry_username: ${{ secrets.GHA_DOCKERHUB_PUSH_USER }}
         registry_password: ${{ secrets.GHA_KONG_ORG_DOCKERHUB_PUSH_TOKEN }}

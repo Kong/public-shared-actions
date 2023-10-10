@@ -2,9 +2,14 @@ name: Sign Docker Image
 description: Keyeless Image signing with transaprency and uploads to registry for specified docker image
 author: 'Kong'
 inputs:
+  local_save_cosign_assets:
+    description: 'Save cosign output assets locally on disk. Ex: certificate and signature of signed artifacts'
+    required: false
+    default: false
   cosign_output_prefix:
-    description: 'cosign output prefix. Ex: certificate and signature of signed artifacts'
-    required: true
+    description: 'cosign file prefix for storing local signatures and certificates. Works when input local_save_cosign_assets is enabled'
+    required: false
+    default: ''
   signature_registry:
     description: 'Separate registry to store image signature to avoid polluting image registry'
     required: false
@@ -29,14 +34,6 @@ inputs:
   registry_password:
     description: 'docker password to login against private docker registry'
     required: false
-  # fail_build:
-  #   description: 'fail the build if the vulnerability is above the severity cutoff'
-  #   required: false
-  #   default: false
-  #   type: choice
-  #   options:
-  #   - 'true'
-  #   - 'false'
 
 #outputs:
   # sbom-cyclonedx-report:
@@ -47,11 +44,14 @@ runs:
   using: composite
   steps:
 
-    - name: Set Sign Job Metadata
+    - name: Set Cosign metadata
       shell: bash
       id: meta
       env:
+        LOCAL_SAVE_COSIGN_ASSETS: ${{ inputs.local_save_cosign_assets }}
         ASSET_PREFIX: ${{ inputs.cosign_output_prefix }}
+        MULTI_PLATFORM: ${{ inputs.multi_platform }}
+        REKOR_TRANSPARENCY: ${{ inputs.rekor_transparency }}
       run: $GITHUB_ACTION_PATH/scripts/cosign-metadata.sh
     
     - name: Install Cosign
@@ -84,29 +84,29 @@ runs:
         password: ${{ inputs.registry_password }}
 
     - name: Sign the images with GitHub OIDC Token 
+      id: sign
       env:
         COSIGN_REPOSITORY: ${{ inputs.signature_registry }}
+        COSIGN_ARGS: ${{ steps.meta.outputs.cosign_signing_args}}
         IMAGE_REGISTRIES: ${{ env.IMAGES }} # Space separated image registries that have same digest
-        IMAGE_DIGEST: ${{ inputs.image_digest }} # Single Digest associated with the registry images
-        RECURSIVE: ${{ inputs.multi_platform == 'true' && '--recursive' || '' }}
-        CERTIFICATE: ${{ steps.meta.outputs.certificate_file }}
-        SIGNATURE: ${{ steps.meta.outputs.signature_file }}
-        AUTO_CONFIRM: "--yes"
-        REKOR_TRANSPARENCY: ${{ inputs.REKOR_TRANSPARENCY == 'true' && 'true' || 'false' }}
+        IMAGE_DIGEST: ${{ inputs.image_digest }} # Single Digest associated with the registry images 
       shell: bash
       run: |
         set -euox pipefail
         for img in $IMAGES; do
-          cosign sign ${{ env.AUTO_CONFIRM }} \
+          cosign sign ${{ env.COSIGN_ARGS }} \
           -a "repo=${{ github.repository }}" \
           -a "workflow=${{ github.workflow }}" \
           -a "sha=${{ github.sha }}" \
-          ${{ env.RECURSIVE }} \
-          --output-certificate ${{ env.CERTIFICATE }} \
-          --output-signature ${{ env.SIGNATURE }} \
-          --tlog-upload=${{ env.REKOR_TRANSPARENCY }} \
           "$img"@${{ env.IMAGE_DIGEST }}
         done
-    
 
-    
+     # Upload Cosign Artifacts (public cert and signatures)
+    - name: Upload Cosign Artifacts
+      uses: actions/upload-artifact@v3
+      if: ${{ inputs.local_save_cosign_assets == 'true' && inputs.cosign_output_prefix != '' }}
+      with:
+        path: |
+          ${{inputs.cosign_output_prefix}}*.crt
+          ${{inputs.cosign_output_prefix}}.sig*
+        if-no-files-found: warn
