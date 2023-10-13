@@ -21,29 +21,17 @@ permissions:
 - `cosign sign` to:
   -  Generate an signature based on keyless identities using `Github` OIDC provider within workflows
 - Be authenicated access to publish docker hub registry
-- Uploads the Artifact digest and Subject (Email / GH workflow) as part of the [HashedRekord](https://www.bastionzero.com/blog/bastionzeros-openpubkey-why-i-think-it-is-the-most-important-security-research-ive-done) to Public Rekor Instance logged forever.
+- Uploads the [mapping identities](https://github.com/sigstore/fulcio/blob/main/docs/oid-info.md) to Public Rekor Instance logged forever.
   - **Contain senstitive information for private repositories**; Yet no way to protect PII being uploaded / masked.
-
+s
 #### Verification
 - `cosign verify` needs to have:
   - access to public rekor instance
   - authenicated access to private docker hub registry
   - un-authenticated access to public registry
   - use `--insecure-ignore-tlog` to skip verifying against rekor if transparency is optional
-
-
+  
 #### Input specification
-- Global parameters can be used for controlling the transparency of logging sensitive information to Rekor when signing images on private repositories.
-
-- These parameters are controlled in the [cosign-metadata.sh](./security-actions/sign-docker-image/scripts/cosign-metadata.sh)
-
-- User provided input parameters are exposed to the workflows consuming the shared action
-
-- Global parameters are not exposed to the workflows consuming the shared action
-
-- Global parameters take **precedence / override** any user provided input parameters
-
-- Action assumes the container image to exist locally; otherwise uses credentials to pull from private registry
 
 #### Parameters
 ```yaml
