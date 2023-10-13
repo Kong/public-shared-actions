@@ -47,23 +47,27 @@ permissions:
 
 #### Parameters
 ```yaml
+  local_save_cosign_assets:
+    description: 'Save cosign output assets locally on disk. Ex: certificate and signature of signed artifacts'
+    required: false
+    default: false
   cosign-output-prefix:
     description: 'cosign output prefix. Ex: certificate and signature of signed artifacts'
     required: true
-  rekor-transparency:
+  signature_registry:
+    description: 'Separate registry to store image signature to avoid polluting image registry'
+    required: false
+    default: ''
+  tags:
+    description: 'Comma separated <image>:<tag> that have same digest'
+    required: true
+  image_digest:
+    description: 'specify single sha256 digest associated with the specified image_registries'
+    required: true
+  rekor_transparency:
     description: 'rekor during publishing / verification transaprency for private repositories'
     default: false
     required: false
-  image:
-    description: 'specify an image to be signed'
-    required: true
-  tag:
-    description: 'specify a image tag to be signed'
-    required: true
-  multi-platform:
-    description: 'Is the image multi arch'
-    required: false
-    default: false
   registry_username:
     description: 'docker username to login against private docker registry'
     required: false
@@ -72,428 +76,100 @@ permissions:
     required: false
 
 ```
-
-#### User provided input parameters
-
-- Inputs **image / dir / file** are mutually exclusive. Any one input is mandatory
-
-- OCI tar balls / Docker archives (OCI compatible) are considered as input type  **Image**
-
-```yaml
-  asset_prefix:
-    description: 'prefix for generated scan artifacts'
-    required: false
-    default: ''
-  dir: 
-    description: 'Specify a directory to be scanned. This is mutually exclusive to file and image'
-    required: 'false'
-    default: ''
-  file:
-    description: 'Specify a file to be scanned. This is mutually exclusive to dir and image'
-    required: 'false'
-    default: ''
-  image:
-    description: 'specify an image to be scanned. Specify registry credentials if the image is remote. Takes priority over dir and file'
-    required: 'false'
-    default: ''
-  tag:
-    description: 'specify a docker image tag / release tag / ref to be scanned'
-    required: 'false'
-    default: ''
-  registry_username:
-    description: 'docker username to login against private docker registry'
-    required: 'false'
-  registry_password:
-    description: 'docker password to login against private docker registry'
-    required: 'false'
-  fail_build:
-    description: 'fail the build if the vulnerability is above the severity cutoff'
-    required: 'false'
-    default: 'false'
-    type: choice
-    options:
-    - 'true'
-    - 'false'
-```
-
 #### Output specification
 
-- Generates sbom reports in **spdx.json** and **cyclonedx.xml** formats using *syft* on the inputs **image / dir / file**
+- Generates a signature that is pushed to registry for every single platform and manifest digest
 
-- Generates cve vulnerability analysis report based on the spdx sbom file using *grype*
+- Generates a log entry in Public Rekor transaprency for every digest being signed with a unique docker repository
 
-- Generates docker-cis analysis report using *trivy*
+- No Build Time artifacts are generated
 
-- Uploads the security assets as workflow artifacts and retained based on repo / org settings
+#### Verification:
+Use `cosign verify` command to specify claims and image digest to be verified against the rekor transaparency log and signature / certificate subject identity in the Docker registry
 
-- Allows for publishing github releases with security assets
-
-#### Output parameters
-
-```yaml
-    cis-json-report:
-      description: 'docker-cis json report'
-    grype-sarif-report:
-      description: 'vulnerability SARIF report'
-    sbom-spdx-report:
-      description: 'SBOM spdx report'
-    sbom-cyclonedx-report:
-      description: 'SBOM cyclonedx report'
+Example:
+```
+COSIGN_REPOSITORY=kong/notary cosign verify -a repo="Kong/kong-ee" -a workflow="Package & Release" --certificate-oidc-issuer="https://token.actions.githubusercontent.com" --certificate-identity-regexp="https://github.com/Kong/kong-ee/.github/workflows/release.yml*" <image>:<tag>@sha256:<disgest> 
 ```
 
 #### Usage Examples
 
-- Using action to scan single platform docker image as a step within a job 
-
-   ```yaml
-  jobs:
-    release:
-      name: Release
-      runs-on: ubuntu-latest
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_BOT_TOKEN }}
-        DOCKER_BASE_IMAGE_NAME: org/repo
-      outputs:
-        grype-report: ${{ steps.sbom_action.outputs.grype-sarif-report }}
-        sbom-spdx-report: ${{ steps.sbom_action.outputs.sbom-spdx-report }}
-        sbom-cyclonedx-report: ${{ steps.sbom_action.outputs.sbom-cyclonedx-report }}
-        buildx-tags: ${{ steps.meta.output.tags }}
-      steps:
-        - name: Checkout Source Code
-          uses: actions/checkout@v3
-          with:
-            token: ${{ secrets.GITHUB_BOT_TOKEN }}
-        - name: Set Semver Release Tag
-          run: |
-            ## Assuming release tag is associated with docker tag
-            ## Can use any github action to output release / artifact TAG
-            echo "RELEASE_TAG=X.Y.Z" >> $GITHUB_ENV
-        - name: Log in to Dockerhub
-          uses: docker/login-action@v2.1.0
-          with:
-            username: ${{ secrets.DOCKERHUB_USERNAME }}
-            password: ${{ secrets.DOCKERHUB_PASSWORD }}
-        - name: Set up Docker Buildx
-          uses: docker/setup-buildx-action@v2.2.0
-          with:
-            install: true
-        - name: Docker meta
-          id: meta
-          uses: docker/metadata-action@v4
-          with:
-            images: ${{ env.DOCKER_BASE_IMAGE_NAME }}
-            tags: |
-              type=raw,value=latest,enable={{is_default_branch}}
-              type=raw,value=${{ env.RELEASE_TAG }}
-            sep-tags: ','
-        - name: Docker build
-          id: docker_buildx
-          uses: docker/build-push-action@v3.2.0
-          with:
-            context: .
-            push: false
-            load: true  # Supports only single platform images
-            target: <target>
-            tags: ${{ steps.meta.outputs.tags }}
-        - name: Scan and Generate vulnerability report
-          id: sbom_action
-          uses: Kong/public-shared-actions/security-actions/scan-docker-image@main
-          with:
-            asset_prefix: ${{ env.DOCKER_BASE_IMAGE_NAME }}
-            image: ${{ env.DOCKER_BASE_IMAGE_NAME }}:${{ env.RELEASE_TAG }}
-        - name: Draft GH Release
-          id: release-drafter
-          uses: release-drafter/release-drafter@v5
-          with:
-            name: ${{ env.RELEASE_TAG }}
-            tag: ${{ env.RELEASE_TAG }}
-            version: ${{ env.RELEASE_TAG }}
-            publish: true
-            commitish: ${{ github.sha }}
-        - uses: actions/download-artifact@v3
-          with:
-            path: ${{ github.workspace }}/sbom-artifacts
-        - uses: AButler/upload-release-assets@v2.0
-          with:
-            files: '${{ github.workspace }}/sbom-artifacts/**/*.sarif;${{ github.workspace }}/sbom-artifacts/**/*.spdx.json;${{ github.workspace }}/sbom-artifacts/**/*.cyclonedx.xml'
-            repo-token: ${{ secrets.GITHUB_BOT_TOKEN }}
-            release-tag: ${{ env.RELEASE_TAG }}
-        # Push to registry after successful scanning and release
-        - name: Retag and Push to registry
-          if: ${{ (!failure() && steps.release-drafter.outputs.id != '') }}
-          env:
-            BUILDX_TAGS: ${{ steps.meta.outputs.tags }}
-          run: |
-            set -x
-            for image in ${BUILDX_TAGS//,/ }; do \
-              # Optionally re-tag image \
-              docker push $image; \
-            done
-  ```
-
-- Using action to scan single platform docker image as a job within a workflow
-  - Uses *actions/upload-artifact@v3* and *actions/download-artifact@v3* to share docker archives across jobs
-  - On successful workflow completion, delete the Docker Archive workflow artifact at the end; otherwise retain for a 1 day at most
-  - Better visualization using separate scan job in the pipeline
-
   ```yaml
+  jobs:
+  test-sign-docker-image:
+
+    permissions:
+      contents: read
+      packages: write # needed to upload to packages to registry
+      id-token: write # needed for signing the images with GitHub OIDC Token
+
+    if: ${{ github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository }}
+    name: Test Sign Docker Image
+    runs-on: ubuntu-22.04
     env:
-      DOCKER_OCI_ARCHIVE: "docker-archive"
-      DOCKER_BASE_IMAGE_NAME: org/repo
-    jobs:
-      docker-build:
-        name: Docker build
-        runs-on: ubuntu-latest
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_BOT_TOKEN }}
-        outputs:
-          buildx-tags: ${{ steps.meta.output.tags }}
-          release-tag: ${{ steps.version.outputs.release-tag}}
-        steps:
-          - name: Checkout Source Code
-            uses: actions/checkout@v3
-            with:
-              token: ${{ secrets.GITHUB_BOT_TOKEN }}
-          - name: Set Semver Release Tag
-            id: version
-            run: |
-              ## Assuming release tag is associated with docker tag
-              ## Can use any github action to output release / artifact TAG
-              echo "release-tag=X.Y.Z" >> $GITHUB_OUTPUT
-          - name: Log in to Dockerhub
-            uses: docker/login-action@v2.1.0
-            with:
-              username: ${{ secrets.DOCKERHUB_USERNAME }}
-              password: ${{ secrets.DOCKERHUB_PASSWORD }}
-          - name: Set up Docker Buildx
-            uses: docker/setup-buildx-action@v2.2.0
-            with:
-              install: true
-          - name: Docker meta
-            id: meta
-            uses: docker/metadata-action@v4
-            with:
-              images: ${{ env.DOCKER_BASE_IMAGE_NAME }}
-              tags: |
-                type=raw,value=latest,enable={{is_default_branch}}
-                type=raw,value=${{ env.RELEASE_TAG }}
-              sep-tags: ','
-          - name: Docker build
-            id: docker_buildx
-            uses: docker/build-push-action@v3.2.0
-            with:
-              context: .
-              push: false
-              load: false 
-              target: <target>
-              tags: ${{ steps.meta.outputs.tags }}
-              outputs: "type=docker,dest=${{ env.DOCKER_OCI_ARCHIVE }}.tar" # Supports only single platform images
-          - name: Upload Docker OCI layout TAR Artifact
-          uses: actions/upload-artifact@v3
-          with:
-            name: ${{ env.DOCKER_OCI_ARCHIVE }}
-            path: ${{ env.DOCKER_OCI_ARCHIVE }}.tar
-            if-no-files-found: fail
-            retention-days: 1
+      PRERELEASE_IMAGE: kongcloud/security-test-repo-pub:ubuntu_23_10 #particular reason for the choice of image: test multi arch image
+      TAGS: kongcloud/security-test-repo-pub:ubuntu_23_10,kongcloud/security-test-repo:ubuntu_23_10
+    steps:
 
-        scan:
-          name: scan
-          runs-on: ubuntu-latest
-          needs: [docker-build]
-          env:
-            GITHUB_TOKEN: ${{ secrets.GITHUB_BOT_TOKEN }}
-          outputs:
-            grype-report: ${{ steps.sbom_action.outputs.grype-sarif-report }}
-            sbom-spdx-report: ${{ steps.sbom_action.outputs.sbom-spdx-report }}
-            sbom-cyclonedx-report: ${{ steps.sbom_action.outputs.sbom-cyclonedx-report }}
-            buildx-tags: ${{ needs.docker-build.outputs.buildx-tags }}
-          steps:
-            - name: Download OCI docker TAR artifact
-              uses: actions/download-artifact@v3
-              with:
-                name: ${{ env.DOCKER_OCI_ARCHIVE }}
-                path: ${{ github.workspace }}/${{ env.DOCKER_OCI_ARCHIVE }}
-            - name: Scan and Generate vulnerability report
-              id: sbom_action
-              uses: Kong/public-shared-actions/security-actions/scan-docker-image@main
-              with:
-                asset_prefix: ${{ env.DOCKER_BASE_IMAGE_NAME }}
-                image: ${{github.workspace}}/${{ env.DOCKER_OCI_ARCHIVE }}/${{ env.DOCKER_OCI_ARCHIVE }}.tar
-          
-          release:
-            name: release
-            runs-on: ubuntu-latest
-            needs: [scan, docker-build]
-            env:
-              GITHUB_TOKEN: ${{ secrets.GITHUB_BOT_TOKEN }}
-              RELEASE_TAG:  ${{ needs.docker-build.outputs.release-tag }}
-              BUILDX_TAGS: ${{ needs.scan.outputs.buildx-tags }}
-            steps:
-              - name: Draft GH Release
-                id: release-drafter
-                uses: release-drafter/release-drafter@v5
-                with:
-                  name: ${{ env.RELEASE_TAG }}
-                  tag: ${{ env.RELEASE_TAG }}
-                  version: ${{ env.RELEASE_TAG }}
-                  publish: true
-                  commitish: ${{ github.sha }}
-              - uses: actions/download-artifact@v3
-                with:
-                  path: ${{ github.workspace }}/sbom-artifacts
-              - run: |
-                  ls -alR ${{ github.workspace }}/sbom-artifacts
-              - uses: AButler/upload-release-assets@v2.0
-                with:
-                  files: '${{ github.workspace }}/sbom-artifacts/**/*.sarif;${{ github.workspace }}/sbom-artifacts/**/*.spdx.json;${{ github.workspace }}/sbom-artifacts/**/*.cyclonedx.xml'
-                  repo-token: ${{ secrets.GITHUB_BOT_TOKEN }}
-                  release-tag: ${{ env.RELEASE_TAG }}
-              - name: Log in to Dockerhub
-                uses: docker/login-action@v2.1.0
-                with:
-                  username: ${{ secrets.DOCKERHUB_USERNAME }}
-                  password: ${{ secrets.DOCKERHUB_PASSWORD }}
-              
-              # Load the archive as image into docker daemon
-              - name: Load and Inspect docker archive 
-                run: |
-                  docker load --input ${{ github.workspace }}/${{ env.DOCKER_OCI_ARCHIVE }}/${{ env.DOCKER_OCI_ARCHIVE }}.tar
-                  docker image ls
+    - uses: actions/checkout@v3
 
-              # Push to registry after successful scanning and release
-              - name: Retag and Push to registry
-                if: ${{ (!failure() && steps.release-drafter.outputs.id != '') }}
-                run: |
-                  set -x
-                  for image in ${BUILDX_TAGS//,/ }; do \
-                    # Optionally re-tag image \
-                    docker push $image; \
-                  done
+    - name: Install regctl
+      uses: regclient/actions/regctl-installer@main
 
-          cleanup-artifacts:
-            name: Cleanup
-            needs:
-              - release
-            if: always()
-            runs-on: ubuntu-latest
-            env:
-              GITHUB_TOKEN: ${{ secrets.GITHUB_BOT_TOKEN }}
-            steps:
-              - uses: geekyeggo/delete-artifact@v2
-                with: 
-                  failOnError: false
-                  name: |
-                    ${{ env.DOCKER_OCI_ARCHIVE }}
+    - name: Parse Image Manifest Digest
+      id: image_manifest_metadata
+      run: |
+        manifest_list_exists="$(
+          if regctl manifest get "${PRERELEASE_IMAGE}" --format raw-body --require-list -v panic &> /dev/null; then
+            echo true
+          else
+            echo false
+          fi
+        )"
+        echo "manifest_list_exists=$manifest_list_exists"
+        echo "manifest_list_exists=$manifest_list_exists" >> $GITHUB_OUTPUT
+
+        manifest_sha="$(regctl image digest "${PRERELEASE_IMAGE}")"
+
+        echo "manifest_sha=$manifest_sha"
+        echo "manifest_sha=$manifest_sha" >> $GITHUB_OUTPUT
+
+    - name: Sign Image digest
+      id: sign_image
+      if: steps.image_manifest_metadata.outputs.manifest_sha != ''
+      uses: ./security-actions/sign-docker-image
+      with:
+        cosign_output_prefix: ubuntu-23-10
+        signature_registry: kongcloud/security-test-repo-sig-pub
+        tags: ${{ env.TAGS }} 
+        image_digest: ${{ steps.image_manifest_metadata.outputs.manifest_sha }}
+        rekor_transparency: true
+        local_save_cosign_assets: true
+        registry_username: ${{ secrets.GHA_DOCKERHUB_PUSH_USER }}
+        registry_password: ${{ secrets.GHA_KONG_ORG_DOCKERHUB_PUSH_TOKEN }}
+
+    - name: Push Images
+      env:
+        RELEASE_TAG: kongcloud/security-test-repo:v1
+      run: |
+        docker pull ${PRERELEASE_IMAGE}
+        for tag in $RELEASE_TAG; do
+          regctl -v debug image copy ${PRERELEASE_IMAGE} $tag
+        done
+    
+    - name: Sign Image digest
+      id: sign_image_v1
+      if: steps.image_manifest_metadata.outputs.manifest_sha != ''
+      uses: ./security-actions/sign-docker-image
+      env:
+        RELEASE_TAG: kongcloud/security-test-repo:v1
+      with:
+        cosign_output_prefix: v1
+        signature_registry: kongcloud/security-test-repo-sig-pub
+        tags: ${{ env.RELEASE_TAG }} 
+        image_digest: ${{ steps.image_manifest_metadata.outputs.manifest_sha }}
+        rekor_transparency: true
+        local_save_cosign_assets: true
+        registry_username: ${{ secrets.GHA_DOCKERHUB_PUSH_USER }}
+        registry_password: ${{ secrets.GHA_DOCKERHUB_PUSH_TOKEN }}
   ```
-
-- Using action to scan multiple platform docker image as a step within a job
-  - Use matrix strategy to build and load each image archive independently
-
-  ```yaml
-  jobs:
-    metadata:
-      name: Set release metadata
-      runs-on: ubuntu-latest
-      outputs:
-        RELEASE_TAG: ${{ steps.release_meta.output.release_tag }}
-      steps:
-        - name: Set Semver Release Tag
-          id: release_meta
-          run: |
-            ## Assuming release tag is associated with docker tag
-            ## Can use any github action to output release / artifact TAG
-            echo "release_tag=X.Y.Z" >> $GITHUB_OUTPUT
-
-    release:
-        name: Build, Scan & Release
-        runs-on: ubuntu-latest
-        strategy:
-          matrix:
-            architecture: [aarch64, x86_64]
-            ostype: [linux-gnu, linux-musl]
-        needs: [metadata]
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_BOT_TOKEN }}
-          DOCKER_BASE_IMAGE_NAME: org/repo
-          RELEASE_TAG: ${{ steps.metadata.outputs.RELEASE_TAG }}
-        outputs:
-          grype-report: ${{ steps.sbom_action.outputs.grype-sarif-report }}
-          sbom-spdx-report: ${{ steps.sbom_action.outputs.sbom-spdx-report }}
-          sbom-cyclonedx-report: ${{ steps.sbom_action.outputs.sbom-cyclonedx-report }}
-          buildx-tags: ${{ steps.meta.output.tags }}
-        steps:
-          - name: Checkout Source Code
-            uses: actions/checkout@v3
-            with:
-              token: ${{ secrets.GITHUB_BOT_TOKEN }}
-          - name: Log in to Dockerhub
-            uses: docker/login-action@v2.1.0
-            with:
-              username: ${{ secrets.DOCKERHUB_USERNAME }}
-              password: ${{ secrets.DOCKERHUB_PASSWORD }}
-          - name: Set environment variables
-            run: |
-              grep -v '^#' .env >> $GITHUB_ENV
-              echo "ARCHITECTURE=${{ matrix.architecture }}" >> $GITHUB_ENV
-              echo "OSTYPE=${{ matrix.ostype }}" >> $GITHUB_ENV
-          - uses: docker/setup-qemu-action@v2
-          - name: Set up Docker Buildx
-            uses: docker/setup-buildx-action@v2.2.0
-            with:
-              install: true
-          - name: Docker meta
-            id: meta
-            uses: docker/metadata-action@v4
-            with:
-              images: ${{ env.DOCKER_BASE_IMAGE_NAME }}
-              flavor: |
-              suffix=-${{ matrix.architecture }}-${{ matrix.ostype }}
-              tags: |
-                type=raw,value=${{ env.RELEASE_TAG }}
-              sep-tags: ','
-          - name: Docker build
-            id: docker_buildx
-            uses: docker/build-push-action@v3.2.0
-            with:
-              context: .
-              push: false
-              load: true  # Supports only single platform images
-              target: <target>
-              tags: ${{ steps.meta.outputs.tags }}
-          - name: Scan and Generate vulnerability report
-            id: sbom_action
-            uses: Kong/public-shared-actions/security-actions/scan-docker-image@main
-            with:
-              asset_prefix: ${{ env.DOCKER_BASE_IMAGE_NAME }}
-              image: ${{ env.DOCKER_BASE_IMAGE_NAME }}:${{ env.RELEASE_TAG }}
-          - name: Draft GH Release
-            id: release-drafter
-            uses: release-drafter/release-drafter@v5
-            with:
-              name: ${{ env.RELEASE_TAG }}
-              tag: ${{ env.RELEASE_TAG }}
-              version: ${{ env.RELEASE_TAG }}
-              publish: true
-              commitish: ${{ github.sha }}
-          - uses: actions/download-artifact@v3
-            with:
-              path: ${{ github.workspace }}/sbom-artifacts
-          - run: |
-              ls -alR ${{ github.workspace }}/sbom-artifacts
-          - uses: AButler/upload-release-assets@v2.0
-            with:
-              files: '${{ github.workspace }}/sbom-artifacts/**/*.sarif;${{ github.workspace }}/sbom-artifacts/**/*.spdx.json;${{ github.workspace }}/sbom-artifacts/**/*.cyclonedx.xml'
-              repo-token: ${{ secrets.GITHUB_BOT_TOKEN }}
-              release-tag: ${{ env.RELEASE_TAG }}
-          # Push to registry after successful scanning and release
-          - name: Retag and Push to registry
-            if: ${{ (!failure() && steps.release-drafter.outputs.id != '') }}
-            env:
-              BUILDX_TAGS: ${{ steps.meta.outputs.tags }}
-            run: |
-              set -x
-              for image in ${BUILDX_TAGS//,/ }; do \
-                # Optionally re-tag image \
-                docker push $image; \
-              done
-    ```
