@@ -59,10 +59,9 @@ jobs:
         signature_registry: kongcloud/security-test-repo-sig-pub
         tags: ${{ env.TAGS }} 
         image_digest: ${{ steps.image_manifest_metadata.outputs.manifest_sha }}
-        rekor_transparency: true
         local_save_cosign_assets: true
-        registry_username: ${{ secrets.GHA_DOCKERHUB_PUSH_USER }}
-        registry_password: ${{ secrets.GHA_KONG_ORG_DOCKERHUB_PUSH_TOKEN }}
+        registry_username: ${{ secrets.DOCKERHUB_PUSH_USERNAME }}
+        registry_password: ${{ secrets.DOCKERHUB_PUSH_TOKEN }}
 
     - name: Push Images
       env:
@@ -80,11 +79,10 @@ jobs:
       env:
         RELEASE_TAG: kongcloud/security-test-repo:v1
       with:
-        cosign_output_prefix: v1
+        cosign_output_prefix: v1 # Optional
+        local_save_cosign_assets: true # Optional
         signature_registry: kongcloud/security-test-repo-sig-pub
         tags: ${{ env.RELEASE_TAG }} 
         image_digest: ${{ steps.image_manifest_metadata.outputs.manifest_sha }}
-        rekor_transparency: true
-        local_save_cosign_assets: true
-        registry_username: ${{ secrets.GHA_DOCKERHUB_PUSH_USER }}
-        registry_password: ${{ secrets.GHA_KONG_ORG_DOCKERHUB_PUSH_TOKEN }}
+        registry_username: ${{ secrets.DOCKERHUB_PUSH_USERNAME }}
+        registry_password: ${{ secrets.DOCKERHUB_PUSH_TOKEN }}

@@ -5,8 +5,10 @@ set -euo pipefail
 readonly signature_ext=".sig"
 readonly signing_cert_ext=".crt"
 
+readonly rekor_transparency="true"
+
 # Always Recurisvely sign one/ all manifest digests for docker manifest distribution /list mediaType
-signing_args="--yes --recursive --tlog-upload=${REKOR_TRANSPARENCY}"
+signing_args="--yes --recursive --tlog-upload=${rekor_transparency}"
 
 # if [[ ${MULTI_PLATFORM} ]]; then
 #     signing_args+=" --recursive"

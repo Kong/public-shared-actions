@@ -20,10 +20,6 @@ inputs:
   image_digest:
     description: 'specify single sha256 digest associated with the specified image_registries'
     required: true
-  rekor_transparency:
-    description: 'Use rekor during publishing / verification of transaprency publicly. When false, the input local_save_cosign_assets must be enabled to generate signatures and certs locally for verification'
-    default: true
-    required: false
   registry_username:
     description: 'docker username to login against private docker registry'
     required: false
@@ -46,7 +42,6 @@ runs:
       env:
         LOCAL_SAVE_COSIGN_ASSETS: ${{ inputs.local_save_cosign_assets }}
         ASSET_PREFIX: ${{ inputs.cosign_output_prefix }}
-        REKOR_TRANSPARENCY: ${{ inputs.rekor_transparency }}
       run: $GITHUB_ACTION_PATH/scripts/cosign-metadata.sh
     
     - name: Install Cosign
