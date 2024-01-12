@@ -15,7 +15,6 @@ fi
 
 if [[ -n ${DIR} ]]; then
     echo "scan_dir=${DIR}" >> $GITHUB_OUTPUT
-    echo "manifest_path=${DIR}/Cargo.toml" >> $GITHUB_OUTPUT
 fi
 
 if [[ -n ${ASSET_PREFIX} ]]; then

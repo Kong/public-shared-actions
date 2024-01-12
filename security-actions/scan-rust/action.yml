@@ -1,5 +1,5 @@
-name:  Rust Source Code Lints
-description: Rust linting and SCA using grype on specified rust source code
+name: Rust SCA
+description: Rust SCA using grype
 author: 'Kong'
 inputs:
   asset_prefix:
@@ -18,9 +18,14 @@ inputs:
     options:
     - 'true'
     - 'false'
-  token: 
-    description: 'Github token to annotate files with findings'
-    required: true
+  codeql_upload:
+    description: 'Toggle to upload results to Github code scanning for public repositories'
+    required: false
+    default: true
+    type: choice
+    options:
+    - 'true'
+    - 'false'
 
 outputs:
   grype-json-report:
@@ -33,11 +38,6 @@ outputs:
 runs:
   using: composite
   steps:
-  
-    - uses: actions-rs/toolchain@b2417cde72dcf67f306c0ae8e0828a81bf0b189f
-      with:
-        toolchain: stable
-        components: clippy
 
     - name: Set Scan Job Metadata
       shell: bash
@@ -46,43 +46,6 @@ runs:
         DIR: ${{ inputs.dir }}
         ASSET_PREFIX: ${{ inputs.asset_prefix }}
       run: $GITHUB_ACTION_PATH/scripts/scan-metadata.sh
-    
-    - uses: Swatinem/rust-cache@v1
-
-    # - uses: actions-rs/cargo@ae10961054e4aa8b4aa7dffede299aaf087aa33b
-    #   continue-on-error: true
-    #   with:
-    #     command: install
-    #     args: "clippy-sarif sarif-fmt"
-
-    # - name: Run Cargo Clippy
-    #   shell: bash
-    #   continue-on-error: true
-    #   run: |
-    #     cargo clippy --manifest-path ${{ steps.meta.outputs.manifest_path }} --message-format=json -- -W clippy::correctness -W clippy::cargo -W clippy::pedantic | clippy-sarif | tee rust_clippy_${{github.sha}}.sarif | sarif-fmt
-
-    # - name: Upload Rust Linting SARIF file to CodeQL
-    #   if: ${{ github.event.repository.visibility == 'public' }}
-    #   uses: github/codeql-action/upload-sarif@v2
-    #   with:
-    #     sarif_file: rust_clippy_${{github.sha}}.sarif
-    #     category: clippy_rust
-
-    - uses: actions-rs/clippy-check@v1
-      continue-on-error: true
-      with:
-        token: ${{ inputs.token }}
-        args: --manifest-path ${{ steps.meta.outputs.manifest_path }} -- -W clippy::correctness -W clippy::cargo -W clippy::pedantic
-        name: Rust Clippy Report
-   
-    # - name: Upload Rust Linting results to workflow
-    #   if: always()
-    #   uses: actions/upload-artifact@v3
-    #   with:
-    #     name: rust_clippy_results.sarif
-    #     path: |
-    #       rust_clippy_${{github.sha}}.sarif
-    #     if-no-files-found: warn 
     
     # Don't fail during report generation
     - name: Vulnerability analysis of SBOM
@@ -96,8 +59,8 @@ runs:
         severity-cutoff: ${{ steps.meta.outputs.global_severity_cutoff }}
         add-cpes-if-none: true
     
-    - name: Upload SARIF CVE analysis file to CodeQL
-      if: ${{ always() && github.event.repository.visibility == 'public' }}
+    - name: Publish SARIF to github code scanning
+      if: ${{ always() && inputs.codeql_upload == 'true' && github.event.repository.visibility == 'public' }}
       continue-on-error: true
       uses: github/codeql-action/upload-sarif@v2
       with:
@@ -111,7 +74,7 @@ runs:
       run: |
         mv ${{ steps.scan.outputs.sarif }} ${{ steps.meta.outputs.grype_sarif_file }}
 
-    - name: Upload grype analysis report
+    - name: Publish SARIF to github workflow artifact
       if: always()
       uses: actions/upload-artifact@v3
       with:
@@ -130,9 +93,3 @@ runs:
         output-format: table
         fail-build: ${{ steps.meta.outputs.global_enforce_build_failure == 'true' && steps.meta.outputs.global_enforce_build_failure || inputs.fail_build }}
         severity-cutoff: ${{ steps.meta.outputs.global_severity_cutoff }}
-
-    # # Rust Clippy - Linting report
-    # - name:  Rust Linting Report - SARIF
-    #   shell: bash
-    #   run: |
-    #     cat rust_clippy_${{github.sha}}.sarif

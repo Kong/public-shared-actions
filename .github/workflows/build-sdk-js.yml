@@ -18,14 +18,14 @@ jobs:
     runs-on: ubuntu-latest
     name: Test Build JS SDK on PR
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
         with:
           repository: ${{env.JS_SDK_TEST_REPOSITORY}}
           path: ${{github.workspace}}/sdk
       - uses: ./code-build-actions/build-js-sdk
         with:
-          dry-run: true
+          dry-run: 'true'
           app_directory: ${{ github.workspace }}
           sdk_output_directory: ${{github.workspace}}/sdk
           token: ${{secrets.GITHUB_TOKEN}}

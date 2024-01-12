@@ -4,6 +4,15 @@ This action uses Semgrep CI command to scan all supported platforms on a specifi
 
 The action runs the following:
 - Self detects config rules from semgrep registry
+- Applies any additional arguments / configuration rules passed to semgrep
+- Provides a optional input to fail downstream builds based on semgrep findings
+
+## Action Output
+- Report Semgrep Finding Summary as Console output
+- Report Findings 
+  - Private repositories: workflow artifact file
+  - Public repositories: Github Security tab 
+- The failure mode of build is configurable based on shared action outcome
 ## Detailed example
 
 ```yaml
@@ -33,7 +42,7 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
-      - uses: Kong/public-shared-actions/code-check-actions/semgrep@main
+      - uses: Kong/public-shared-actions/security-actions/semgrep@main
         with:
           additional_config: '--config p/rust'
             

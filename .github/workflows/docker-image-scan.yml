@@ -18,14 +18,14 @@ jobs:
     env:
       IMAGE: kong/kong-gateway-dev:latest #particular reason for the choice of image: test multi arch image sbom
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
 
     - name: Install regctl
       uses: regclient/actions/regctl-installer@main
 
     - name: Login to DockerHub
       if: success()
-      uses: docker/login-action@v2
+      uses: docker/login-action@v3
       with:
         username: ${{ secrets.GHA_DOCKERHUB_PULL_USER }}
         password: ${{ secrets.GHA_KONG_ORG_DOCKERHUB_PUBLIC_TOKEN }}

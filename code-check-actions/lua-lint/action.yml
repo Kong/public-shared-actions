@@ -10,7 +10,7 @@ inputs:
     description: 'List of files, directories and rockspecs to check'
     required: false
     default: '.' # Scans workspace dir
-    
+
 runs:
   using: composite
   steps:
@@ -19,8 +19,8 @@ runs:
       uses: lunarmodules/luacheck@ababb6d403d634eb74d2c541035e9ede966e710d
       continue-on-error: true
       with:
-        args: "${{ inputs.additional_args }} -c --codes --ranges --formatter JUnit -q ${{ inputs.files }} > luacheck_${{github.sha}}.xml"
-    
+        args: "${{ inputs.additional_args }} --codes --ranges --formatter JUnit -q ${{ inputs.files }} > luacheck_${{github.sha}}.xml"
+
     - name: Upload results to workflow
       if: always()
       uses: actions/upload-artifact@v3
@@ -32,7 +32,7 @@ runs:
 
 #     - name: Print Luacheck results
 #       shell: bash
-#       run: | 
+#       run: |
 #         cat luacheck_${{github.sha}}.xml
 
     # when using the regular GITHUB_TOKEN, the check-run created by this step will be assigned to a
@@ -42,12 +42,13 @@ runs:
     # Publishing: https://github.com/EnricoMi/publish-unit-test-result-action#publishing-test-results
     - name: Luacheck Report
       uses: EnricoMi/publish-unit-test-result-action@v2
-      if: always()
+      if: always() && github.actor != 'dependabot[bot]'
       with:
         files: |
           luacheck_${{github.sha}}.xml
         check_name: Luacheck Report
         comment_mode: always
         action_fail: false
+        fail_on: 'nothing' # Explicitly don't fail reporting check based on test results
 
-  
+
