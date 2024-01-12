@@ -1,0 +1,61 @@
+name:  Semgrep SAST
+description: Semgrep SAST
+author: 'Kong'
+inputs:
+  additional_config:
+    description: 'Provide additional config to semgrep ci command using --config'
+    required: false
+    default: ''
+  codeql_upload:
+    description: 'Toggle to upload results to Github code scanning for public repositories'
+    required: false
+    default: true
+    type: choice
+    options:
+    - 'true'
+    - 'false'
+  fail_on_findings:
+    description: 'Fail build / job on semgrep findings/errors'
+    required: false
+    default: false
+    type: choice
+    options:
+    - 'true'
+    - 'false'
+runs:
+  using: 'composite'
+  steps:
+
+    - name: SAST Scan
+      uses: docker://returntocorp/semgrep
+      id: semgrep
+      continue-on-error: true
+      with:
+        args: "semgrep ci --config auto --sarif -o semgrep_${{github.sha}}.sarif --no-autofix ${{ inputs.additional_config }}"
+    
+    # Upload grype cve reports
+    - name: Upload Semgrep SARIF to Workflow
+      if: always()
+      uses: actions/upload-artifact@v3
+      with:
+        name: semgrep_sast.zip
+        path: |
+          semgrep_${{github.sha}}.sarif
+        if-no-files-found: warn
+
+    - name: Upload SARIF to Github Code Scanning
+      if: ${{ always() && inputs.codeql_upload == 'true' && github.event.repository.visibility == 'public' }}
+      uses: github/codeql-action/upload-sarif@v2
+      with:
+        # Path to SARIF file relative to the root of the repository
+        sarif_file: semgrep_${{github.sha}}.sarif
+        # Optional category for the results
+        # Used to differentiate multiple results for one commit
+        category: sast_semgrep
+    
+    - name: Fail on findings
+      if: ${{ always() && inputs.fail_on_findings == 'true' && steps.semgrep.outcome == 'failure' }}
+      shell: bash
+      run: |
+        echo "::error::Semgrep has detected findings. For findings, check workflow artifact: semgrep_sast.zip / Github Security analysis"
+        exit 1

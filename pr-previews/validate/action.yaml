@@ -1,0 +1,31 @@
+name: Validate No PR preview references
+description: Checks all package.json files in repository and throws error is detects any dependency on PR preview package
+
+runs:
+  using: composite
+  steps:
+    - name: Searching for PR versions of the packages used
+      shell: bash
+      run: |
+        previewPkgsDetected=""
+
+        for pkg in $(find ./ -name package.json ! -path '*/node_modules/*' ! -path '*/__template__/*')
+        do
+          inPackage=$(jq -r '{dependencies: .dependencies, devDependencies: .devDependencies, peerDependencies: .peerDependencies}' ${pkg} | jq '.[]' | cut -d":" -f2 | grep -E "(\-pr\.[0-9]+\.|@pr\-[0-9]+)" || true)
+          if [[ "${inPackage}" != "" ]]; then
+            if [[ "${previewPkgsDetected}" != "" ]]; then
+              previewPkgsDetected="${previewPkgsDetected}\n"
+            fi
+            previewPkgsDetected="${previewPkgsDetected}\nPR preview package version found in ${pkg}:"
+            for ver in $(echo -e ${inPackage})
+            do
+              previewPkgsDetected="${previewPkgsDetected}\n$(grep ${ver} ${pkg})"
+            done
+          fi
+        done
+
+        if [[ "${previewPkgsDetected}" != "" ]]; then
+          echo "::error title=PR preview package found in dependencies :: ${previewPkgsDetected//'\n'/'%0A'}"
+          exit 1
+        fi
+

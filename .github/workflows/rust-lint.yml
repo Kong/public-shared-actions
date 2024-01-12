@@ -1,0 +1,37 @@
+name: Rust Lint Test
+
+on:
+  pull_request:
+    branches:
+    - main
+  push:
+    branches:
+    - main
+    tags:
+    - '*'
+  workflow_dispatch: {}
+
+jobs:
+  test-rust-lint:
+    permissions:
+      # required for all workflows
+      security-events: write
+      checks: write
+      pull-requests: write
+      # only required for workflows in private repositories
+      actions: read
+      contents: read
+    env:
+      TEST_REPOSITORY: "${{github.repository_owner}}/atc-router"
+    runs-on: ubuntu-latest
+    name: Rust Code Linting checks
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: ${{env.TEST_REPOSITORY}}
+          path: ${{env.TEST_REPOSITORY}}
+      - uses: ./code-check-actions/rust-lint
+        with:
+          token: ${{secrets.GITHUB_TOKEN}}
+          manifest_dir: ${{ github.workspace }}/${{env.TEST_REPOSITORY}}
