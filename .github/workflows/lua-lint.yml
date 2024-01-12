@@ -16,6 +16,11 @@ jobs:
     env:
       TEST_REPOSITORY: "${{github.repository_owner}}/atc-router"
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: read
+      checks: write
+      pull-requests: write
     name: Luacheck code analysis
     steps:
       - uses: actions/checkout@v3

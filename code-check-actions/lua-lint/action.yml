@@ -42,7 +42,7 @@ runs:
     # Publishing: https://github.com/EnricoMi/publish-unit-test-result-action#publishing-test-results
     - name: Luacheck Report
       uses: EnricoMi/publish-unit-test-result-action@v2
-      if: always()
+      if: always() && github.actor != 'dependabot[bot]'
       with:
         files: |
           luacheck_${{github.sha}}.xml
