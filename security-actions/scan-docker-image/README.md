@@ -195,7 +195,7 @@
             version: ${{ env.RELEASE_TAG }}
             publish: true
             commitish: ${{ github.sha }}
-        - uses: actions/download-artifact@v3
+        - uses: actions/download-artifact@v4
           with:
             path: ${{ github.workspace }}/sbom-artifacts
         - uses: AButler/upload-release-assets@v2.0
@@ -217,7 +217,7 @@
   ```
 
 - Using action to scan single platform docker image as a job within a workflow
-  - Uses *actions/upload-artifact@v3* and *actions/download-artifact@v3* to share docker archives across jobs
+  - Uses *actions/upload-artifact@v4* and *actions/download-artifact@v4* to share docker archives across jobs
   - On successful workflow completion, delete the Docker Archive workflow artifact at the end; otherwise retain for a 1 day at most
   - Better visualization using separate scan job in the pipeline
 
@@ -274,7 +274,7 @@
               tags: ${{ steps.meta.outputs.tags }}
               outputs: "type=docker,dest=${{ env.DOCKER_OCI_ARCHIVE }}.tar" # Supports only single platform images
           - name: Upload Docker OCI layout TAR Artifact
-          uses: actions/upload-artifact@v3
+          uses: actions/upload-artifact@v4
           with:
             name: ${{ env.DOCKER_OCI_ARCHIVE }}
             path: ${{ env.DOCKER_OCI_ARCHIVE }}.tar
@@ -294,7 +294,7 @@
             buildx-tags: ${{ needs.docker-build.outputs.buildx-tags }}
           steps:
             - name: Download OCI docker TAR artifact
-              uses: actions/download-artifact@v3
+              uses: actions/download-artifact@v4
               with:
                 name: ${{ env.DOCKER_OCI_ARCHIVE }}
                 path: ${{ github.workspace }}/${{ env.DOCKER_OCI_ARCHIVE }}
@@ -323,7 +323,7 @@
                   version: ${{ env.RELEASE_TAG }}
                   publish: true
                   commitish: ${{ github.sha }}
-              - uses: actions/download-artifact@v3
+              - uses: actions/download-artifact@v4
                 with:
                   path: ${{ github.workspace }}/sbom-artifacts
               - run: |
@@ -460,7 +460,7 @@
               version: ${{ env.RELEASE_TAG }}
               publish: true
               commitish: ${{ github.sha }}
-          - uses: actions/download-artifact@v3
+          - uses: actions/download-artifact@v4
             with:
               path: ${{ github.workspace }}/sbom-artifacts
           - run: |
