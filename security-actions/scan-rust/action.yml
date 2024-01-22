@@ -76,7 +76,7 @@ runs:
 
     - name: Publish SARIF to github workflow artifact
       if: always()
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: ${{ steps.meta.outputs.grype_sarif_file }}
         path: |

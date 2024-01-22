@@ -36,7 +36,7 @@ runs:
     # Upload grype cve reports
     - name: Upload Semgrep SARIF to Workflow
       if: always()
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: semgrep_sast.zip
         path: |

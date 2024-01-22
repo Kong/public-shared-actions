@@ -23,7 +23,7 @@ runs:
 
     - name: Upload results to workflow
       if: always()
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: luacheck_results.zip
         path: |
