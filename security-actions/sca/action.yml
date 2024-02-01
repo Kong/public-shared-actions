@@ -110,7 +110,7 @@ runs:
         dependency-snapshot: false
 
     - name: Check SBOM files existence
-      uses: andstor/file-existence-action@v2
+      uses: andstor/file-existence-action@v3
       id: sbom_report
       with:
         files: "${{ steps.meta.outputs.sbom_spdx_file }}, ${{ steps.meta.outputs.sbom_cyclonedx_file }}"
@@ -142,7 +142,7 @@ runs:
         severity-cutoff: ${{ steps.meta.outputs.global_severity_cutoff }}
 
     - name: Check vulnerability analysis report existence
-      uses: andstor/file-existence-action@v2
+      uses: andstor/file-existence-action@v3
       id: grype_report
       with:
         files: "${{ steps.grype_analysis_sarif.outputs.sarif }}, ${{ steps.grype_analysis_json.outputs.json }}"
