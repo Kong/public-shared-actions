@@ -64,7 +64,7 @@ runs:
 
     - name: Check docker OCI tar existence
       if: ${{ steps.sca.outputs.analyzed-image != '' }}
-      uses: andstor/file-existence-action@v2
+      uses: andstor/file-existence-action@v3
       id: docker_tar
       with:
         files: "${{ steps.sca.outputs.analyzed-image }}"
