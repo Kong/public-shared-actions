@@ -7,7 +7,7 @@ inputs:
     required: false
     default: ''
   dir:
-    description: 'Speicify a directory to be scanned. This is mutually exclusive to file and image'
+    description: 'Specify a directory to be scanned. This is mutually exclusive to file and image'
     required: false
     default: ''
   file:
