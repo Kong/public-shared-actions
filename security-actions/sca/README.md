@@ -2,14 +2,14 @@
 
 ## Action implemented
 
-- [Scan Docker Image](./scan-docker-image/action.yml) is a action for container SCA image scanning and CIS benchmarks. The action produces an SBOM, CVE, and CIS benchmark scanning and reports for a given image.
+- [SCA](./sca/action.yml) is a unified action for composition analysis. The action produces an SBOM, CVE reports for a given image / directory / file.
   - Tools used:
     - [syft](https://github.com/anchore/syft) generates a Software Bill of Materials (SBOM)
-    - [grype](https://github.com/anchore/grype) vulnerability scanner for container images
-    - [trivy](https://github.com/aquasecurity/trivy) compliance scanner for docker-cis 
+    - [grype](https://github.com/anchore/grype) vulnerability scanner for CVE analysis
 
-### Scan Docker Image
+### Scan
 
+- Use [SCA](./sca/action.yml) for directories and files
 - Use [SCAN-DOCKER-IMAGE](./scan-docker-image/action.yml) for docker images
 
 #### SBOM Generation Working
@@ -63,14 +63,20 @@
 
 #### User provided input parameters
 
-- Inputs **image** is mandatory
-
-- OCI tar balls / Docker archives (OCI compatible) are considered as input type  **Image**
+- Inputs **image / dir / file** are mutually exclusive. Any one input is mandatory
 
 ```yaml
   asset_prefix:
     description: 'prefix for generated scan artifacts'
     required: false
+    default: ''
+  dir: 
+    description: 'Specify a directory to be scanned. This is mutually exclusive to file and image'
+    required: 'false'
+    default: ''
+  file:
+    description: 'Specify a file to be scanned. This is mutually exclusive to dir and image'
+    required: 'false'
     default: ''
   image:
     description: 'specify an image to be scanned. Specify registry credentials if the image is remote. Takes priority over dir and file'
@@ -98,11 +104,9 @@
 
 #### Output specification
 
-- Generates sbom reports in **spdx.json** and **cyclonedx.xml** formats using *syft* on the inputs **image**
+- Generates sbom reports in **spdx.json** and **cyclonedx.xml** formats using *syft* on the inputs **image / dir / file**
 
 - Generates cve vulnerability analysis report based on the spdx sbom file using *grype*
-
-- Generates docker-cis analysis report using *trivy*
 
 - Uploads the security assets as workflow artifacts and retained based on repo / org settings
 
@@ -111,12 +115,10 @@
 #### Output parameters
 
 ```yaml
-    cis-json-report:
-      description: 'docker-cis json report'
     grype-sarif-report:
       description: 'vulnerability SARIF report'
     grype-json-report:
-      description: 'vulnerability JSON report'
+      description: 'vulnerability JSON report'  
     sbom-spdx-report:
       description: 'SBOM spdx report'
     sbom-cyclonedx-report:

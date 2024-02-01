@@ -11,6 +11,14 @@ updates:
       interval: "daily"
 
   - package-ecosystem: "github-actions"
+    directory: "/security-actions/sca"
+    schedule:
+      interval: "daily"
+    commit-message:
+      prefix: "github-actions"
+      include: "scope"
+
+  - package-ecosystem: "github-actions"
     directory: "/security-actions/scan-docker-image"
     schedule:
       interval: "daily"

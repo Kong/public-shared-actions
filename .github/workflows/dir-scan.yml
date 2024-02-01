@@ -1,0 +1,35 @@
+name: SCA Directory Scan
+
+on:
+  pull_request:
+    branches:
+    - main
+  push:
+    branches:
+    - main
+    tags:
+    - '*'
+
+jobs:
+  test-sca-dir:
+    env:
+      TEST_REPOSITORY: "${{github.repository_owner}}/insomnia"
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: read
+      checks: write
+      pull-requests: write
+    name: Test Repository Scan
+    steps:
+        - uses: actions/checkout@v4
+        - uses: actions/checkout@v4
+          with:
+            repository: ${{env.TEST_REPOSITORY}}
+            path: ${{env.TEST_REPOSITORY}}
+        - name: Scan Directory
+          id: scan-dir
+          uses: ./security-actions/sca
+          with:
+            asset_prefix: ${{env.TEST_REPOSITORY}}
+            dir: ${{env.TEST_REPOSITORY}}
