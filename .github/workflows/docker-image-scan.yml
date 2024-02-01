@@ -1,4 +1,4 @@
-name: Docker Scan Test
+name: SCA Docker Test
 
 on:
   pull_request:
