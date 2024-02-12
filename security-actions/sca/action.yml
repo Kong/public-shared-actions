@@ -28,6 +28,9 @@ inputs:
   registry_password:
     description: 'docker password to login against private docker registry'
     required: false
+  config:
+    description: 'file path to syft custom configuration'
+    required: false
   fail_build:
     description: 'fail the build if the vulnerability is above the severity cutoff'
     required: false
@@ -81,6 +84,7 @@ runs:
       uses: anchore/sbom-action@v0.15.8
       id: sbom_spdx
       with:
+        config: ${{ inputs.config }}
         image: ${{ steps.meta.outputs.scan_image }}
         registry-username: ${{ inputs.registry_username }}
         registry-password: ${{ inputs.registry_password }}
@@ -97,6 +101,7 @@ runs:
       uses: anchore/sbom-action@v0.15.8
       id: sbom_cyclonedx
       with:
+        config: ${{ inputs.config }}
         image: ${{ steps.meta.outputs.scan_image }}
         registry-username: ${{ inputs.registry_username }}
         registry-password: ${{ inputs.registry_password }}
