@@ -14,20 +14,6 @@ inputs:
     description: 'Specify a file to be scanned. This is mutually exclusive to dir and image'
     required: false
     default: ''
-  image:
-    description: 'specify an image to be scanned. Specify registry credentials if the image is remote. Takes priority over dir and file'
-    required: false
-    default: ''
-  tag:
-    description: 'specify a docker image tag / release tag / ref to be scanned'
-    required: false
-    default: ''
-  registry_username:
-    description: 'docker username to login against private docker registry'
-    required: false
-  registry_password:
-    description: 'docker password to login against private docker registry'
-    required: false
   config:
     description: 'file path to syft custom configuration'
     required: false
@@ -45,9 +31,6 @@ outputs:
   global-enforce-build-failure:
     description: 'Globally fail the build on failure. Overrides fail_build when set'
     value: ${{ steps.meta.outputs.global_enforce_build_failure }}
-  analyzed-image:
-    description: 'sanitized docker image / tar only when image input is specified'
-    value: ${{ steps.meta.outputs.scan_image }}
   cis-json-report:
     description: 'docker-cis json report'
     value: ${{ steps.meta.outputs.cis_json_file }}
@@ -72,8 +55,6 @@ runs:
       shell: bash
       id: meta
       env:
-        IMAGE: ${{ inputs.image }}
-        TAG: ${{ inputs.tag }}
         DIR: ${{ inputs.dir }}
         FILE: ${{ inputs.file }}
         ASSET_PREFIX: ${{ inputs.asset_prefix }}
@@ -85,9 +66,6 @@ runs:
       id: sbom_spdx
       with:
         config: ${{ inputs.config }}
-        image: ${{ steps.meta.outputs.scan_image }}
-        registry-username: ${{ inputs.registry_username }}
-        registry-password: ${{ inputs.registry_password }}
         path: ${{ steps.meta.outputs.scan_dir }}
         file: ${{ steps.meta.outputs.scan_file }}
         format: spdx-json
@@ -102,9 +80,6 @@ runs:
       id: sbom_cyclonedx
       with:
         config: ${{ inputs.config }}
-        image: ${{ steps.meta.outputs.scan_image }}
-        registry-username: ${{ inputs.registry_username }}
-        registry-password: ${{ inputs.registry_password }}
         path: ${{ steps.meta.outputs.scan_dir }}
         file: ${{ steps.meta.outputs.scan_file }}
         format: cyclonedx-json
