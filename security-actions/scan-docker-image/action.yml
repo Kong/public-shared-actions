@@ -20,6 +20,9 @@ inputs:
   registry_password:
     description: 'docker password to login against private docker registry'
     required: false
+  config:
+    description: 'file path to syft custom configuration'
+    required: false
   fail_build:
     description: 'fail the build if the vulnerability is above the severity cutoff'
     required: false
@@ -32,84 +35,179 @@ inputs:
 outputs:
   cis-json-report:
     description: 'docker-cis json report'
-    value: ${{ steps.sca.outputs.cis-json-report }}
+    value: ${{ steps.meta.outputs.cis_json_file }}
   grype-json-report:
     description: 'vulnerability json report'
-    value: ${{ steps.sca.outputs.grype_json_report }}
+    value: ${{ steps.meta.outputs.grype_json_report }}
   grype-sarif-report:
     description: 'vulnerability sarif report'
-    value: ${{ steps.sca.outputs.grype_sarif_report }}
+    value: ${{ steps.meta.outputs.grype_sarif_report }}
   sbom-spdx-report:
     description: 'SBOM spdx report'
-    value: ${{ steps.sca.outputs.sbom_spdx_file }}
+    value: ${{ steps.meta.outputs.sbom_spdx_file }}
   sbom-cyclonedx-report:
     description: 'SBOM cyclonedx report'
-    value: ${{ steps.sca.outputs.sbom_cyclonedx_file }}
+    value: ${{ steps.meta.outputs.sbom_cyclonedx_file }}
 
 runs:
   using: composite
   steps:
 
-    # Due to https://github.com/orgs/community/discussions/41927
-    - name: Symlink current Actions repo
-      working-directory: ${{ github.action_path }}
+    - name: Set Scan Job Metadata
       shell: bash
-      run: ln -fs $(realpath ../../)  /home/runner/work/_actions/current
+      id: meta
+      env:
+        IMAGE: ${{ inputs.image }}
+        TAG: ${{ inputs.tag }}
+        ASSET_PREFIX: ${{ inputs.asset_prefix }}
+      run: $GITHUB_ACTION_PATH/scripts/scan-metadata.sh
 
-    - run: |
-        ls -al /home/runner/work/_actions/current
-      shell: bash
-
-    # Reuse SCA action for docker-image
-    - name: Perform Docker SCA
-      id: sca
-      uses: ./../../_actions/current/security-actions/sca
+    # Must upload artifact for output file parameter to have effect
+    - name: Generate SPDX SBOM Using Syft
+      uses: anchore/sbom-action@v0.15.8
+      id: sbom_spdx
       with:
-        asset_prefix: ${{ inputs.asset_prefix }}
-        image: ${{ inputs.image }}
-        tag: ${{ inputs.tag }}
-        registry_username: ${{ inputs.registry_username }}
-        registry_password: ${{ inputs.registry_password }}
-        fail_build: ${{ inputs.fail_build }}
+        config: ${{ inputs.config }}
+        image: ${{ steps.meta.outputs.scan_image }}
+        registry-username: ${{ inputs.registry_username }}
+        registry-password: ${{ inputs.registry_password }}
+        format: spdx-json
+        artifact-name: ${{ steps.meta.outputs.sbom_spdx_file }}
+        output-file: ${{ steps.meta.outputs.sbom_spdx_file }}
+        upload-artifact: true
+        upload-release-assets: false
+        dependency-snapshot: false
+
+    - name: Generate CycloneDX SBOM Using Syft
+      uses: anchore/sbom-action@v0.15.8
+      id: sbom_cyclonedx
+      with:
+        config: ${{ inputs.config }}
+        image: ${{ steps.meta.outputs.scan_image }}
+        registry-username: ${{ inputs.registry_username }}
+        registry-password: ${{ inputs.registry_password }}
+        format: cyclonedx-json
+        artifact-name: ${{ steps.meta.outputs.sbom_cyclonedx_file }}
+        output-file: ${{ steps.meta.outputs.sbom_cyclonedx_file }}
+        upload-artifact: true
+        upload-release-assets: false
+        dependency-snapshot: false
+
+    - name: Check SBOM files existence
+      uses: andstor/file-existence-action@v3
+      id: sbom_report
+      with:
+        files: "${{ steps.meta.outputs.sbom_spdx_file }}, ${{ steps.meta.outputs.sbom_cyclonedx_file }}"
+        fail: true
+
+    # Don't fail during report generation
+    - name: Vulnerability analysis of SBOM
+      uses: anchore/scan-action@v3.6.4
+      id: grype_analysis_sarif
+      if: ${{ steps.sbom_report.outputs.files_exists == 'true' }}
+      with:
+        sbom: ${{ steps.meta.outputs.sbom_spdx_file }}
+        output-format: sarif
+        fail-build: 'false'
+        add-cpes-if-none: true
+        severity-cutoff: ${{ steps.meta.outputs.global_severity_cutoff }}
+
+    # Don't fail during report generation
+    # JSON format will report  any ignored rules
+    - name: Vulnerability analysis of SBOM
+      uses: anchore/scan-action@v3.6.4
+      id: grype_analysis_json
+      if: ${{ steps.sbom_report.outputs.files_exists == 'true' }}
+      with:
+        sbom: ${{ steps.meta.outputs.sbom_spdx_file }}
+        output-format: json
+        fail-build: 'false'
+        add-cpes-if-none: true
+        severity-cutoff: ${{ steps.meta.outputs.global_severity_cutoff }}
+
+    - name: Check vulnerability analysis report existence
+      uses: andstor/file-existence-action@v3
+      id: grype_report
+      with:
+        files: "${{ steps.grype_analysis_sarif.outputs.sarif }}, ${{ steps.grype_analysis_json.outputs.json }}"
+        fail: true
+
+    # Grype CVE Action generates an ./results.sarif or ./results.report and no way to customize output file name
+    # Hack to increase readability of grype artifacts attached to workflows and releases
+    - name: Rename grype analysis report
+      shell: bash
+      run: |
+        mv ${{ steps.grype_analysis_sarif.outputs.sarif }} ${{ steps.meta.outputs.grype_sarif_file }}
+        mv ${{ steps.grype_analysis_json.outputs.json }} ${{ steps.meta.outputs.grype_json_file }}
+
+    - name: Upload grype analysis report
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ steps.meta.outputs.grype_sarif_file }}
+        path: |
+          ${{ steps.meta.outputs.grype_sarif_file }}
+        if-no-files-found: warn
+
+    # Upload grype cve reports
+    - name: Upload grype analysis report
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ steps.meta.outputs.grype_json_file }}
+        path: |
+          ${{ steps.meta.outputs.grype_json_file }}
+        if-no-files-found: warn
+
+    # Fail based on severity and input parameters
+    # Notify grype quick scan results in table format
+    # Table format will supress any specified ignore rules
+    - name: Inspect Vulnerability analysis of SBOM
+      uses: anchore/scan-action@v3.6.4
+      if: ${{ steps.sbom_report.outputs.files_exists == 'true' }}
+      with:
+        sbom: ${{ steps.meta.outputs.sbom_spdx_file }}
+        output-format: table
+        fail-build: ${{ steps.meta.outputs.global_enforce_build_failure == 'true' && steps.meta.outputs.global_enforce_build_failure || inputs.fail_build }}
+        add-cpes-if-none: true
+        severity-cutoff: ${{ steps.meta.outputs.global_severity_cutoff }}
 
     - name: Check docker OCI tar existence
-      if: ${{ steps.sca.outputs.analyzed-image != '' }}
+      if: ${{ steps.meta.outputs.scan_image != '' }}
       uses: andstor/file-existence-action@v3
       id: docker_tar
       with:
-        files: "${{ steps.sca.outputs.analyzed-image }}"
+        files: "${{ steps.meta.outputs.scan_image }}"
 
     - name: Generate docker-cis JSON report
       uses: docker://ghcr.io/aquasecurity/trivy:0.37.2
-      if: ${{ steps.sca.outputs.analyzed-image != '' }}
+      if: ${{ steps.meta.outputs.scan_image != '' }}
       id: cis_json
       with:
         entrypoint: trivy
-        args: "image ${{ env.input }} ${{ steps.sca.outputs.analyzed-image }} --compliance ${{ env.compliance }} -f json --severity ${{ env.severity }} --ignore-unfixed -o ${{ steps.sca.outputs.cis-json-report }}"
+        args: "image ${{ env.input }} ${{ steps.meta.outputs.scan_image }} --compliance ${{ env.compliance }} -f json --severity ${{ env.severity }} --ignore-unfixed -o ${{ steps.meta.outputs.cis_json_file }}"
       env:
         compliance: docker-cis
-        severity: ${{ steps.sca.outputs.global_severity_cutoff }}
+        severity: ${{ steps.meta.outputs.global_enforce_build_failure }}
         input: ${{ steps.docker_tar.outputs.files_exists == 'true' && '--input' || '' }}
 
     - name: upload docker-cis JSON report
-      if: ${{ steps.sca.outputs.analyzed-image != '' }}
+      if: ${{ steps.meta.outputs.scan_image != '' }}
       uses: actions/upload-artifact@v4
       with:
-        name: ${{ steps.sca.outputs.cis-json-report }}
+        name: ${{ steps.meta.outputs.cis_json_file }}
         path: |
-          ${{ steps.sca.outputs.cis-json-report }}
+          ${{ steps.meta.outputs.cis_json_file }}
         if-no-files-found: warn
 
     - name: Inspect docker-cis report
-      if: ${{ steps.sca.outputs.analyzed-image != '' }}
+      if: ${{ steps.meta.outputs.scan_image != '' }}
       uses: docker://ghcr.io/aquasecurity/trivy:0.37.2
       with:
         entrypoint: trivy
-        args: "image ${{ env.input }} ${{ steps.sca.outputs.analyzed-image }} --compliance ${{ env.compliance }} -f table --severity ${{ env.severity }} --ignore-unfixed --exit-code ${{ env.exit-code }}"
+        args: "image ${{ env.input }} ${{ steps.meta.outputs.scan_image }} --compliance ${{ env.compliance }} -f table --severity ${{ env.severity }} --ignore-unfixed --exit-code ${{ env.exit-code }}"
       env:
-        exit-code: ${{ (steps.sca.outputs.global_enforce_build_failure == 'true' || inputs.fail_build == 'true') && '1' || '0' }}
+        exit-code: ${{ (steps.meta.outputs.global_enforce_build_failure == 'true' || inputs.fail_build == 'true') && '1' || '0' }}
         compliance: docker-cis
-        severity: ${{ steps.sca.outputs.global_severity_cutoff }}
+        severity: ${{ steps.meta.outputs.global_enforce_build_failure }}
         input: ${{ steps.docker_tar.outputs.files_exists == 'true' && '--input' || '' }}
 
     

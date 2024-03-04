@@ -11,22 +11,18 @@ readonly cis_json_ext="cis-report.json"
 global_severity_cutoff='critical'
 global_enforce_build_failure='false'
 
-if [[ -n ${DIR} && -n ${FILE} ]]; then
-    echo '::error ::Input fields "dir" and "file" are mutually exlcusive'
+if [[ -z ${IMAGE} ]]; then
+    echo '::error ::Specify "image" inputs fields'
     exit 1
 fi
 
-if [[ -z ${DIR} && -z ${FILE} ]]; then
-    echo '::error ::Specify one of "dir" and "file" inputs fields'
-    exit 1
-fi
-
-if [[ -n ${DIR} ]]; then
-    echo "scan_dir=${DIR}" >> $GITHUB_OUTPUT
-fi
-
-if [[ -n ${FILE} ]]; then
-    echo "scan_file=${FILE}" >> $GITHUB_OUTPUT
+# OCI archive should be passed as image instead of file
+if [[ -n ${IMAGE} ]]; then
+    if [[ -n ${TAG} ]]; then
+        echo "scan_image=${IMAGE}:${TAG}" >> $GITHUB_OUTPUT
+    else
+        echo "scan_image=${IMAGE}" >> $GITHUB_OUTPUT
+    fi
 fi
 
 if [[ -n ${ASSET_PREFIX} ]]; then
