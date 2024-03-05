@@ -64,7 +64,7 @@ runs:
 
     # Must upload artifact for output file parameter to have effect
     - name: Generate SPDX SBOM Using Syft
-      uses: anchore/sbom-action@v0.15.8
+      uses: anchore/sbom-action@v0.15.9
       id: sbom_spdx
       with:
         config: ${{ inputs.config }}
@@ -79,7 +79,7 @@ runs:
         dependency-snapshot: false
 
     - name: Generate CycloneDX SBOM Using Syft
-      uses: anchore/sbom-action@v0.15.8
+      uses: anchore/sbom-action@v0.15.9
       id: sbom_cyclonedx
       with:
         config: ${{ inputs.config }}
