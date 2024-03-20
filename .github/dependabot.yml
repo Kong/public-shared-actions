@@ -33,6 +33,22 @@ updates:
     commit-message:
       prefix: "docker"
       include: "scope"
+
+  - package-ecosystem: "github-actions"
+    directory: "/security-actions/sign-docker-image"
+    schedule:
+      interval: "daily"
+    commit-message:
+      prefix: "github-actions"
+      include: "scope"
+    
+  - package-ecosystem: docker
+    directory: "/security-actions/sign-docker-image"
+    schedule:
+      interval: "daily"
+    commit-message:
+      prefix: "docker"
+      include: "scope"
   
   - package-ecosystem: "github-actions"
     directory: "/code-check-actions/luacheck"
