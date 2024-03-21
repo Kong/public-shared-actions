@@ -1,0 +1,65 @@
+name: Docker Image Provenance
+
+on:
+  push:
+    branches:
+    - main
+    tags:
+    - '*'
+  workflow_dispatch: {}
+
+env:
+  PRERELEASE_IMAGE: kongcloud/security-test-repo-pub:ubuntu_23_10 #particular reason for the choice of image: test multi arch image
+  TAGS: kongcloud/security-test-repo-pub:ubuntu_23_10,kongcloud/security-test-repo:ubuntu_23_10
+
+jobs:
+
+  provenance-metadata:
+    name: Set Docker Image Provenance metadata
+    runs-on: ubuntu-22.04
+    if: ${{ github.repository_owner == 'Kong' }}
+    outputs:
+      IMAGE_MANIFEST_DIGEST: ${{ steps.image_manifest_metadata.outputs.manifest_sha }}
+      IMAGE: ${{ env.PRERELEASE_IMAGE }}
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Install regctl
+      uses: regclient/actions/regctl-installer@main
+
+    - name: Parse Image Manifest Digest
+      id: image_manifest_metadata
+      run: |
+        manifest_list_exists="$(
+            if regctl manifest get "${PRERELEASE_IMAGE}" --format raw-body --require-list -v panic &> /dev/null; then
+            echo true
+            else
+            echo false
+            fi
+        )"
+        echo "manifest_list_exists=$manifest_list_exists"
+        echo "manifest_list_exists=$manifest_list_exists" >> $GITHUB_OUTPUT
+
+        manifest_sha="$(regctl image digest "${PRERELEASE_IMAGE}")"
+
+        echo "manifest_sha=$manifest_sha"
+        echo "manifest_sha=$manifest_sha" >> $GITHUB_OUTPUT
+
+  test-docker-image-provenance:
+    name: Test Docker Image Provenance
+    needs: [provenance-metadata]
+    permissions:
+      contents: read
+      packages: write # needed to upload to packages to registry
+      id-token: write # needed for signing the images with GitHub OIDC Token
+    if: ${{ github.repository_owner == 'Kong' }}
+    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@v1.10.0
+    with:
+      image: "${{ needs.provenance-metadata.outputs.IMAGE }}"
+      digest: "${{ needs.provenance-metadata.outputs.IMAGE_MANIFEST_DIGEST }}"
+      provenance-repository: kongcloud/security-test-repo-sig-pub
+    secrets:
+      registry-password: ${{ secrets.DOCKERHUB_PUSH_USERNAME }}
+      registry-username: ${{ secrets.DOCKERHUB_PUSH_TOKEN }}
+      provenance-registry-username: ${{ secrets.DOCKERHUB_PUSH_USERNAME }}
+      provenance-registry-password: ${{ secrets.DOCKERHUB_PUSH_TOKEN }}
