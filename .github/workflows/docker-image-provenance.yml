@@ -50,6 +50,7 @@ jobs:
     needs: [provenance-metadata]
     permissions:
       contents: read
+      actions: read
       packages: write # needed to upload to packages to registry
       id-token: write # needed for signing the images with GitHub OIDC Token
     if: ${{ github.repository_owner == 'Kong' }}
