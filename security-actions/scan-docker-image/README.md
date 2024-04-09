@@ -125,6 +125,72 @@
 
 #### Usage Examples
 
-Refer [directory-scan](./github/workflows/dir-scan.yml) for scanning non-docker files / paths
+```yml
+name: SCA Docker Image Manifest
 
-Refer [docker-image-scan](./github/workflows/docker-image-scan.yml) for scanning docker images / docker tar
+on:
+  pull_request:
+    branches:
+    - main
+  push:
+    branches:
+    - main
+    tags:
+    - '*'
+
+jobs:
+  sca-docker-image:
+    if: ${{ github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository }}
+    name: Scan Docker Image
+    runs-on: ubuntu-22.04
+    env:
+      IMAGE: kong/kong-gateway-dev:latest # multi arch image input
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Install regctl
+      uses: regclient/actions/regctl-installer@main
+
+    - name: Login to DockerHub
+      if: success()
+      uses: docker/login-action@v3
+      with:
+        username: ${{ secrets.GHA_DOCKERHUB_PULL_USER }}
+        password: ${{ secrets.GHA_KONG_ORG_DOCKERHUB_PUBLIC_TOKEN }}
+
+    - name: Parse Architecture Specific Image Manifest Digests
+      id: image_manifest_metadata
+      run: |
+        manifest_list_exists="$(
+          if regctl manifest get "${IMAGE}" --format raw-body --require-list -v panic &> /dev/null; then
+            echo true
+          else
+            echo false
+          fi
+        )"
+        echo "manifest_list_exists=$manifest_list_exists"
+        echo "manifest_list_exists=$manifest_list_exists" >> $GITHUB_OUTPUT
+
+        amd64_sha="$(regctl image digest "${IMAGE}" --platform linux/amd64 || echo '')"
+        arm64_sha="$(regctl image digest "${IMAGE}" --platform linux/arm64 || echo '')"
+        echo "amd64_sha=$amd64_sha"
+        echo "amd64_sha=$amd64_sha" >> $GITHUB_OUTPUT
+        echo "arm64_sha=$arm64_sha"
+        echo "arm64_sha=$arm64_sha" >> $GITHUB_OUTPUT
+
+    - name: Scan AMD64 Image digest
+      id: sbom_action_amd64
+      if: steps.image_manifest_metadata.outputs.amd64_sha != ''
+      uses: Kong/public-shared-actions/security-actions/scan-docker-image@main
+      with:
+        asset_prefix: kong-gateway-dev-linux-amd64
+        image: ${{env.IMAGE}}@${{ steps.image_manifest_metadata.outputs.amd64_sha }}
+
+    - name: Scan ARM64 Image digest
+      if: steps.image_manifest_metadata.outputs.manifest_list_exists == 'true' && steps.image_manifest_metadata.outputs.arm64_sha != ''
+      id: sbom_action_arm64
+      uses: Kong/public-shared-actions/security-actions/scan-docker-image@main
+      with:
+        asset_prefix: kong-gateway-dev-linux-arm64
+        image: ${{env.IMAGE}}@${{ steps.image_manifest_metadata.outputs.arm64_sha }}
+```
