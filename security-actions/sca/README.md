@@ -127,6 +127,38 @@
 
 #### Usage Examples
 
-Refer [directory-scan](./github/workflows/dir-scan.yml) for scanning non-docker files / paths
+For scanning filesystem directories / paths:
 
-Refer [docker-image-scan](./github/workflows/docker-image-scan.yml) for scanning docker images / docker tar
+```yml
+name: SCA Repository Scan
+
+on:
+  pull_request:
+    branches:
+    - main
+  push:
+    branches:
+    - main
+    tags:
+    - '*'
+
+jobs:
+  sca:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: read
+      checks: write
+      pull-requests: write
+    name: Repository Scan
+    steps:
+        - uses: actions/checkout@v4
+        - name: Scan Repository
+          id: sca_repo
+          uses: Kong/public-shared-actions/security-actions/sca@main
+          with:
+            asset_prefix: <repo-name-slug> #output files prefix
+            dir: '.' # Path to directory where the repository is checked out
+            config: .syft.yaml # Custom config for overrides in repository root
+            fail_build: 'true' # Fail job if critical vulnerabilities are detected
+```
