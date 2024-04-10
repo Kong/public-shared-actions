@@ -8,12 +8,17 @@ The action runs the following:
 - Provides a optional input to fail downstream builds based on semgrep findings
 
 ## Action Output
+
 - Report Semgrep Finding Summary as Console output
 - Report Findings 
   - Private repositories: workflow artifact file
   - Public repositories: Github Security tab 
 - The failure mode of build is configurable based on shared action outcome
+
 ## Detailed example
+
+> [!IMPORTANT]
+Create a GH workflow file `sast.yml` under `.github/workflows` folder
 
 ```yaml
 name: Semgrep

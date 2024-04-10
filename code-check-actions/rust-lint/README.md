@@ -21,13 +21,17 @@ manifest_dir:
 - All Clippy Findings are reported as `Warnings` on the github check `Rust Clippy Report`
 
 - On Push: Commit check summary
-- On PR: Github check Summary and PR annotations
+- On PRs (Forked repositories not supported): Github check Summary and PR annotations
 
 ## Action Output
+
 - Report findings as warnings and be non-blocking
 - The failure mode of build is not configurable based on shared action outcome
 
 ## Detailed example
+
+> [!IMPORTANT]
+Create/Update a GH workflow file `lint.yml` under `.github/workflows` folder
 
 ```yaml
 name: Rust Code Quality

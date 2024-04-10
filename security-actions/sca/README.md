@@ -78,20 +78,9 @@
     description: 'Specify a file to be scanned. This is mutually exclusive to dir and image'
     required: 'false'
     default: ''
-  image:
-    description: 'specify an image to be scanned. Specify registry credentials if the image is remote. Takes priority over dir and file'
-    required: 'false'
-    default: ''
-  tag:
-    description: 'specify a docker image tag / release tag / ref to be scanned'
-    required: 'false'
-    default: ''
-  registry_username:
-    description: 'docker username to login against private docker registry'
-    required: 'false'
-  registry_password:
-    description: 'docker password to login against private docker registry'
-    required: 'false'
+  config:
+    description: 'file path to syft custom configuration'
+    required: false
   fail_build:
     description: 'fail the build if the vulnerability is above the severity cutoff'
     required: 'false'
@@ -124,6 +113,39 @@
     sbom-cyclonedx-report:
       description: 'SBOM cyclonedx report'
 ```
+
+### Migration Strategy
+
+1. The shared action is built to enforce using a global toggle managed by security team, but we don't block, regardless of severity i.e (No Enforcement Yet)
+
+2. Teams integrate the shared action for visibility of the vulnerabilities in their SBOM (image / filesystem) but are not impacted
+
+3. A deadline is set, at which point the scan will turn to block for certain severities e.g. only criticals i.e (Enforcement of build failures). This will be communicated extensively across Kong
+
+4. Using visibility from step 2 / quick CVE scan results, teams can now work to remediate all critical findings. The expectation here is that almost all (almost all because a new rule might be integrated into the scanner just before we turn to block on) critical vulnerabilities would be remediated before we start blocking
+
+5. On the deadline, we enforce global force failing of builds to be turned on. Except for a few outliers from step 3, there should be no impact
+
+6. We repeat steps 2-5 by moving down in severity until all remaining vulnerabilities are within our risk appetite
+
+### Break glass strategy
+
+We expect application teams to use the advanced configuration of ignore rules with due diligence in case of hotfixes/emergency releases
+
+To bypass blocking builds during emergency releases/scenarios where CVE fix needs a lot of refactoring during a hotfix:
+
+#### Syft 
+
+1. Generate a Syft [Override](https://github.com/anchore/syft?tab=readme-ov-file#configuration) configuration file
+2. [Select catalogers](https://github.com/anchore/syft?tab=readme-ov-file#package-cataloger-selection)
+3. [Excluding file paths (only in file system scans)](https://github.com/anchore/syft?tab=readme-ov-file#configuration)
+4. Specify override [config input](https://github.com/Kong/public-shared-actions/blob/main/security-actions/scan-docker-image/action.yml#L23) to the shared action
+
+#### Grype
+
+1. Create a `.grype/config.yaml` [override](https://github.com/anchore/scan-action#additional-configuration) configuration file in the root of the repository
+2. Customize Grype vulnerability results using [ignore rules](https://github.com/anchore/grype#specifying-matches-to-ignore)
+3. These ignore rules take effect during the CVE scan that decides the build state (i.e blocking / non-blocking) for a provided global severity cutoff
 
 #### Usage Examples
 
