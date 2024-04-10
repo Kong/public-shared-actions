@@ -24,6 +24,9 @@ additional_args:
 
 ## Example usage
 
+> [!IMPORTANT]
+Create/Update a GH workflow file `lint.yml` under `.github/workflows` folder
+
 ```yaml
 name: Lua Code Quality
 
