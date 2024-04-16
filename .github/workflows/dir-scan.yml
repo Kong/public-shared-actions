@@ -31,5 +31,6 @@ jobs:
           id: scan-dir
           uses: ./security-actions/sca
           with:
-            asset_prefix: ${{env.TEST_REPOSITORY}}
+            asset_prefix: test.insomnia
             dir: ${{env.TEST_REPOSITORY}}
+            upload-sbom-release-assets: true
