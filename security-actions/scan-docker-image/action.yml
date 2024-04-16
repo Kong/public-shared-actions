@@ -31,6 +31,14 @@ inputs:
     options:
     - 'true'
     - 'false'
+  upload-sbom-release-assets:
+    description: 'specify to only upload sboms to GH release assets'
+    required: false
+    default: false
+    type: choice
+    options:
+    - 'true'
+    - 'false'
 
 outputs:
   cis-json-report:
@@ -75,7 +83,7 @@ runs:
         artifact-name: ${{ steps.meta.outputs.sbom_spdx_file }}
         output-file: ${{ steps.meta.outputs.sbom_spdx_file }}
         upload-artifact: true
-        upload-release-assets: false
+        upload-release-assets: ${{ inputs.upload-sbom-release-assets }}
         dependency-snapshot: false
 
     - name: Generate CycloneDX SBOM Using Syft
@@ -90,7 +98,7 @@ runs:
         artifact-name: ${{ steps.meta.outputs.sbom_cyclonedx_file }}
         output-file: ${{ steps.meta.outputs.sbom_cyclonedx_file }}
         upload-artifact: true
-        upload-release-assets: false
+        upload-release-assets: ${{ inputs.upload-sbom-release-assets }}
         dependency-snapshot: false
 
     - name: Check SBOM files existence

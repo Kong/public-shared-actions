@@ -2,15 +2,15 @@
 
 ## Action implemented
 
-- [SCA](./sca/action.yml) is a unified action for composition analysis. The action produces an SBOM, CVE reports for a given image / directory / file.
+- [SCA](./action.yml) is a unified action for composition analysis. The action produces an SBOM, CVE reports for a given image / directory / file.
   - Tools used:
     - [syft](https://github.com/anchore/syft) generates a Software Bill of Materials (SBOM)
     - [grype](https://github.com/anchore/grype) vulnerability scanner for CVE analysis
 
 ### Scan
 
-- Use [SCA](./sca/action.yml) for directories and files
-- Use [SCAN-DOCKER-IMAGE](./scan-docker-image/action.yml) for docker images
+- Use [SCA](./action.yml) for directories and files
+- Use [SCAN-DOCKER-IMAGE](../scan-docker-image/action.yml) for docker images
 
 #### SBOM Generation Working
 
@@ -36,7 +36,7 @@
 
 - Global parameters can be used for enforcement by centralized team across all repositories.
 
-- These parameters are controlled in the [scan-metadata.sh](./security-actions/sca/scripts/scan-metadata.sh)
+- These parameters are controlled in the [scan-metadata.sh](./scripts/scan-metadata.sh)
 
 - User provided input parameters are exposed to the workflows consuming the shared action
 
@@ -89,6 +89,14 @@
     options:
     - 'true'
     - 'false'
+  upload-sbom-release-assets:
+    description: 'specify to only upload sboms to GH release assets'
+    required: false
+    default: false
+    type: choice
+    options:
+    - 'true'
+    - 'false'
 ```
 
 #### Output specification
@@ -97,9 +105,9 @@
 
 - Generates cve vulnerability analysis report based on the spdx sbom file using *grype*
 
-- Uploads the security assets as workflow artifacts and retained based on repo / org settings
+- Uploads all the generated security assets as workflow artifacts and retained based on repo / org settings
 
-- Allows for publishing github releases with security assets
+- When enabled, publishes only the SBOMs to tags / GH release assets
 
 #### Output parameters
 
