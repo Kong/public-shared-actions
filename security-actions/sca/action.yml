@@ -25,6 +25,10 @@ inputs:
     options:
     - 'true'
     - 'false'
+  github-token:
+    description: "Authorized secret GitHub Personal Access Token. Defaults to github.token"
+    required: false
+    default: ${{ github.token }}
   upload-sbom-release-assets:
     description: 'specify to only upload sboms to GH release assets'
     required: false
@@ -82,6 +86,7 @@ runs:
         upload-artifact: true
         upload-release-assets: ${{ inputs.upload-sbom-release-assets }}
         dependency-snapshot: false
+        github-token: ${{ inputs.github-token }}
 
     - name: Generate CycloneDX SBOM Using Syft
       uses: anchore/sbom-action@v0.15.10
@@ -96,6 +101,7 @@ runs:
         upload-artifact: true
         upload-release-assets: ${{ inputs.upload-sbom-release-assets }}
         dependency-snapshot: false
+        github-token: ${{ inputs.github-token }}
 
     - name: Check SBOM files existence
       uses: andstor/file-existence-action@v3
@@ -173,3 +179,4 @@ runs:
         fail-build: ${{ steps.meta.outputs.global_enforce_build_failure == 'true' && steps.meta.outputs.global_enforce_build_failure || inputs.fail_build }}
         add-cpes-if-none: true
         severity-cutoff: ${{ steps.meta.outputs.global_severity_cutoff }}
+        github-token: ${{ inputs.github-token }}

@@ -61,6 +61,13 @@
     description: 'This will enforce the build failure regardless of `fail_build` external input parameter value for a specified `severity_cutoff`'
 ```
 
+### Required Workflow Permissions
+
+```yaml
+permissions:
+  contents: write # publish sbom to GH releases/tag assets
+```
+
 #### User provided input parameters
 
 - Inputs **image / dir / file** are mutually exclusive. Any one input is mandatory
@@ -89,8 +96,12 @@
     options:
     - 'true'
     - 'false'
+  github-token:
+    description: "Authorized secret GitHub Personal Access Token. Defaults to github.token"
+    required: false
+    default: ${{ github.token }}
   upload-sbom-release-assets:
-    description: 'specify to only upload sboms to GH release assets'
+    description: 'specify to only upload sboms to GH release assets.'
     required: false
     default: false
     type: choice
@@ -107,7 +118,7 @@
 
 - Uploads all the generated security assets as workflow artifacts and retained based on repo / org settings
 
-- When enabled, publishes only the SBOMs to tags / GH release assets
+- When `upload-sbom-release-assets` is enabled, publishes only the SBOMs to tags / GH release assets
 
 #### Output parameters
 
