@@ -96,6 +96,10 @@ permissions:
     options:
     - 'true'
     - 'false'
+  github-token:
+    description: "Authorized secret GitHub Personal Access Token. Defaults to github.token"
+    required: false
+    default: ${{ github.token }}
   upload-sbom-release-assets:
     description: 'specify to only upload sboms to GH release assets.'
     required: false
