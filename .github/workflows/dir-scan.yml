@@ -16,7 +16,7 @@ jobs:
       TEST_REPOSITORY: "${{github.repository_owner}}/insomnia"
     runs-on: ubuntu-latest
     permissions:
-      contents: read
+      contents: write # publish sbom to GH releases/tag assets
       issues: read
       checks: write
       pull-requests: write

@@ -61,6 +61,13 @@
     description: 'This will enforce the build failure regardless of `fail_build` external input parameter value for a specified `severity_cutoff`'
 ```
 
+### Required Workflow Permissions
+
+```yaml
+permissions:
+  contents: write # publish sbom to GH releases/tag assets
+```
+
 #### User provided input parameters
 
 - Inputs **image** is mandatory
@@ -117,7 +124,7 @@
 
 - Uploads all the generated ecurity assets as workflow artifacts and retained based on repo / org settings
 
-- When enabled, publishes only the SBOMs to tags / GH release assets
+- When `upload-sbom-release-assets` is enabled, publishes only the SBOMs to tags / GH release assets
 
 #### Output parameters
 

@@ -30,9 +30,19 @@ permissions:
   - authenicated access to private docker hub registry
   - un-authenticated access to public registry
 
+### Required Workflow Permissions
+
+```yaml
+permissions:
+  contents: read
+  packages: write # needed to upload to packages to registry
+  id-token: write # needed for signing the images with GitHub OIDC Token
+```
+
 #### Input specification
 
 #### Parameters
+
 ```yaml
   local_save_cosign_assets:
     description: 'Save cosign output assets locally on disk. Ex: certificate and signature of signed artifacts'

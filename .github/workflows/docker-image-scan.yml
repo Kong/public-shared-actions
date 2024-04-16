@@ -12,6 +12,11 @@ on:
 
 jobs:
   test-scan-docker-image:
+    permissions:
+      contents: write # publish sbom to GH releases/tag assets
+      issues: read
+      checks: write
+      pull-requests: write
     if: ${{ github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository }}
     name: Test Scan Docker Image
     runs-on: ubuntu-22.04
