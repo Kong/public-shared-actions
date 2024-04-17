@@ -223,6 +223,3 @@ runs:
         compliance: docker-cis
         severity: ${{ steps.meta.outputs.global_enforce_build_failure }}
         input: ${{ steps.docker_tar.outputs.files_exists == 'true' && '--input' || '' }}
-        github-token: ${{ inputs.github-token }}
-
-    

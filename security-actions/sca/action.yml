@@ -179,4 +179,3 @@ runs:
         fail-build: ${{ steps.meta.outputs.global_enforce_build_failure == 'true' && steps.meta.outputs.global_enforce_build_failure || inputs.fail_build }}
         add-cpes-if-none: true
         severity-cutoff: ${{ steps.meta.outputs.global_severity_cutoff }}
-        github-token: ${{ inputs.github-token }}
