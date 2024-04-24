@@ -134,6 +134,8 @@ runs:
         fail-build: 'false'
         add-cpes-if-none: true
         severity-cutoff: ${{ steps.meta.outputs.global_severity_cutoff }}
+      env:
+        GRYPE_DB_AUTO_UPDATE: false # Use grype db cache from grype step above
 
     - name: Check vulnerability analysis report existence
       uses: andstor/file-existence-action@v3
@@ -179,3 +181,5 @@ runs:
         fail-build: ${{ steps.meta.outputs.global_enforce_build_failure == 'true' && steps.meta.outputs.global_enforce_build_failure || inputs.fail_build }}
         add-cpes-if-none: true
         severity-cutoff: ${{ steps.meta.outputs.global_severity_cutoff }}
+      env:
+        GRYPE_DB_AUTO_UPDATE: false # Use grype db cache from grype step above
