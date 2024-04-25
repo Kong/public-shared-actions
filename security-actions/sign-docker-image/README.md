@@ -67,6 +67,20 @@ permissions:
   registry_password:
     description: 'docker password to login against private docker registry'
     required: false
+  image_registry_domain:
+    description: 'image registry domain'
+    required: false
+    default: 'docker.io'
+  signature_registry_username:
+    description: 'username to login to publish image signatures to separate signature registry'
+    required: false
+  signature_registry_password:
+    description: 'password to login to publish image signatures to separate signature registry'
+    required: false
+  signature_registry_domain:
+    description: 'signature registry domain for images'
+    required: false
+    default: 'docker.io'
 
 ```
 #### Output specification
