@@ -11,7 +11,7 @@ inputs:
     required: false
     default: ''
   signature_registry:
-    description: 'Separate registry to store image signature to avoid polluting image registry'
+    description: 'Separate signature repository to store image signature to avoid polluting image repository'
     required: false
     default: ''
   tags:
@@ -21,11 +21,25 @@ inputs:
     description: 'specify single sha256 digest associated with the specified image_registries'
     required: true
   registry_username:
-    description: 'docker username to login against private docker registry'
+    description: 'username to login against private image registry'
     required: false
   registry_password:
-    description: 'docker password to login against private docker registry'
+    description: 'password to login against private image registry'
     required: false
+  image_registry_domain:
+    description: 'image registry domain'
+    required: false
+    default: 'docker.io'
+  signature_registry_username:
+    description: 'username to login to publish image signatures to separate signature registry'
+    required: false
+  signature_registry_password:
+    description: 'password to login to publish image signatures to separate signature registry'
+    required: false
+  signature_registry_domain:
+    description: 'signature registry domain for images'
+    required: false
+    default: 'docker.io'
 
 #outputs:
   # sbom-cyclonedx-report:
@@ -70,12 +84,24 @@ runs:
           echo $IMAGE_REPOS >> $GITHUB_ENV
           echo 'EOF' >> $GITHUB_ENV
 
-    - name: Login to Container Registry
+    # By default cosign publishes image signatures alongside image repositories in the same registry
+    # This step is needed for pulling image from / pushing image sig to private registry
+    - name: Login to Image Registry - ${{ inputs.image_registry_domain }}
       uses: docker/login-action@e92390c5fb421da1463c202d546fed0ec5c39f20 # v3.1.0
       if: ${{ inputs.registry_username != '' && inputs.registry_password != '' }}
       with:
+        registry: ${{ inputs.image_registry_domain }}
         username: ${{ inputs.registry_username }}
         password: ${{ inputs.registry_password }}
+    
+    # This step runs if signature registry is different from image registry
+    - name: Login to Signature Registry - ${{ inputs.signature_registry_domain }}
+      uses: docker/login-action@e92390c5fb421da1463c202d546fed0ec5c39f20 # v3.1.0
+      if: ${{ inputs.signature_registry_username != '' && inputs.signature_registry_password != '' }}
+      with:
+        registry: ${{ inputs.signature_registry_domain }}
+        username: ${{ inputs.signature_registry_username }}
+        password: ${{ inputs.signature_registry_password }}
 
     - name: Sign the images with GitHub OIDC Token 
       id: sign
