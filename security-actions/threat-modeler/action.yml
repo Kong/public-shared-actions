@@ -1,0 +1,42 @@
+# Note: This action creates a baseline threat model for you to get started with. You're strongly encouraged to expand upon the results. Please review all results before approving any automated PRs
+name:  GenAI Threat Modeling Assistant
+description: Create a threat model based on an application description and mermaid.js diagram using the ChatGPT API
+author: 'Kong'
+inputs:
+  docs-directory:
+    description: 'The directory where your markdown docs are located'
+    required: true
+    default: ''
+  application-description:
+    description: '2-3 sentences describing the target application'
+    required: true
+    default: ''
+    # Example: MY_APP is a Java application, deployed as a microservice, running as a Docker container on AWS EKS. MY_APP exposes an API, which provides consumers the ability to submit JWT tokens, whose claims are evaluated against a rules engine. MY_APP returns a true/false response, which consumers can use to determine whether the request is authorized or not.
+  dry-run:
+    description: "Process all the files, build the ChatGPT params, but don't call the ChatGPT API"
+    required: false
+    default: 'false'
+  api-key:
+    description: "OPENAI API key"
+    required: true
+    default: ''
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Checkout Git repository
+      uses: actions/checkout@v3
+      with:
+        repository: Sanboxy/public-shared-actions
+        path: './threat-modeler'
+
+    - name: Call Local Action
+      uses: ./threat-modeler/threat-modeler
+      id: threat-modeler
+      with:
+        description: ${{ inputs.application-description }}
+        directory: ../../${{ inputs.docs-directory }}
+        dry-run: ${{ inputs.dry-run }}
+        api-key: ${{ inputs.api-key }}
+
+
