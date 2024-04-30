@@ -30,14 +30,14 @@ inputs:
     required: false
     default: ${{ github.token }}
   upload-sbom-release-assets:
-    description: 'specify to only upload sboms to GH release assets'
+    description: 'Specify to only upload sboms to GH release assets'
     required: false
     default: false
     type: choice
     options:
     - 'true'
     - 'false'
-
+  
 # Outputs to be consumed by others using this SCA action
 outputs:
   global-enforce-build-failure:
@@ -87,6 +87,7 @@ runs:
         upload-release-assets: ${{ inputs.upload-sbom-release-assets }}
         dependency-snapshot: false
         github-token: ${{ inputs.github-token }}
+      
 
     - name: Generate CycloneDX SBOM Using Syft
       uses: anchore/sbom-action@v0.15.11

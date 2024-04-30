@@ -13,8 +13,6 @@ on:
 
 jobs:
   test-sca-dir:
-    env:
-      TEST_REPOSITORY: "${{github.repository_owner}}/insomnia"
     runs-on: ubuntu-latest
     permissions:
       contents: write # publish sbom to GH releases/tag assets
@@ -24,14 +22,9 @@ jobs:
     name: Test Repository Scan
     steps:
         - uses: actions/checkout@v4
-        - uses: actions/checkout@v4
-          with:
-            repository: ${{env.TEST_REPOSITORY}}
-            path: ${{env.TEST_REPOSITORY}}
-        - name: Scan Directory
-          id: scan-dir
+        - name: Scan Current Repository Directory
+          id: scan-repo-dir
           uses: ./security-actions/sca
           with:
-            asset_prefix: test.insomnia
-            dir: ${{env.TEST_REPOSITORY}}
+            dir: . # checkout path
             upload-sbom-release-assets: true
