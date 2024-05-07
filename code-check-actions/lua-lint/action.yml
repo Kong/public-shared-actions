@@ -53,6 +53,6 @@ runs:
         check_name: Luacheck Report
         comment_mode: always
         action_fail: ${{ inputs.action_fail }}
-        fail_on: 'nothing' # Explicitly don't fail reporting check based on test results
-
+        # Explicitly don't fail reporting check based on test results if `inputs.action_fail` is `false`.
+        fail_on: ${{ inputs.action_fail && 'test failures' || 'nothing' }}
 
