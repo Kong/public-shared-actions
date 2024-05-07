@@ -11,7 +11,7 @@ inputs:
     required: false
     default: '.' # Scans workspace dir
   action_fail:
-    description: 'Action itself will fail if linting fails‘
+    description: 'Action itself will fail if linting fails'
     required: false
     default: false
 
