@@ -10,6 +10,10 @@ inputs:
     description: 'List of files, directories and rockspecs to check'
     required: false
     default: '.' # Scans workspace dir
+  action_fail:
+    description: 'Action itself will fail if linting fails‘
+    required: false
+    default: false
 
 runs:
   using: composite
@@ -48,7 +52,7 @@ runs:
           luacheck_${{github.sha}}.xml
         check_name: Luacheck Report
         comment_mode: always
-        action_fail: false
+        action_fail: ${{ inputs.action_fail }}
         fail_on: 'nothing' # Explicitly don't fail reporting check based on test results
 
 
