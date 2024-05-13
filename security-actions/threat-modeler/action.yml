@@ -27,16 +27,36 @@ runs:
     - name: Checkout Git repository
       uses: actions/checkout@v3
       with:
-        repository: Sanboxy/public-shared-actions
+        repository: Kong/threat-modeler
+        ref: '4f8f3decef5d9dd2f36ad1ac8771db268312d7f7'
         path: './threat-modeler'
 
-    - name: Call Local Action
-      uses: ./threat-modeler/threat-modeler
-      id: threat-modeler
+    - name: Set up Node.js
+      uses: actions/setup-node@v3
       with:
-        description: ${{ inputs.application-description }}
-        directory: ../../${{ inputs.docs-directory }}
-        dry-run: ${{ inputs.dry-run }}
-        api-key: ${{ inputs.api-key }}
+        node-version: '20.x'
 
+    - name: Install dependencies
+      working-directory: ./threat-modeler
+      shell: bash
+      run: npm i
+
+    - name: Build TS
+      working-directory: ./threat-modeler
+      shell: bash
+      run: npm run build 
+
+    - name: Run threat-modeler
+      id: threat-modeler
+      working-directory: ./threat-modeler
+      shell: bash
+      env:
+          OPENAI_API_KEY: ${{ inputs.api-key }}
+      run: npm run start -- '${{ inputs.application-description }}' '${{ inputs.docs-directory }}' '${{ inputs.dry-run }}' > threat_model.json 
+
+    - name: Archive threat modeler results
+      uses: actions/upload-artifact@v4
+      with:
+        name: threat-model
+        path: threat-modeler/threat_model.json
 
