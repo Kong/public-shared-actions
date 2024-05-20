@@ -1,0 +1,62 @@
+# Note: This action creates a baseline threat model for you to get started with. You're strongly encouraged to expand upon the results. Please review all results before approving any automated PRs
+name:  GenAI Threat Modeling Assistant
+description: Create a threat model based on an application description and mermaid.js diagram using the ChatGPT API
+author: 'Kong'
+inputs:
+  docs-directory:
+    description: 'The directory where your markdown docs are located'
+    required: true
+    default: ''
+  application-description:
+    description: '2-3 sentences describing the target application'
+    required: true
+    default: ''
+    # Example: MY_APP is a Java application, deployed as a microservice, running as a Docker container on AWS EKS. MY_APP exposes an API, which provides consumers the ability to submit JWT tokens, whose claims are evaluated against a rules engine. MY_APP returns a true/false response, which consumers can use to determine whether the request is authorized or not.
+  dry-run:
+    description: "Process all the files, build the ChatGPT params, but don't call the ChatGPT API"
+    required: false
+    default: 'false'
+  api-key:
+    description: "OPENAI API key"
+    required: true
+    default: ''
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Checkout Git repository
+      uses: actions/checkout@v3
+      with:
+        repository: Kong/threat-modeler
+        ref: '4f8f3decef5d9dd2f36ad1ac8771db268312d7f7'
+        path: './threat-modeler'
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '20.x'
+
+    - name: Install dependencies
+      working-directory: ./threat-modeler
+      shell: bash
+      run: npm i
+
+    - name: Build TS
+      working-directory: ./threat-modeler
+      shell: bash
+      run: npm run build 
+
+    - name: Run threat-modeler
+      id: threat-modeler
+      working-directory: ./threat-modeler
+      shell: bash
+      env:
+          OPENAI_API_KEY: ${{ inputs.api-key }}
+      run: npm run start -- '${{ inputs.application-description }}' '${{ inputs.docs-directory }}' '${{ inputs.dry-run }}' > threat_model.json 
+
+    - name: Archive threat modeler results
+      uses: actions/upload-artifact@v4
+      with:
+        name: threat-model
+        path: threat-modeler/threat_model.json
+
