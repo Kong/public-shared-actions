@@ -72,3 +72,23 @@ jobs:
         asset_prefix: test.kong-gateway-dev-linux-arm64
         image: ${{env.IMAGE}}@${{ steps.image_manifest_metadata.outputs.arm64_sha }}
         upload-sbom-release-assets: true
+
+  test-download-sbom:
+    if: ${{ github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository }}
+    name: Download SBOM
+    runs-on: ubuntu-22.04
+    needs: [test-scan-docker-image]
+    env:
+      SBOM_DOWNLOAD_PATH: ${{ github.workspace }}/security-assets/sboms
+      SPDX_SBOM_PATTERN: "*sbom.spdx.json"
+      CYCLONEDX_SBOM_PATTERN: "*sbom.cyclonedx.json"
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - name: "Download all SBOM assets"
+        id: collect_sbom
+        if: ${{ needs.test-scan-docker-image.result == 'success' }}
+        run: |-
+          gh run download ${{ github.run_id }} -D ${{ env.SBOM_DOWNLOAD_PATH }} -p '${{ env.CYCLONEDX_SBOM_PATTERN }}' -p '${{ env.SPDX_SBOM_PATTERN }}' --repo ${{ github.repository }}
+      - name: Inspect download assets
+        run: |
+          ls -alR ${{ github.workspace }}/security-assets/sboms
