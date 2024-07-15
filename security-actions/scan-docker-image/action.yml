@@ -116,7 +116,7 @@ runs:
 
     # Don't fail during report generation
     - name: Vulnerability analysis of SBOM
-      uses: anchore/scan-action@v3.6.4
+      uses: anchore/scan-action@v4.1.0
       id: grype_analysis_sarif
       if: ${{ steps.sbom_report.outputs.files_exists == 'true' }}
       with:
@@ -129,7 +129,7 @@ runs:
     # Don't fail during report generation
     # JSON format will report  any ignored rules
     - name: Vulnerability analysis of SBOM
-      uses: anchore/scan-action@v3.6.4
+      uses: anchore/scan-action@v4.1.0
       id: grype_analysis_json
       if: ${{ steps.sbom_report.outputs.files_exists == 'true' }}
       with:
@@ -177,7 +177,7 @@ runs:
     # Notify grype quick scan results in table format
     # Table format will supress any specified ignore rules
     - name: Inspect Vulnerability analysis of SBOM
-      uses: anchore/scan-action@v3.6.4
+      uses: anchore/scan-action@v4.1.0
       if: ${{ steps.sbom_report.outputs.files_exists == 'true' }}
       with:
         sbom: ${{ steps.meta.outputs.sbom_spdx_file }}
