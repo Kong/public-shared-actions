@@ -118,20 +118,16 @@ permissions:
     - 'false'
 ```
 
-#### Output specification
-
-- Generates sbom reports in **spdx.json** and **cyclonedx.xml** formats using *syft* on the inputs **image**
-
-- Generates cve vulnerability analysis report based on the spdx sbom file using *grype*
-
-- Generates docker-cis analysis report using *trivy*
-
-- Uploads all the generated ecurity assets as workflow artifacts and retained based on repo / org settings
-
-- When `upload-sbom-release-assets` is enabled, publishes only the SBOMs to tags / GH release assets
+#### Outputs:
+  
+- Uploads all the generated security assets as Github workflow artifacts for the job uner: `Package & Release → Job summary → artifacts → <assets>`
+- When `upload-sbom-release-assets` is enabled, uploads only the SBOMs as GH tag / GH release assets
 
 #### Output parameters
-
+- Generates sbom reports in **spdx.json** and **cyclonedx.xml** formats using *syft* on the inputs **image**
+- Generates cve vulnerability analysis report based on the spdx sbom file using *grype*
+- Generates docker-cis analysis report using *trivy
+- 
 ```yaml
     cis-json-report:
       description: 'docker-cis json report'
