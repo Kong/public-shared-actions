@@ -35,3 +35,5 @@ jobs:
             asset_prefix: test.insomnia
             dir: ${{env.TEST_REPOSITORY}}
             upload-sbom-release-assets: true
+            force_grype_db_update: true ## Explicitly skip cache
+            fail_build: false
