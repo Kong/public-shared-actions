@@ -11,6 +11,13 @@ readonly cis_json_ext="cis-report.json"
 global_severity_cutoff='critical'
 global_enforce_build_failure='false'
 
+# SET SYFT SOURCE METADATA FOR PROPER SBOM GENERATION FOR GH REPOS
+
+## SOURCE NAME POINTS TO GH REPOSITORY FOR ALL DIR / FILE SCANS
+## SOURCE VERSION POINTS TO SHORT SHA OF HEAD BRANCH BASED ON EVENT TRIGGERED
+source_name="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}"
+source_version="$(git rev-parse --short HEAD)"
+
 if [[ -n ${DIR} && -n ${FILE} ]]; then
     echo '::error ::Input fields "dir" and "file" are mutually exlcusive'
     exit 1
@@ -28,6 +35,9 @@ fi
 if [[ -n ${FILE} ]]; then
     echo "scan_file=${FILE}" >> $GITHUB_OUTPUT
 fi
+
+echo "SYFT_SOURCE_NAME=${source_name}" >> $GITHUB_ENV
+echo "SYFT_SOURCE_VERSION=${source_version}" >> $GITHUB_ENV
 
 if [[ -n ${ASSET_PREFIX} ]]; then
     echo "sbom_spdx_file=${ASSET_PREFIX##*/}-${spdx_ext}" >> $GITHUB_OUTPUT
