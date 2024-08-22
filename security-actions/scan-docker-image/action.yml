@@ -154,25 +154,24 @@ runs:
         echo "::group::Grype DB Status Check"
         grype db check -vv || db_check_status=$?
         if [[ "${db_check_status}" -eq 0 ]]; then
-          echo "::notice :: Grype DB is already up-to-date"
+          echo "::notice ::Grype DB is already up-to-date"
         fi
         echo "::endgroup::"
 
-        echo "::group:: Update Grype DB"
+        echo "::group::Update Grype DB"
         if [[ "${db_check_status}" -ne 0 ]] || [[ ${FORCE_GRYPE_DB_UPDATE} == "true" ]]; then
-          grype db update -vv || db_update_status=$?
-        fi
-
-        if [[ "${db_update_status}" -ne 0 ]]; then
-          GRYPE_DB_UPDATE_MSG="Grype DB updates was not successful. SCA / CVE Grype results might be skipped / unavailable due to DB issues"
-          if [[ ${FAIL_BUILD} -eq 1 ]]; then
-            echo "::error ::${GRYPE_DB_UPDATE_MSG}"
-            exit ${FAIL_BUILD}
-          elif [[ $FAIL_BUILD -eq 0 ]]; then
-            echo "::warning ::${GRYPE_DB_UPDATE_MSG}"
+          grype db update -vv || db_update_status=$?     
+          if [[ "${db_update_status}" -ne 0 ]]; then
+            GRYPE_DB_UPDATE_MSG="Grype DB updates was not successful. SCA / CVE Grype results might be skipped / unavailable due to DB issues"
+            if [[ ${FAIL_BUILD} -eq 1 ]]; then
+              echo "::error ::${GRYPE_DB_UPDATE_MSG}"
+              exit ${FAIL_BUILD}
+            elif [[ $FAIL_BUILD -eq 0 ]]; then
+              echo "::warning ::${GRYPE_DB_UPDATE_MSG}"
+            fi
+          else
+            echo "::notice ::Grype DB is updated succesfully"
           fi
-        else
-          echo "::notice :: Grype DB is updated succesfully"
         fi
         echo "::endgroup::"
         
