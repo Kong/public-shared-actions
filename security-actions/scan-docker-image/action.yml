@@ -127,7 +127,7 @@ runs:
 
     # Check for any existing cache to reuse
     - name: Grype DB Cache
-      id: grype_db
+      id: grype_db_cache
       if: ${{ inputs.force_grype_db_update != 'true' }}
       uses: actions/cache@v4
       with:
@@ -146,7 +146,7 @@ runs:
     ## Edgecase: Grype DB will never update if stale cache is found
     - name: Grype DB Check Updates
       #if: ${{ steps.cache_grype_db.outputs.cache-hit != 'true' }}
-      id: grype_db_check_updates
+      id: grype_db
       shell: bash
       run: |
         db_check_status=0
@@ -170,13 +170,13 @@ runs:
             exit ${FAIL_BUILD}
           elif [[ $FAIL_BUILD -eq 0 ]]; then
             echo "::warning ::${GRYPE_DB_UPDATE_MSG}"
-            echo "GRYPE_DB_UPDATE_STATUS=${db_update_status}" >> $GITHUB_OUTPUT 
           fi
         else
           echo "::notice :: Grype DB is updated succesfully"
         fi
         echo "::endgroup::"
-
+        
+        echo "GRYPE_DB_CHECK_UPDATE_STATUS=${db_check_status}" >> $GITHUB_OUTPUT
         echo "GRYPE_DB_UPDATE_STATUS=${db_update_status}" >> $GITHUB_OUTPUT
       env:
         FAIL_BUILD: ${{ (steps.meta.outputs.global_enforce_build_failure == 'true' || inputs.fail_build == 'true') && '1' || '0' }}
@@ -184,8 +184,11 @@ runs:
         GRYPE_DB_UPDATE_DOWNLOAD_TIMEOUT: 600s # timeout for actual db download if needed
         FORCE_GRYPE_DB_UPDATE: ${{ inputs.force_grype_db_update }} 
 
+    # Save cache when db update is available (i.e drift) and update is successful
+    # Condition helps When this action is invoked more than once in the same workflow
+    # Example: first workflow saves cache if updates available and second retries to save again even when latest updated cache is available and fails
     - name: Update Cache / Save Grype DB updates
-      if: ${{ steps.grype_db_check_updates.outputs.GRYPE_DB_UPDATE_STATUS == 0 }}
+      if: ${{ steps.grype_db.outputs.GRYPE_DB_CHECK_UPDATE_STATUS != 0 && steps.grype_db.outputs.GRYPE_DB_UPDATE_STATUS }}
       id: save_grype_db_cache_updates
       uses: actions/cache/save@v4
       with:
