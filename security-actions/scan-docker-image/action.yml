@@ -290,10 +290,9 @@ runs:
       id: cis_json
       with:
         entrypoint: trivy
-        args: "image ${{ env.input }} ${{ steps.meta.outputs.scan_image }} --compliance ${{ env.compliance }} -f json --severity ${{ env.severity }} --ignore-unfixed -o ${{ steps.meta.outputs.cis_json_file }}"
+        args: "image ${{ env.input }} ${{ steps.meta.outputs.scan_image }} --compliance ${{ env.compliance }} -f json --ignore-unfixed -o ${{ steps.meta.outputs.cis_json_file }}"
       env:
         compliance: docker-cis
-        severity: ${{ steps.meta.outputs.global_enforce_build_failure }}
         input: ${{ steps.docker_tar.outputs.files_exists == 'true' && '--input' || '' }}
 
     - name: upload docker-cis JSON report
@@ -310,9 +309,8 @@ runs:
       uses: docker://ghcr.io/aquasecurity/trivy:0.37.2
       with:
         entrypoint: trivy
-        args: "image ${{ env.input }} ${{ steps.meta.outputs.scan_image }} --compliance ${{ env.compliance }} -f table --severity ${{ env.severity }} --ignore-unfixed --exit-code ${{ env.exit-code }}"
+        args: "image ${{ env.input }} ${{ steps.meta.outputs.scan_image }} --compliance ${{ env.compliance }} -f table --ignore-unfixed --exit-code ${{ env.exit-code }}"
       env:
         exit-code: ${{ (steps.meta.outputs.global_enforce_build_failure == 'true' || inputs.fail_build == 'true') && '1' || '0' }}
         compliance: docker-cis
-        severity: ${{ steps.meta.outputs.global_enforce_build_failure }}
         input: ${{ steps.docker_tar.outputs.files_exists == 'true' && '--input' || '' }}
