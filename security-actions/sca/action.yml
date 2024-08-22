@@ -45,6 +45,14 @@ inputs:
     options:
     - 'true'
     - 'false'
+  skip_grype_db_cache:
+    required: false
+    default: false
+    description: 'Skip the caching of the Grype DB during the SBOM (Software Bill of Materials) scanning process'
+    type: choice
+    options:
+      - 'true'
+      - 'false'
 
 # Outputs to be consumed by others using this SCA action
 outputs:
@@ -120,11 +128,12 @@ runs:
 
     - name: Download Grype
       uses: anchore/scan-action/download-grype@v4.1.1
-    
+
+    # Skip Cache Restoration: If skip_grype_db_cache is true, skip the restoration of the cache.
     # Check for any existing cache to reuse
     - name: Grype DB Cache
       id: grype_db_cache
-      if: ${{ inputs.force_grype_db_update != 'true' }}
+      if: ${{ inputs.skip_grype_db_cache != 'true' && inputs.force_grype_db_update != 'true' }}
       uses: actions/cache@v4
       with:
         # Grype cache files are stored in `~/.cache/grype/db` on Linux/macOS
@@ -183,7 +192,7 @@ runs:
     # Condition helps When this action is invoked more than once in the same workflow
     # Example: first workflow saves cache if updates available and second retries to save again even when latest updated cache is available and fails
     - name: Update Cache / Save Grype DB updates
-      if: ${{ steps.grype_db.outputs.GRYPE_DB_CHECK_UPDATE_STATUS != 0 && steps.grype_db.outputs.GRYPE_DB_UPDATE_STATUS }}
+      if: ${{ inputs.skip_grype_db_cache != 'true' && steps.grype_db.outputs.GRYPE_DB_CHECK_UPDATE_STATUS != 0 && steps.grype_db.outputs.GRYPE_DB_UPDATE_STATUS }}
       id: save_grype_db_cache_updates
       uses: actions/cache/save@v4
       with:
