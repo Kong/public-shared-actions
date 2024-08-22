@@ -122,10 +122,10 @@ runs:
       uses: anchore/scan-action/download-grype@v4.1.1
     
     # Check for any existing cache to reuse
-    - name: Restore Grype DB Cache
-      id: restore_grype_db
+    - name: Grype DB Cache
+      id: grype_db
       if: ${{ inputs.force_grype_db_update != 'true' }}
-      uses: actions/cache/restore@v4
+      uses: actions/cache@v4
       env:
         cache-name: cache_grype_db
       with:
