@@ -121,11 +121,11 @@ runs:
     - name: Download Grype
       uses: anchore/scan-action/download-grype@v4.1.1
     
-    # Check for any existing cache to reuse / update
-    - name: Cache Grype DB
-      id: cache_grype_db
+    # Check for any existing cache to reuse
+    - name: Restore Grype DB Cache
+      id: restore_grype_db
       if: ${{ inputs.force_grype_db_update != 'true' }}
-      uses: actions/cache@v4
+      uses: actions/cache/restore@v4
       env:
         cache-name: cache_grype_db
       with:
@@ -139,7 +139,6 @@ runs:
 
     ## Edgecase: Grype DB will never update if stale cache is found
     - name: Grype DB Check Updates
-      #if: ${{ steps.cache_grype_db.outputs.cache-hit != 'true' }}
       id: grype_db_check_updates
       shell: bash
       run: |
@@ -178,10 +177,10 @@ runs:
         GRYPE_DB_UPDATE_DOWNLOAD_TIMEOUT: 600s # timeout for actual db download if needed
         FORCE_GRYPE_DB_UPDATE: ${{ inputs.force_grype_db_update }}
 
-    - name: Cache Grype DB updates
+    - name: Update Cache / Save Grype DB updates
       if: ${{ steps.grype_db_check_updates.outputs.GRYPE_DB_UPDATE_STATUS == 0 }}
-      id: cache_grype_db_updates
-      uses: actions/cache@v4
+      id: save_grype_db_cache_updates
+      uses: actions/cache/save@v4
       env:
         cache-name: cache_grype_db # Use generic cache key instead of unique keys for different refs since CVE DB doesn't change frequently
       with:
