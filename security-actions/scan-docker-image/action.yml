@@ -130,12 +130,14 @@ runs:
       id: grype_db
       if: ${{ inputs.force_grype_db_update != 'true' }}
       uses: actions/cache@v4
-      env:
-        cache-name: cache_grype_db
       with:
         # Grype cache files are stored in `~/.cache/grype/db` on Linux/macOS
         path: ~/.cache/grype/db
-        key: ${{ env.cache-name }}
+        key: |
+          cache_grype_${{ github.run_id }}_${{ github.run_attempt }}
+        restore-keys: |
+          cache_grype_${{ github.run_id }}_
+          cache_grype_db
 
     # Make a network call to anchore grype CDN.
     # This could fail when CDN is flaky for long periods of time.
@@ -186,13 +188,12 @@ runs:
       if: ${{ steps.grype_db_check_updates.outputs.GRYPE_DB_UPDATE_STATUS == 0 }}
       id: save_grype_db_cache_updates
       uses: actions/cache/save@v4
-      env:
-        cache-name: cache_grype_db # Use generic cache key instead of unique keys for different refs since CVE DB doesn't change frequently
       with:
         # Grype cache files are stored in `~/.cache/grype/db` on Linux/macOS
         path: ~/.cache/grype/db
-        key: ${{ env.cache-name }}
-    
+        key: |
+          cache_grype_${{ github.run_id }}_${{ github.run_attempt }}
+
     # Grype is invoked first time ever 
     # Don't fail during report generation
     - name: Vulnerability analysis of SBOM
