@@ -310,5 +310,4 @@ runs:
       env:
         exit-code: ${{ (steps.meta.outputs.global_enforce_build_failure == 'true' || inputs.fail_build == 'true') && '1' || '0' }}
         compliance: docker-cis
-        severity: ${{ steps.meta.outputs.global_enforce_build_failure }}
         input: ${{ steps.docker_tar.outputs.files_exists == 'true' && '--input' || '' }}
