@@ -47,7 +47,7 @@ inputs:
     - 'false'
   skip_grype_db_cache:
     required: false
-    default: false
+    default: true
     description: 'Skip the caching of the Grype DB during the SBOM (Software Bill of Materials) scanning process'
     type: choice
     options:
