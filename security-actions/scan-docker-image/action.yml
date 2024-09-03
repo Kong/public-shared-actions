@@ -53,7 +53,7 @@ inputs:
     - 'false'
   skip_grype_db_cache:
     required: false
-    default: false
+    default: true
     description: 'Skip grype db caching'
     type: choice
     options:
@@ -219,7 +219,7 @@ runs:
         add-cpes-if-none: true
         severity-cutoff: ${{ steps.meta.outputs.global_severity_cutoff }}
       env:
-        GRYPE_DB_AUTO_UPDATE: false 
+        GRYPE_DB_AUTO_UPDATE: false # Use grype db pointed from grype_db step above
 
     # Don't fail during report generation
     # JSON format will report  any ignored rules
@@ -234,7 +234,7 @@ runs:
         add-cpes-if-none: true
         severity-cutoff: ${{ steps.meta.outputs.global_severity_cutoff }}
       env:
-        GRYPE_DB_AUTO_UPDATE: false # Use grype db cache from grype step above
+        GRYPE_DB_AUTO_UPDATE: false # Use grype db pointed from grype_db step above
 
     - name: Check vulnerability analysis report existence
       if: ${{ steps.grype_db_check_updates.outputs.GRYPE_DB_UPDATE_STATUS == 0 }} # Run only if DB is available on the runner
@@ -285,7 +285,7 @@ runs:
         add-cpes-if-none: true
         severity-cutoff: ${{ steps.meta.outputs.global_severity_cutoff }}
       env:
-        GRYPE_DB_AUTO_UPDATE: false # Use grype db cache from grype step above
+        GRYPE_DB_AUTO_UPDATE: false # Use grype db pointed from grype_db step above
 
     - name: Check docker OCI tar existence
       if: ${{ steps.meta.outputs.scan_image != '' }}
