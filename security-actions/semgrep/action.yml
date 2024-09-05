@@ -27,7 +27,7 @@ runs:
   steps:
 
     - name: SAST Scan
-      uses: returntocorp/semgrep
+      uses: returntocorp/semgrep:latest
       id: semgrep
       continue-on-error: true
       with:
