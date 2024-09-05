@@ -1,38 +1,37 @@
-name:  Semgrep SAST
+name: Semgrep SAST
 description: Semgrep SAST
-author: 'Kong'
+author: "Kong"
 inputs:
   additional_config:
-    description: 'Provide additional config to semgrep ci command using --config'
+    description: "Provide additional config to semgrep ci command using --config"
     required: false
-    default: ''
+    default: ""
   codeql_upload:
-    description: 'Toggle to upload results to Github code scanning for public repositories'
+    description: "Toggle to upload results to Github code scanning for public repositories"
     required: false
     default: true
     type: choice
     options:
-    - 'true'
-    - 'false'
+      - "true"
+      - "false"
   fail_on_findings:
-    description: 'Fail build / job on semgrep findings/errors'
+    description: "Fail build / job on semgrep findings/errors"
     required: false
     default: false
     type: choice
     options:
-    - 'true'
-    - 'false'
+      - "true"
+      - "false"
 runs:
-  using: 'composite'
+  using: "composite"
   steps:
-
     - name: SAST Scan
-      uses: docker://returntocorp/semgrep
+      uses: docker://returntocorp/semgrep:1.86.0
       id: semgrep
       continue-on-error: true
       with:
         args: "semgrep ci --config auto --sarif -o semgrep_${{github.sha}}.sarif --no-autofix ${{ inputs.additional_config }}"
-    
+
     # Upload grype cve reports
     - name: Upload Semgrep SARIF to Workflow
       if: always()
@@ -52,7 +51,7 @@ runs:
         # Optional category for the results
         # Used to differentiate multiple results for one commit
         category: sast_semgrep
-    
+
     - name: Fail on findings
       if: ${{ always() && inputs.fail_on_findings == 'true' && steps.semgrep.outcome == 'failure' }}
       shell: bash
