@@ -24,16 +24,14 @@ inputs:
     - 'false'
 runs:
   using: 'composite'
-  container:
-    # Use the official Semgrep Docker image
-    image: semgrep/semgrep
-
   steps:
 
     - name: SAST Scan
+      uses: docker://returntocorp/semgrep:1.86.0
       id: semgrep
-      run: semgrep ci --config auto --sarif -o semgrep_${{github.sha}}.sarif --no-autofix ${{ inputs.additional_config }}
       continue-on-error: true
+      with:
+        args: "semgrep ci --config auto --sarif -o semgrep_${{github.sha}}.sarif --no-autofix ${{ inputs.additional_config }}"
 
     # Upload grype cve reports
     - name: Upload Semgrep SARIF to Workflow
