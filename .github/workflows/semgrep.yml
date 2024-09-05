@@ -13,12 +13,6 @@ jobs:
   semgrep:
     name: SAST
     runs-on: ubuntu-20.04
-    permissions:
-      # required for all workflows
-      security-events: write
-      # only required for workflows in private repositories
-      actions: read
-      contents: read
     env:
       TEST_REPOSITORY: "${{github.repository_owner}}/atc-router"
     if: (github.actor != 'dependabot[bot]')
