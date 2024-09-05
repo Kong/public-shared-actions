@@ -27,7 +27,7 @@ runs:
   steps:
 
     - name: SAST Scan
-      uses: docker://returntocorp/semgrep
+      uses: docker://returntocorp/semgrep:1.86.0
       id: semgrep
       continue-on-error: true
       with:
