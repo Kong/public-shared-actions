@@ -73,3 +73,11 @@ updates:
     commit-message:
       prefix: "github-actions"
       include: "scope"
+
+  - package-ecosystem: docker
+    directory: "/security-actions/semgrep"
+    schedule:
+      interval: "daily"
+    commit-message:
+      prefix: "semgrep"
+      include: "scope"
