@@ -14,6 +14,10 @@ inputs:
     description: 'Action itself will fail if linting fails'
     required: false
     default: false
+  print_results:
+    description: 'Print Luacheck results'
+    required: false
+    default: 'false'
 
 runs:
   using: composite
@@ -34,10 +38,11 @@ runs:
           luacheck_${{github.sha}}.xml
         if-no-files-found: warn
 
-#     - name: Print Luacheck results
-#       shell: bash
-#       run: |
-#         cat luacheck_${{github.sha}}.xml
+    - name: Print Luacheck results
+      shell: bash
+      run: |
+        cat luacheck_${{github.sha}}.xml
+      if: inputs.print_results != 'false'
 
     # when using the regular GITHUB_TOKEN, the check-run created by this step will be assigned to a
     # random workflow in the GH UI. to prevent this, we can force the check-run to be created in a separate
