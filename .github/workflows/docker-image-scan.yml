@@ -72,7 +72,6 @@ jobs:
         asset_prefix: test.kong-gateway-dev-linux-arm64
         image: ${{env.IMAGE}}@${{ steps.image_manifest_metadata.outputs.arm64_sha }}
         upload-sbom-release-assets: true
-        force_grype_db_update: true ## Explicitly skip db cache when available
 
   test-download-sbom:
     if: ${{ github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository }}

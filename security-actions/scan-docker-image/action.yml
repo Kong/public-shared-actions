@@ -51,6 +51,14 @@ inputs:
     options:
     - 'true'
     - 'false'
+  skip_grype_db_cache:
+    required: false
+    default: true
+    description: 'Skip grype db caching'
+    type: choice
+    options:
+      - 'true'
+      - 'false'
 
 outputs:
   cis-json-report:
@@ -125,17 +133,20 @@ runs:
     - name: Download Grype
       uses: anchore/scan-action/download-grype@v4.1.1
 
-    # Check for any existing cache to reuse / update
-    - name: Cache Grype DB
-      if: ${{ inputs.force_grype_db_update != 'true' }}
-      id: cache_grype_db
+    # Skip Cache Restoration: If skip_grype_db_cache is true, skip the restoration of the cache.
+    # Check for any existing cache to reuse
+    - name: Grype DB Cache
+      id: grype_db_cache
+      if: ${{ inputs.skip_grype_db_cache != 'true' && inputs.force_grype_db_update != 'true' }}
       uses: actions/cache@v4
-      env:
-        cache-name: cache_grype_db
       with:
         # Grype cache files are stored in `~/.cache/grype/db` on Linux/macOS
         path: ~/.cache/grype/db
-        key: ${{ env.cache-name }}
+        key: |
+          cache_grype_${{ github.run_id }}_${{ github.run_attempt }}
+        restore-keys: |
+          cache_grype_${{ github.run_id }}_
+          cache_grype_db
 
     # Make a network call to anchore grype CDN.
     # This could fail when CDN is flaky for long periods of time.
@@ -144,7 +155,7 @@ runs:
     ## Edgecase: Grype DB will never update if stale cache is found
     - name: Grype DB Check Updates
       #if: ${{ steps.cache_grype_db.outputs.cache-hit != 'true' }}
-      id: grype_db_check_updates
+      id: grype_db
       shell: bash
       run: |
         db_check_status=0
@@ -152,29 +163,28 @@ runs:
         echo "::group::Grype DB Status Check"
         grype db check -vv || db_check_status=$?
         if [[ "${db_check_status}" -eq 0 ]]; then
-          echo "::notice :: Grype DB is already up-to-date"
+          echo "::notice ::Grype DB is already up-to-date"
         fi
         echo "::endgroup::"
 
-        echo "::group:: Update Grype DB"
+        echo "::group::Update Grype DB"
         if [[ "${db_check_status}" -ne 0 ]] || [[ ${FORCE_GRYPE_DB_UPDATE} == "true" ]]; then
-          grype db update -vv || db_update_status=$?
-        fi
-
-        if [[ "${db_update_status}" -ne 0 ]]; then
-          GRYPE_DB_UPDATE_MSG="Grype DB updates was not successful. SCA / CVE Grype results might be skipped / unavailable due to DB issues"
-          if [[ ${FAIL_BUILD} -eq 1 ]]; then
-            echo "::error ::${GRYPE_DB_UPDATE_MSG}"
-            exit ${FAIL_BUILD}
-          elif [[ $FAIL_BUILD -eq 0 ]]; then
-            echo "::warning ::${GRYPE_DB_UPDATE_MSG}"
-            echo "GRYPE_DB_UPDATE_STATUS=${db_update_status}" >> $GITHUB_OUTPUT 
+          grype db update -vv || db_update_status=$?     
+          if [[ "${db_update_status}" -ne 0 ]]; then
+            GRYPE_DB_UPDATE_MSG="Grype DB updates was not successful. SCA / CVE Grype results might be skipped / unavailable due to DB issues"
+            if [[ ${FAIL_BUILD} -eq 1 ]]; then
+              echo "::error ::${GRYPE_DB_UPDATE_MSG}"
+              exit ${FAIL_BUILD}
+            elif [[ $FAIL_BUILD -eq 0 ]]; then
+              echo "::warning ::${GRYPE_DB_UPDATE_MSG}"
+            fi
+          else
+            echo "::notice ::Grype DB is updated succesfully"
           fi
-        else
-          echo "::notice :: Grype DB is updated succesfully"
         fi
         echo "::endgroup::"
-
+        
+        echo "GRYPE_DB_CHECK_UPDATE_STATUS=${db_check_status}" >> $GITHUB_OUTPUT
         echo "GRYPE_DB_UPDATE_STATUS=${db_update_status}" >> $GITHUB_OUTPUT
       env:
         FAIL_BUILD: ${{ (steps.meta.outputs.global_enforce_build_failure == 'true' || inputs.fail_build == 'true') && '1' || '0' }}
@@ -182,17 +192,20 @@ runs:
         GRYPE_DB_UPDATE_DOWNLOAD_TIMEOUT: 600s # timeout for actual db download if needed
         FORCE_GRYPE_DB_UPDATE: ${{ inputs.force_grype_db_update }} 
 
-    - name: Cache Grype DB updates
-      if: ${{ steps.grype_db_check_updates.outputs.GRYPE_DB_UPDATE_STATUS == 0 }}
-      id: cache_grype_db_updates
-      uses: actions/cache@v4
-      env:
-        cache-name: cache_grype_db # Use generic cache key instead of unique keys for different refs since CVE DB doesn't change frequently
+    # Save cache when db update is available (i.e drift) and update is successful
+    # Condition helps When this action is invoked more than once in the same workflow
+    # Example: first workflow saves cache if updates available and second retries to save again even when latest updated cache is available and fails
+    # Skip Cache Saving: If skip_grype_db_cache is true, skip saving the cache updates.
+    - name: Update Cache / Save Grype DB updates
+      if: ${{ inputs.skip_grype_db_cache != 'true' && steps.grype_db.outputs.GRYPE_DB_CHECK_UPDATE_STATUS != 0 && steps.grype_db.outputs.GRYPE_DB_UPDATE_STATUS }}
+      id: save_grype_db_cache_updates
+      uses: actions/cache/save@v4
       with:
         # Grype cache files are stored in `~/.cache/grype/db` on Linux/macOS
         path: ~/.cache/grype/db
-        key: ${{ env.cache-name }}
-    
+        key: |
+          cache_grype_${{ github.run_id }}_${{ github.run_attempt }}
+
     # Grype is invoked first time ever 
     # Don't fail during report generation
     - name: Vulnerability analysis of SBOM
@@ -206,7 +219,7 @@ runs:
         add-cpes-if-none: true
         severity-cutoff: ${{ steps.meta.outputs.global_severity_cutoff }}
       env:
-        GRYPE_DB_AUTO_UPDATE: false 
+        GRYPE_DB_AUTO_UPDATE: false # Use grype db pointed from grype_db step above
 
     # Don't fail during report generation
     # JSON format will report  any ignored rules
@@ -221,7 +234,7 @@ runs:
         add-cpes-if-none: true
         severity-cutoff: ${{ steps.meta.outputs.global_severity_cutoff }}
       env:
-        GRYPE_DB_AUTO_UPDATE: false # Use grype db cache from grype step above
+        GRYPE_DB_AUTO_UPDATE: false # Use grype db pointed from grype_db step above
 
     - name: Check vulnerability analysis report existence
       if: ${{ steps.grype_db_check_updates.outputs.GRYPE_DB_UPDATE_STATUS == 0 }} # Run only if DB is available on the runner
@@ -272,7 +285,7 @@ runs:
         add-cpes-if-none: true
         severity-cutoff: ${{ steps.meta.outputs.global_severity_cutoff }}
       env:
-        GRYPE_DB_AUTO_UPDATE: false # Use grype db cache from grype step above
+        GRYPE_DB_AUTO_UPDATE: false # Use grype db pointed from grype_db step above
 
     - name: Check docker OCI tar existence
       if: ${{ steps.meta.outputs.scan_image != '' }}
@@ -287,10 +300,9 @@ runs:
       id: cis_json
       with:
         entrypoint: trivy
-        args: "image ${{ env.input }} ${{ steps.meta.outputs.scan_image }} --compliance ${{ env.compliance }} -f json --severity ${{ env.severity }} --ignore-unfixed -o ${{ steps.meta.outputs.cis_json_file }}"
+        args: "image ${{ env.input }} ${{ steps.meta.outputs.scan_image }} --compliance ${{ env.compliance }} -f json --ignore-unfixed -o ${{ steps.meta.outputs.cis_json_file }}"
       env:
         compliance: docker-cis
-        severity: ${{ steps.meta.outputs.global_enforce_build_failure }}
         input: ${{ steps.docker_tar.outputs.files_exists == 'true' && '--input' || '' }}
 
     - name: upload docker-cis JSON report
@@ -307,9 +319,8 @@ runs:
       uses: docker://ghcr.io/aquasecurity/trivy:0.37.2
       with:
         entrypoint: trivy
-        args: "image ${{ env.input }} ${{ steps.meta.outputs.scan_image }} --compliance ${{ env.compliance }} -f table --severity ${{ env.severity }} --ignore-unfixed --exit-code ${{ env.exit-code }}"
+        args: "image ${{ env.input }} ${{ steps.meta.outputs.scan_image }} --compliance ${{ env.compliance }} -f table --ignore-unfixed --exit-code ${{ env.exit-code }}"
       env:
         exit-code: ${{ (steps.meta.outputs.global_enforce_build_failure == 'true' || inputs.fail_build == 'true') && '1' || '0' }}
         compliance: docker-cis
-        severity: ${{ steps.meta.outputs.global_enforce_build_failure }}
         input: ${{ steps.docker_tar.outputs.files_exists == 'true' && '--input' || '' }}
