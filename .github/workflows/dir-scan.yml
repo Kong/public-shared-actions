@@ -35,3 +35,4 @@ jobs:
             asset_prefix: test.insomnia
             dir: ${{env.TEST_REPOSITORY}}
             upload-sbom-release-assets: true
+            fail_build: false

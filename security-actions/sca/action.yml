@@ -37,6 +37,22 @@ inputs:
     options:
     - 'true'
     - 'false'
+  force_grype_db_update:
+    required: false
+    default: false
+    description: 'Force to download DB when cache is available and up-to-date'
+    type: choice
+    options:
+    - 'true'
+    - 'false'
+  skip_grype_db_cache:
+    required: false
+    default: true
+    description: 'Skip the caching of the Grype DB during the SBOM (Software Bill of Materials) scanning process'
+    type: choice
+    options:
+      - 'true'
+      - 'false'
 
 # Outputs to be consumed by others using this SCA action
 outputs:
@@ -74,7 +90,7 @@ runs:
 
     # Must upload artifact for output file parameter to have effect
     - name: Generate SPDX SBOM Using Syft
-      uses: anchore/sbom-action@v0.17.1
+      uses: anchore/sbom-action@v0.17.2
       id: sbom_spdx
       with:
         config: ${{ inputs.config }}
@@ -89,7 +105,7 @@ runs:
         github-token: ${{ inputs.github-token }}
 
     - name: Generate CycloneDX SBOM Using Syft
-      uses: anchore/sbom-action@v0.17.1
+      uses: anchore/sbom-action@v0.17.2
       id: sbom_cyclonedx
       with:
         config: ${{ inputs.config }}
@@ -110,11 +126,86 @@ runs:
         files: "${{ steps.meta.outputs.sbom_spdx_file }}, ${{ steps.meta.outputs.sbom_cyclonedx_file }}"
         fail: true
 
+    - name: Download Grype
+      uses: anchore/scan-action/download-grype@v4.1.2
+
+    # Skip Cache Restoration: If skip_grype_db_cache is true, skip the restoration of the cache.
+    # Check for any existing cache to reuse
+    - name: Grype DB Cache
+      id: grype_db_cache
+      if: ${{ inputs.skip_grype_db_cache != 'true' && inputs.force_grype_db_update != 'true' }}
+      uses: actions/cache@v4
+      with:
+        # Grype cache files are stored in `~/.cache/grype/db` on Linux/macOS
+        path: ~/.cache/grype/db
+        key: |
+          cache_grype_${{ github.run_id }}_${{ github.run_attempt }}
+        restore-keys: |
+          cache_grype_${{ github.run_id }}_
+          cache_grype_db
+
+    # Make a network call to anchore grype CDN.
+    # This could fail when CDN is flaky for long periods of time.
+    # Setting timeout for available avoids long stuck grype processes on workflow jobs
+
+    ## Edgecase: Grype DB will never update if stale cache is found
+    - name: Grype DB Check Updates
+      id: grype_db
+      shell: bash
+      run: |
+        db_check_status=0
+        db_update_status=0
+        echo "::group::Grype DB Status Check"
+        grype db check -vv || db_check_status=$?
+        if [[ "${db_check_status}" -eq 0 ]]; then
+          echo "::notice ::Grype DB is already up-to-date"
+        fi
+        echo "::endgroup::"
+
+        echo "::group::Update Grype DB"
+        if [[ "${db_check_status}" -ne 0 ]] || [[ ${FORCE_GRYPE_DB_UPDATE} == "true" ]]; then
+          grype db update -vv || db_update_status=$?
+
+          if [[ "${db_update_status}" -ne 0 ]]; then
+            GRYPE_DB_UPDATE_MSG="Grype DB updates was not successful. SCA / CVE Grype results might be skipped / unavailable due to DB issues"
+            if [[ ${FAIL_BUILD} -eq 1 ]]; then
+              echo "::error ::${GRYPE_DB_UPDATE_MSG}"
+              exit ${FAIL_BUILD}
+            elif [[ $FAIL_BUILD -eq 0 ]]; then
+              echo "::warning ::${GRYPE_DB_UPDATE_MSG}"
+            fi
+          else
+            echo "::notice ::Grype DB is updated succesfully"
+          fi
+        fi
+        echo "::endgroup::"
+
+        echo "GRYPE_DB_CHECK_UPDATE_STATUS=${db_check_status}" >> $GITHUB_OUTPUT
+        echo "GRYPE_DB_UPDATE_STATUS=${db_update_status}" >> $GITHUB_OUTPUT
+      env:
+        FAIL_BUILD: ${{ (steps.meta.outputs.global_enforce_build_failure == 'true' || inputs.fail_build == 'true') && '1' || '0' }}
+        GRYPE_DB_UPDATE_AVAILABLE_TIMEOUT: 30s # timeout to fetch listing.json to check if db download is needed
+        GRYPE_DB_UPDATE_DOWNLOAD_TIMEOUT: 600s # timeout for actual db download if needed
+        FORCE_GRYPE_DB_UPDATE: ${{ inputs.force_grype_db_update }}
+
+    # Save cache when db update is available (i.e drift) and update is successful
+    # Condition helps When this action is invoked more than once in the same workflow
+    # Example: first workflow saves cache if updates available and second retries to save again even when latest updated cache is available and fails
+    - name: Update Cache / Save Grype DB updates
+      if: ${{ inputs.skip_grype_db_cache != 'true' && steps.grype_db.outputs.GRYPE_DB_CHECK_UPDATE_STATUS != 0 && steps.grype_db.outputs.GRYPE_DB_UPDATE_STATUS }}
+      id: save_grype_db_cache_updates
+      uses: actions/cache/save@v4
+      with:
+        # Grype cache files are stored in `~/.cache/grype/db` on Linux/macOS
+        path: ~/.cache/grype/db
+        key: |
+          cache_grype_${{ github.run_id }}_${{ github.run_attempt }}
+
     # Don't fail during report generation
     - name: Vulnerability analysis of SBOM
-      uses: anchore/scan-action@v4.1.1
+      uses: anchore/scan-action@v4.1.2
       id: grype_analysis_sarif
-      if: ${{ steps.sbom_report.outputs.files_exists == 'true' }}
+      if: ${{ steps.sbom_report.outputs.files_exists == 'true' && steps.grype_db_check_updates.outputs.GRYPE_DB_UPDATE_STATUS == 0 }} # Run only if DB is available on the runner }}
       with:
         sbom: ${{ steps.meta.outputs.sbom_spdx_file }}
         output-format: sarif
@@ -125,9 +216,9 @@ runs:
     # Don't fail during report generation
     # JSON format will report  any ignored rules
     - name: Vulnerability analysis of SBOM
-      uses: anchore/scan-action@v4.1.1
+      uses: anchore/scan-action@v4.1.2
       id: grype_analysis_json
-      if: ${{ steps.sbom_report.outputs.files_exists == 'true' }}
+      if: ${{ steps.sbom_report.outputs.files_exists == 'true' && steps.grype_db_check_updates.outputs.GRYPE_DB_UPDATE_STATUS == 0 }} # Run only if DB is available on the runner}}
       with:
         sbom: ${{ steps.meta.outputs.sbom_spdx_file }}
         output-format: json
@@ -138,6 +229,7 @@ runs:
         GRYPE_DB_AUTO_UPDATE: false # Use grype db cache from grype step above
 
     - name: Check vulnerability analysis report existence
+      if: ${{ steps.grype_db_check_updates.outputs.GRYPE_DB_UPDATE_STATUS == 0 }}
       uses: andstor/file-existence-action@v3
       id: grype_report
       with:
@@ -148,11 +240,13 @@ runs:
     # Hack to increase readability of grype artifacts attached to workflows and releases
     - name: Rename grype analysis report
       shell: bash
+      if: ${{ steps.grype_db_check_updates.outputs.GRYPE_DB_UPDATE_STATUS == 0 }} # Run only if DB is available on the runner
       run: |
         mv ${{ steps.grype_analysis_sarif.outputs.sarif }} ${{ steps.meta.outputs.grype_sarif_file }}
         mv ${{ steps.grype_analysis_json.outputs.json }} ${{ steps.meta.outputs.grype_json_file }}
 
     - name: Upload grype analysis report
+      if: ${{ steps.grype_db_check_updates.outputs.GRYPE_DB_UPDATE_STATUS == 0 }} # Run only if DB is available on the runner
       uses: actions/upload-artifact@v4
       with:
         name: ${{ steps.meta.outputs.grype_sarif_file }}
@@ -162,6 +256,7 @@ runs:
 
     # Upload grype cve reports
     - name: Upload grype analysis report
+      if: ${{ steps.grype_db_check_updates.outputs.GRYPE_DB_UPDATE_STATUS == 0 }} # Run only if DB is available on the runner
       uses: actions/upload-artifact@v4
       with:
         name: ${{ steps.meta.outputs.grype_json_file }}
@@ -173,8 +268,8 @@ runs:
     # Notify grype quick scan results in table format
     # Table format will supress any specified ignore rules
     - name: Inspect Vulnerability analysis of SBOM
-      uses: anchore/scan-action@v4.1.1
-      if: ${{ steps.sbom_report.outputs.files_exists == 'true' }}
+      uses: anchore/scan-action@v4.1.2
+      if: ${{ steps.sbom_report.outputs.files_exists == 'true' && steps.grype_db_check_updates.outputs.GRYPE_DB_UPDATE_STATUS == 0 }}
       with:
         sbom: ${{ steps.meta.outputs.sbom_spdx_file }}
         output-format: table
