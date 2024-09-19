@@ -90,7 +90,7 @@ runs:
 
     # Must upload artifact for output file parameter to have effect
     - name: Generate SPDX SBOM Using Syft
-      uses: anchore/sbom-action@v0.17.1
+      uses: anchore/sbom-action@v0.17.2
       id: sbom_spdx
       with:
         config: ${{ inputs.config }}
@@ -105,7 +105,7 @@ runs:
         github-token: ${{ inputs.github-token }}
 
     - name: Generate CycloneDX SBOM Using Syft
-      uses: anchore/sbom-action@v0.17.1
+      uses: anchore/sbom-action@v0.17.2
       id: sbom_cyclonedx
       with:
         config: ${{ inputs.config }}
@@ -127,7 +127,7 @@ runs:
         fail: true
 
     - name: Download Grype
-      uses: anchore/scan-action/download-grype@v4.1.1
+      uses: anchore/scan-action/download-grype@v4.1.2
 
     # Skip Cache Restoration: If skip_grype_db_cache is true, skip the restoration of the cache.
     # Check for any existing cache to reuse
@@ -203,7 +203,7 @@ runs:
 
     # Don't fail during report generation
     - name: Vulnerability analysis of SBOM
-      uses: anchore/scan-action@v4.1.1
+      uses: anchore/scan-action@v4.1.2
       id: grype_analysis_sarif
       if: ${{ steps.sbom_report.outputs.files_exists == 'true' && steps.grype_db_check_updates.outputs.GRYPE_DB_UPDATE_STATUS == 0 }} # Run only if DB is available on the runner }}
       with:
@@ -216,7 +216,7 @@ runs:
     # Don't fail during report generation
     # JSON format will report  any ignored rules
     - name: Vulnerability analysis of SBOM
-      uses: anchore/scan-action@v4.1.1
+      uses: anchore/scan-action@v4.1.2
       id: grype_analysis_json
       if: ${{ steps.sbom_report.outputs.files_exists == 'true' && steps.grype_db_check_updates.outputs.GRYPE_DB_UPDATE_STATUS == 0 }} # Run only if DB is available on the runner}}
       with:
@@ -268,7 +268,7 @@ runs:
     # Notify grype quick scan results in table format
     # Table format will supress any specified ignore rules
     - name: Inspect Vulnerability analysis of SBOM
-      uses: anchore/scan-action@v4.1.1
+      uses: anchore/scan-action@v4.1.2
       if: ${{ steps.sbom_report.outputs.files_exists == 'true' && steps.grype_db_check_updates.outputs.GRYPE_DB_UPDATE_STATUS == 0 }}
       with:
         sbom: ${{ steps.meta.outputs.sbom_spdx_file }}
