@@ -59,6 +59,14 @@ inputs:
     options:
       - 'true'
       - 'false'
+  skip_cis_scan:
+    required: false
+    default: false
+    description: 'Toggle to skip Trivy scan'
+    type: choice
+    options:
+      - 'true'
+      - 'false'
 
 outputs:
   cis-json-report:
@@ -295,18 +303,18 @@ runs:
         files: "${{ steps.meta.outputs.scan_image }}"
 
     - name: Generate docker-cis JSON report
-      uses: docker://ghcr.io/aquasecurity/trivy:0.37.2
-      if: ${{ steps.meta.outputs.scan_image != '' }}
+      uses: docker://aquasec/trivy:0.55.2
+      if: ${{ inputs.skip_cis_scan != 'true' && steps.meta.outputs.scan_image != '' }}
       id: cis_json
       with:
         entrypoint: trivy
         args: "image ${{ env.input }} ${{ steps.meta.outputs.scan_image }} --compliance ${{ env.compliance }} -f json --ignore-unfixed -o ${{ steps.meta.outputs.cis_json_file }}"
       env:
-        compliance: docker-cis
+        compliance: docker-cis-1.6.0
         input: ${{ steps.docker_tar.outputs.files_exists == 'true' && '--input' || '' }}
 
     - name: upload docker-cis JSON report
-      if: ${{ steps.meta.outputs.scan_image != '' }}
+      if: ${{ inputs.skip_cis_scan != 'true' && steps.meta.outputs.scan_image != '' }}
       uses: actions/upload-artifact@v4
       with:
         name: ${{ steps.meta.outputs.cis_json_file }}
@@ -315,12 +323,12 @@ runs:
         if-no-files-found: warn
 
     - name: Inspect docker-cis report
-      if: ${{ steps.meta.outputs.scan_image != '' }}
-      uses: docker://ghcr.io/aquasecurity/trivy:0.37.2
+      if: ${{ inputs.skip_cis_scan != 'true' && steps.meta.outputs.scan_image != '' }}
+      uses: docker://aquasec/trivy:0.55.2
       with:
         entrypoint: trivy
         args: "image ${{ env.input }} ${{ steps.meta.outputs.scan_image }} --compliance ${{ env.compliance }} -f table --ignore-unfixed --exit-code ${{ env.exit-code }}"
       env:
         exit-code: ${{ (steps.meta.outputs.global_enforce_build_failure == 'true' || inputs.fail_build == 'true') && '1' || '0' }}
-        compliance: docker-cis
+        compliance: docker-cis-1.6.0
         input: ${{ steps.docker_tar.outputs.files_exists == 'true' && '--input' || '' }}
