@@ -27,12 +27,12 @@ runs:
   steps:
 
     - name: SAST Scan
-      uses: docker://returntocorp/semgrep
+      uses: docker://returntocorp/semgrep:1.86.0
       id: semgrep
       continue-on-error: true
       with:
         args: "semgrep ci --config auto --sarif -o semgrep_${{github.sha}}.sarif --no-autofix ${{ inputs.additional_config }}"
-    
+
     # Upload grype cve reports
     - name: Upload Semgrep SARIF to Workflow
       if: always()
