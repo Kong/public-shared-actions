@@ -73,7 +73,7 @@ jobs:
         asset_prefix: test.kong-gateway-dev-linux-arm64
         image: ${{env.IMAGE}}@${{ steps.image_manifest_metadata.outputs.arm64_sha }}
         upload-sbom-release-assets: true
-        skip_trivy_scan: true
+        skip_trivy_scan: false
 
   test-download-sbom:
     if: ${{ github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository }}
