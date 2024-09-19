@@ -324,7 +324,7 @@ runs:
 
     - name: Inspect docker-cis report
       if: ${{ inputs.skip_trivy_scan != 'true' && steps.meta.outputs.scan_image != '' }}
-      uses: docker://ghcr.io/aquasecurity/trivy:0.55.2
+      uses: docker://aquasec/trivy:0.55.2
       with:
         entrypoint: trivy
         args: "image ${{ env.input }} ${{ steps.meta.outputs.scan_image }} --compliance ${{ env.compliance }} -f table --ignore-unfixed --exit-code ${{ env.exit-code }}"
