@@ -75,7 +75,7 @@ runs:
                 },
                 {
                   "type": "mrkdwn",
-                  "text": "*Workflow Run Number:*\n<${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|${{ github.run_number }}>"
+                  "text": "*Workflow Run:*\n<${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|${{ github.run_number }}>"
                 },
                 {
                   "type": "mrkdwn",
