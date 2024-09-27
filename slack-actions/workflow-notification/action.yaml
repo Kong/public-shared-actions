@@ -15,11 +15,11 @@ inputs:
   success-message:
     description: The message to display when the workflow is successful. Accepts markdown syntax.
     required: false
-    default: "Workflow completed successfully :mario_luigi_dance:"
+    default: ":large_green_circle: Workflow completed successfully :mario_luigi_dance:"
   failure-message:
     description: The message to display when the workflow is successful. Accepts markdown syntax.
     required: false
-    default: "Workflow completed successfully :mario_luigi_dance:"
+    default: ":red_circle: Workflow failed :sad-panda:"
 
 runs:
   using: composite
