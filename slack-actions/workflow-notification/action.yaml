@@ -1,0 +1,110 @@
+name: Post Slack workflow conclusion notifications
+description: Post a Slack message with the workflow conclusion via Slack incoming webhook.
+inputs:
+  slack-webhook-url:
+    description: The Slack webhook URL.
+    required: true
+  header:
+    description: The notification header, as a plain text string.
+    required: true
+  status:
+    description: The status of the workflow, one of "success" or "failure".
+    required: true
+  success-message:
+    description: The message to display when the workflow is successful. Accepts markdown syntax.
+    required: false
+    default: "Workflow completed successfully :mario_luigi_dance:"
+  failure-message:
+    description: The message to display when the workflow is successful. Accepts markdown syntax.
+    required: false
+    default: "Workflow completed successfully :mario_luigi_dance:"
+
+runs:
+  using: composite
+  steps:
+    - name: Construct Slack variables
+      id: slack-variables
+      shell: bash
+      run: |
+        # Git Variables
+        fallbackBranchName=$(echo "${{ github.ref }}" | cut -c12-)
+        shortCommitHash=$(echo "${{ github.sha }}" | cut -c1-7)
+
+        # Output All Variables
+        echo "fallback-branch-name=${fallbackBranchName}" >> $GITHUB_OUTPUT
+        echo "short-commit-hash=${shortCommitHash}" >> $GITHUB_OUTPUT
+
+        # Echo all variables for debugging
+        echo "fallback-branch-name=${fallbackBranchName}"
+        echo "short-commit-hash=${shortCommitHash}"
+
+    - name: Construct Slack payload
+      id: slack-payload
+      shell: bash
+      run: |
+        PAYLOAD=$(cat << EOF
+        {
+          "blocks": [
+            {
+              "type": "header",
+              "text": {
+                "type": "plain_text",
+                "text": "${{ github.workflow }}",
+                "emoji": true
+              }
+            },
+            {
+              "type": "section",
+              "text": {
+                "type": "mrkdwn",
+                "text": "${{ inputs.status == 'failure' && inputs.status-message || inputs.failure-message }}"
+              }
+            },
+            {
+              "type": "section",
+              "fields": [
+                {
+                  "type": "mrkdwn",
+                  "text": "*Repository:*\n<${{ github.server_url }}/${{ github.repository }}|${{ github.repository }}>"
+                },
+                {
+                  "type": "mrkdwn",
+                  "text": "*Branch:*\n<${{ github.server_url }}/${{ github.repository }}/tree/${{ github.head_ref || steps.slack-variables.outputs.fallback-branch-name }}|${{ github.head_ref || steps.slack-variables.outputs.fallback-branch-name }}>"
+                },
+                {
+                  "type": "mrkdwn",
+                  "text": "*Commit:*\n<${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }}|${{ steps.slack-variables.outputs.short-commit-hash }}>"
+                }
+              ]
+            },
+            {
+              "type": "actions",
+              "elements": [
+                {
+                  "type": "button",
+                  "action_id": "view-workflow-run",
+                  "style": "${{ inputs.status == 'failure' && 'danger' || 'primary' }}",
+                  "url": "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}",
+                  "text": {
+                    "type": "plain_text",
+                    "emoji": true,
+                    "text": "${{ inputs.status == 'failure' && 'View failed workflow run' || 'View workflow run' }}"
+                  }
+                }
+              ]
+            }
+          ]
+        }
+        EOF
+        )
+        echo "payload<<EOF" >> $GITHUB_OUTPUT
+        echo "$PAYLOAD" >> $GITHUB_OUTPUT
+        echo "EOF" >> $GITHUB_OUTPUT
+
+    - name: Send notification
+      uses: slackapi/slack-github-action@v1
+      env:
+        SLACK_WEBHOOK_URL: ${{ inputs.slack-webhook-url }}
+        SLACK_WEBHOOK_TYPE: 'INCOMING_WEBHOOK'
+      with:
+        payload: ${{ steps.slack-payload.outputs.payload }}
