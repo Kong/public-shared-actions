@@ -59,7 +59,7 @@ runs:
               "type": "section",
               "text": {
                 "type": "mrkdwn",
-                "text": "${{ inputs.status == 'failure' && inputs.status-message || inputs.failure-message }}"
+                "text": "${{ inputs.status == 'failure' && inputs.failure-message || inputs.status-message }}"
               }
             },
             {
