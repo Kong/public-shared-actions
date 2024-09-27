@@ -1,15 +1,17 @@
 name: Post Slack workflow conclusion notifications
 description: Post a Slack message with the workflow conclusion via Slack incoming webhook.
 inputs:
+  # REQUIRED INPUTS
   slack-webhook-url:
     description: The Slack webhook URL.
-    required: true
-  header:
-    description: The notification header, as a plain text string.
     required: true
   status:
     description: The status of the workflow, one of "success" or "failure".
     required: true
+  # OPTIONAL INPUTS
+  header:
+    description: The notification header, as a plain text string. Defaults to the workflow name.
+    required: false
   success-message:
     description: The message to display when the workflow is successful. Accepts markdown syntax.
     required: false
@@ -49,7 +51,7 @@ runs:
               "type": "header",
               "text": {
                 "type": "plain_text",
-                "text": "${{ github.workflow }}",
+                "text": "${{ inputs.header || github.workflow }}",
                 "emoji": true
               }
             },
