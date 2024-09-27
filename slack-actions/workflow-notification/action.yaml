@@ -59,7 +59,7 @@ runs:
               "type": "section",
               "text": {
                 "type": "mrkdwn",
-                "text": "${{ inputs.status == 'failure' && inputs.status-message || inputs.failure-message }}"
+                "text": "${{ inputs.status == 'failure' && inputs.failure-message || inputs.status-message }}"
               }
             },
             {
@@ -75,7 +75,7 @@ runs:
                 },
                 {
                   "type": "mrkdwn",
-                  "text": "*Workflow Run Number:*\n<${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|${{ github.run_number }}>"
+                  "text": "*Workflow Run:*\n<${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|${{ github.run_number }}>"
                 },
                 {
                   "type": "mrkdwn",
