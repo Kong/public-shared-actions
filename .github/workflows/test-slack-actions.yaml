@@ -33,6 +33,18 @@ jobs:
           status: 'failure'
           failure-message: ":test_tube: [TEST]: This is a test *failure* notification from `Kong/public-shared-actions`"
 
+      - name: Post 'cancelled' notification
+        uses: ./slack-actions/workflow-notification
+        with:
+          slack-webhook-url: ${{ secrets.SLACK_WEBHOOK_URL_ALERT_SLACK_NOTIFICATION_TEST }}
+          status: 'cancelled'
+
+      - name: Post 'skipped' notification
+        uses: ./slack-actions/workflow-notification
+        with:
+          slack-webhook-url: ${{ secrets.SLACK_WEBHOOK_URL_ALERT_SLACK_NOTIFICATION_TEST }}
+          status: 'skipped'
+
       - name: Post 'success' notification with custom payload
         uses: ./slack-actions/workflow-notification
         with:
