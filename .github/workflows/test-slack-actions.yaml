@@ -1,0 +1,78 @@
+name: Test Slack Workflow Notifications
+
+on:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+    tags:
+      - '*'
+  workflow_dispatch: {}
+
+jobs:
+  test-slack-workflow-notifications:
+    runs-on: ubuntu-latest
+    name: Test slack-actions/workflow-notifications
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Post 'success' notification
+        uses: ./slack-actions/workflow-notification
+        with:
+          slack-webhook-url: ${{ secrets.SLACK_WEBHOOK_URL_NOTIFY_SLACK_NOTIFICATION_TEST }}
+          status: 'success'
+          success-message: ":test_tube: [TEST]: This is a test *success* notification from `Kong/public-shared-actions`"
+
+      - name: Post 'failure' notification
+        uses: ./slack-actions/workflow-notification
+        with:
+          slack-webhook-url: ${{ secrets.SLACK_WEBHOOK_URL_ALERT_SLACK_NOTIFICATION_TEST }}
+          status: 'failure'
+          failure-message: ":test_tube: [TEST]: This is a test *failure* notification from `Kong/public-shared-actions`"
+
+      - name: Post 'cancelled' notification
+        uses: ./slack-actions/workflow-notification
+        with:
+          slack-webhook-url: ${{ secrets.SLACK_WEBHOOK_URL_ALERT_SLACK_NOTIFICATION_TEST }}
+          status: 'cancelled'
+
+      - name: Post 'skipped' notification
+        uses: ./slack-actions/workflow-notification
+        with:
+          slack-webhook-url: ${{ secrets.SLACK_WEBHOOK_URL_ALERT_SLACK_NOTIFICATION_TEST }}
+          status: 'skipped'
+
+      - name: Post 'success' notification with custom payload
+        uses: ./slack-actions/workflow-notification
+        with:
+          slack-webhook-url: ${{ secrets.SLACK_WEBHOOK_URL_NOTIFY_SLACK_NOTIFICATION_TEST }}
+          status: 'success'
+          payload: |
+            {
+              "blocks": [
+                {
+                  "type": "header",
+                  "text": {
+                    "type": "plain_text",
+                    "text": "[TEST] Kong/public-shared-actions",
+                    "emoji": true
+                  }
+                },
+                {
+                  "type": "context",
+                  "elements": [
+                    {
+                      "type": "mrkdwn",
+                      "text": ":test_tube:"
+                    },
+                    {
+                      "type": "mrkdwn",
+                      "text": "This is a test notification with a *custom payload*."
+                    }
+                  ]
+                }
+              ]
+            }
