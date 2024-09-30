@@ -27,7 +27,7 @@ jobs:
       TAGS: kongcloud/security-test-repo-pub:ubuntu_23_10,kongcloud/security-test-repo:ubuntu_23_10
     steps:
 
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
 
     - name: Install regctl
       uses: regclient/actions/regctl-installer@main
