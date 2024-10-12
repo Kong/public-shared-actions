@@ -62,7 +62,7 @@ runs:
     - name: Publish SARIF to github code scanning
       if: ${{ always() && inputs.codeql_upload == 'true' && github.event.repository.visibility == 'public' }}
       continue-on-error: true
-      uses: github/codeql-action/upload-sarif@v2
+      uses: github/codeql-action/upload-sarif@v3
       with:
         sarif_file: ${{ steps.scan.outputs.sarif }}
         category: sca_rust
