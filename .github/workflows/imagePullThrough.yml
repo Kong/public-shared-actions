@@ -37,7 +37,7 @@ jobs:
       - name: Load configuration with yq
         id: load_config
         run: |
-          CONFIG_FILE=".github/image.yaml"
+          CONFIG_FILE=".github/imageList.yaml"
           IMAGES=$(yq -r '.images[] | "\(.name)|\(.type)|\(.source)|\(.owner)|\(.repo)|\(.tag)"' $CONFIG_FILE)
           echo "$IMAGES" > images.txt
 
