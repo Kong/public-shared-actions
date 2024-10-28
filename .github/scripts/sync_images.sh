@@ -2,12 +2,23 @@
 
 set -euo pipefail
 
-ECR_URI="public.ecr.aws/k9g5m0d7/$1"
+ECR_URI="$1"
+
+# Retrieve the registry alias
+REGISTRY_ALIAS=$(aws ecr-public describe-registries --query 'registries[0].registryAlias' --output text)
+
+if [ -z "$REGISTRY_ALIAS" ]; then
+  echo "Failed to retrieve registry alias."
+  exit 1
+fi
+
+# Construct the full repository URI
+FULL_ECR_URI="public.ecr.aws/$REGISTRY_ALIAS"
 
 # Functions
 function check_or_create_repository {
   echo "Checking if repository $REPOSITORY exists in ECR Public..."
-  aws ecr-public describe-repositories --repository-name "$REPOSITORY" || \
+  aws ecr-public describe-repositories --repository-name "$REPOSITORY" > /dev/null 2>&1 || \
   aws ecr-public create-repository --repository-name "$REPOSITORY"
 }
 
@@ -29,8 +40,8 @@ function pull_docker_image {
 
 function push_docker_image {
   echo "Tagging and pushing Docker image to ECR..."
-  docker tag "$owner/$repo:$tag" "$ECR_URI/$REPOSITORY:$tag"
-  docker push "$ECR_URI/$REPOSITORY:$tag"
+  docker tag "$owner/$repo:$tag" "$FULL_ECR_URI/$REPOSITORY:$tag"
+  docker push "$FULL_ECR_URI/$REPOSITORY:$tag"
 }
 
 function pull_oci_artifact {
@@ -40,7 +51,7 @@ function pull_oci_artifact {
 
 function push_oci_artifact {
   echo "Pushing OCI artifact to ECR using ORAS..."
-  oras push "$ECR_URI/$REPOSITORY:$tag" \
+  oras push "$FULL_ECR_URI/$REPOSITORY:$tag" \
     --config config.json:application/vnd.aquasec.trivy.config.v1+json \
     db.tar.gz:application/vnd.aquasec.trivy.db.layer.v1.tar+gzip -v
 }
