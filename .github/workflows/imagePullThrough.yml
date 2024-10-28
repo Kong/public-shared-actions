@@ -1,0 +1,90 @@
+name: Multi-Registry Image Sync
+
+on:
+  schedule:
+    - cron: '0 0 * * *'
+  workflow_dispatch:
+
+jobs:
+  sync_images:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Install yq and ORAS
+        run: |
+          sudo apt-get update && sudo apt-get install -y python3-pip
+          pip3 install yq
+          curl -LO https://github.com/oras-project/oras/releases/download/v1.2.0/oras_1.2.0_linux_amd64.tar.gz
+          tar -zxvf oras_1.2.0_linux_amd64.tar.gz
+          sudo mv oras /usr/local/bin/
+
+      - name: Load configuration with yq
+        id: load_config
+        run: |
+          CONFIG_FILE=".github/image.yaml"
+          IMAGES=$(yq -r '.images[] | "\(.name)|\(.type)|\(.source)|\(.owner)|\(.repo)|\(.tag)"' $CONFIG_FILE)
+          echo "$IMAGES" > images.txt
+
+      - name: Pull and sync images
+        env:
+          REPOSITORY: test-images
+        run: |
+          ECR_URI=${{ steps.login-ecr.outputs.registry }}
+          while IFS="|" read -r name type source owner repo tag; do
+            echo "Processing $name from $source with type $type"
+            case "$type" in
+              image)
+                case "$source" in
+                  dockerhub)
+                    echo "Pulling Docker image from Docker Hub..."
+                    docker pull $owner/$repo:$tag
+                    ;;
+                  ghcr)
+                    echo "Pulling Docker image from GHCR..."
+                    docker pull ghcr.io/$owner/$repo:$tag
+                    ;;
+                  *)
+                    echo "Unknown image source $source"
+                    ;;
+                esac
+          
+                # Tag and push to ECR for Docker images
+                docker tag $owner/$repo:$tag $ECR_URI/$REPOSITORY:$tag
+                docker push $ECR_URI/$REPOSITORY:$tag
+                ;;
+              oci)
+                mkdir ociImage
+                echo "Pulling OCI artifact with ORAS..."
+                oras pull public.ecr.aws/$owner/$repo:$tag  --output ociImage -v
+          
+                # List directory contents to locate artifact
+                echo "Listing pulled OCI artifact contents..."
+                ls -al
+                pwd
+          
+                # Create a minimal config file
+                cd ociImage
+                echo '{}' > config.json
+                ls -al
+                echo "Pushing OCI artifact to ECR using ORAS..."
+                oras push $ECR_URI/$REPOSITORY:$tag --config config.json:application/vnd.aquasec.trivy.config.v1+json db.tar.gz:application/vnd.aquasec.trivy.db.layer.v1.tar+gzip -v
+                ;;
+              *)
+                echo "Unknown type $type"
+                ;;
+            esac
+          done < images.txt
