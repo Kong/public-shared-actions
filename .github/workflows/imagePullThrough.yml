@@ -20,9 +20,9 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: us-east-1
 
-      - name: Login to Amazon ECR
-        id: login-ecr
-        uses: aws-actions/amazon-ecr-login@v2
+      - name: Login to Amazon ECR Public
+        id: login-ecr-public
+        uses: aws-actions/amazon-ecr-public-login@v2
 
       - name: Install yq and ORAS
         run: |
@@ -43,7 +43,7 @@ jobs:
         env:
           REPOSITORY: test-images
         run: |
-          ECR_URI=${{ steps.login-ecr.outputs.registry }}
+          ECR_URI=${{ steps.login-ecr-public.outputs.registry }}
           while IFS="|" read -r name type source owner repo tag; do
             echo "Processing $name from $source with type $type"
             case "$type" in
