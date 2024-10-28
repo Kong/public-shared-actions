@@ -5,7 +5,7 @@ set -euo pipefail
 ECR_URI="$1"
 
 # Retrieve the registry alias
-REGISTRY_ALIAS=$(aws ecr-public describe-repositories --query 'registries[0].registryAlias' --output text)
+REGISTRY_ALIAS=$(aws ecr-public describe-registries  --query 'registries[0].aliases[0].name' --output text)
 
 if [ -z "$REGISTRY_ALIAS" ]; then
   echo "Failed to retrieve registry alias."
