@@ -2,7 +2,7 @@
 
 set -euo pipefail
 
-ECR_URI="$1"
+ECR_URI="public.ecr.aws/k9g5m0d7/$1"
 
 # Functions
 function check_or_create_repository {
