@@ -59,10 +59,18 @@ IMAGES=$(yq -r '.images[] | "\(.name)|\(.type)|\(.source)|\(.owner)|\(.repo)|\(.
 
 echo "$IMAGES" | while IFS="|" read -r name type source owner repo semantic; do
   REPOSITORY="$name"
-  current_tag=$(regctl tag ls "$FULL_ECR_URI/$REPOSITORY" \
-      | grep -E '^[0-9]+\.[0-9]+\.[0-9]+$' \
-      | sort -Vr \
-      | head -n 1)
+  # Get the list of tags
+  tags_list=$(regctl tag ls "$FULL_ECR_URI/$REPOSITORY")
+
+  # Check if the tags list is empty
+  if [ -z "$tags_list" ]; then
+    echo "No images found in $FULL_ECR_URI/$REPOSITORY. Skipping..."
+    current_tag=""  # Set current_tag to empty or handle as needed
+  else
+    # Extract the highest semantic version
+    current_tag=$(echo "$tags_list" | grep -E "^[0-9]+(\.[0-9]+)*$" | sort --version-sort | tail -n 1)
+  fi
+
   echo "Processing $name from $source with type $type and current tag $current_tag"
 
   # Check or create the repository in ECR Public
