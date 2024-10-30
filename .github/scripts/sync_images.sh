@@ -38,10 +38,10 @@ function get_upstream_tags {
     echo "Latest semantic version found: $latest_version"
 
     # Return the latest version tag
-    echo "$latest_version"
+    return "$latest_version"
   else
     echo "Semantic versioning is not enabled, using current tag."
-    echo "$current_tag"
+    return "$current_tag"
   fi
 }
 
@@ -64,7 +64,7 @@ echo "$IMAGES" | while IFS="|" read -r name type source owner repo current_tag s
 
   # Get the upstream tags greater than the current version
   tag=$(get_upstream_tags)
-  
+
   if [ "$tag" != "$current_tag" ]; then
     echo "New version found: $tag for $name"
 
