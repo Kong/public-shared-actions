@@ -13,3 +13,10 @@ images:
     repo: trivy-db
     tag: 2
     semantic: false
+  - name: semgrep
+    type: image
+    source: docker.io
+    owner: returntocorp
+    repo: semgrep
+    tag: 1.92
+    semantic: true
