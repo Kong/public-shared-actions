@@ -43,14 +43,14 @@ function get_upstream_tags {
 # Function to pull an image or OCI artifact using regctl
 function pull_artifact {
   echo "Pulling $type from $source with regctl..."
-  regctl image copy "$owner/$repo:$tag" "local/$REPOSITORY:$tag"
+  regctl image copy "$owner/$repo:$tag" "$FULL_ECR_URI/$REPOSITORY:$tag"
 }
 
-# Function to push an image or OCI artifact to ECR using regctl
-function push_artifact {
-  echo "Pushing $type to ECR with regctl..."
-  regctl image copy "local/$REPOSITORY:$tag" "$FULL_ECR_URI/$REPOSITORY:$tag"
-}
+# # Function to push an image or OCI artifact to ECR using regctl
+# function push_artifact {
+#   echo "Pushing $type to ECR with regctl..."
+#   regctl image copy "local/$REPOSITORY:$tag" "$FULL_ECR_URI/$REPOSITORY:$tag"
+# }
 
 # Main script
 CONFIG_FILE=".github/imageList.yml"
@@ -61,7 +61,7 @@ echo "$IMAGES" | while IFS="|" read -r name type source owner repo current_tag s
   REPOSITORY="$name"
 
   # Check or create the repository in ECR Public
-  check_or_create_repository
+  # check_or_create_repository
 
   # Get the upstream tags greater than the current version
   tag=$(get_upstream_tags)
@@ -73,7 +73,7 @@ echo "$IMAGES" | while IFS="|" read -r name type source owner repo current_tag s
     pull_artifact
 
     # Push the artifact to the ECR Public repository
-    push_artifact
+    # push_artifact
   else
     echo "No new version found for $name."
   fi
