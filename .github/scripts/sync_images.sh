@@ -25,23 +25,23 @@ function check_or_create_repository {
 # Function to fetch tags greater than the current tag in imageList
 function get_upstream_tags {
   if [ "$semantic" = true ]; then
-    echo "Fetching available tags from the upstream registry for $repo..."
+    echo "Fetching available tags from the upstream registry for $repo..." >&2
     
     # Fetch all tags and filter out only semantic versions (e.g., 1.0.0, 2.3, etc.)
     latest_version=$(regctl tag ls "$source/$owner/$repo" | grep -E "^[0-9]+(\.[0-9]+)*$" | sort --version-sort | tail -n 1)
 
     if [ -z "$latest_version" ]; then
-      echo "No semantic version tags found for $repo."
+      echo "No semantic version tags found for $repo." >&2
       return 1
     fi
     
-    echo "Latest semantic version found: $latest_version"
+    echo "Latest semantic version found: $latest_version" >&2
 
     # Return the latest version tag
     echo "$latest_version"
     return 0
   else
-    echo "Semantic versioning is not enabled, using current tag."
+    echo "Semantic versioning is not enabled, using current tag." >&2
     echo "$current_tag"
     return 0
   fi
