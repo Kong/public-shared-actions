@@ -27,7 +27,7 @@ function get_upstream_tags {
   echo "Fetching available tags from the upstream registry for $repo..."
   
   # Fetch all tags and filter out only semantic versions (e.g., 1.0.0, 2.3, etc.)
-  latest_version=$(regctl tag ls "$source/$owner/$repo" | grep -E "^[0-9]+(\.[0-9]+)*$" | sort --version-sort | tail -n 1)
+  latest_version=$(regctl tag ls "$owner/$repo" | grep -E "^[0-9]+(\.[0-9]+)*$" | sort --version-sort | tail -n 1)
 
   if [ -z "$latest_version" ]; then
     echo "No semantic version tags found for $repo."
@@ -43,7 +43,7 @@ function get_upstream_tags {
 # Function to pull an image or OCI artifact using regctl
 function pull_artifact {
   echo "Pulling $type from $source with regctl..."
-  regctl image copy "$source/$owner/$repo:$tag" "local/$REPOSITORY:$tag"
+  regctl image copy "$owner/$repo:$tag" "local/$REPOSITORY:$tag"
 }
 
 # Function to push an image or OCI artifact to ECR using regctl
