@@ -38,10 +38,12 @@ function get_upstream_tags {
     echo "Latest semantic version found: $latest_version"
 
     # Return the latest version tag
-    return "$latest_version"
+    echo "$latest_version"
+    return 0
   else
     echo "Semantic versioning is not enabled, using current tag."
-    return "$current_tag"
+    echo "$current_tag"
+    return 0
   fi
 }
 
