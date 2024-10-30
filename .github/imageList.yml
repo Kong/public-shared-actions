@@ -4,7 +4,7 @@ images:
     source: dockerhub
     owner: aquasec
     repo: trivy
-    tag: 0.56.2
+    tag: 0.56.1
     semantic: true
   - name: trivy-db
     type: oci
