@@ -5,7 +5,7 @@ set -euo pipefail
 ECR_URI="$1"
 
 # Retrieve the registry alias
-REGISTRY_ALIAS=$(aws ecr-public describe-registries  --query 'registries[0].aliases[0].name' --output text)
+REGISTRY_ALIAS=$(aws ecr-public describe-registries --query 'registries[0].aliases[0].name' --output text)
 
 if [ -z "$REGISTRY_ALIAS" ]; then
   echo "Failed to retrieve registry alias."
@@ -15,76 +15,66 @@ fi
 # Construct the full repository URI
 FULL_ECR_URI="public.ecr.aws/$REGISTRY_ALIAS"
 
-# Functions
+# Function to check or create repository
 function check_or_create_repository {
   echo "Checking if repository $REPOSITORY exists in ECR Public..."
   aws ecr-public describe-repositories --repository-name "$REPOSITORY" > /dev/null 2>&1 || \
   aws ecr-public create-repository --repository-name "$REPOSITORY"
 }
 
-function pull_docker_image {
-  case "$source" in
-    dockerhub)
-      echo "Pulling Docker image from Docker Hub..."
-      docker pull "$owner/$repo:$tag"
-      ;;
-    ghcr)
-      echo "Pulling Docker image from GitHub Container Registry..."
-      docker pull "ghcr.io/$owner/$repo:$tag"
-      ;;
-    *)
-      echo "Unknown image source $source"
-      ;;
-  esac
+# Function to fetch tags greater than the current tag in imageList
+function get_upstream_tags {
+  echo "Fetching available tags from the upstream registry for $repo..."
+  
+  # Fetch all tags and filter out only semantic versions (e.g., 1.0.0, 2.3, etc.)
+  latest_version=$(regctl tag ls "$source/$owner/$repo" | grep -E "^[0-9]+(\.[0-9]+)*$" | sort --version-sort | tail -n 1)
+
+  if [ -z "$latest_version" ]; then
+    echo "No semantic version tags found for $repo."
+    return 1
+  fi
+  
+  echo "Latest semantic version found: $latest_version"
+
+  # Return the latest version tag
+  echo "$latest_version"
 }
 
-function push_docker_image {
-  echo "Tagging and pushing Docker image to ECR..."
-  docker tag "$owner/$repo:$tag" "$FULL_ECR_URI/$REPOSITORY:$tag"
-  docker push "$FULL_ECR_URI/$REPOSITORY:$tag"
+# Function to pull an image or OCI artifact using regctl
+function pull_artifact {
+  echo "Pulling $type from $source with regctl..."
+  regctl image copy "$source/$owner/$repo:$tag" "local/$REPOSITORY:$tag"
 }
 
-function pull_oci_artifact {
-  echo "Pulling OCI artifact with ORAS..."
-  oras pull "$source/$owner/$repo:$tag" --output "$OUTPUT_DIR" -v
-}
-
-function push_oci_artifact {
-  echo "Pushing OCI artifact to ECR using ORAS..."
-  oras push "$FULL_ECR_URI/$REPOSITORY:$tag" \
-    --config config.json:application/vnd.aquasec.trivy.config.v1+json \
-    db.tar.gz:application/vnd.aquasec.trivy.db.layer.v1.tar+gzip -v
+# Function to push an image or OCI artifact to ECR using regctl
+function push_artifact {
+  echo "Pushing $type to ECR with regctl..."
+  regctl image copy "local/$REPOSITORY:$tag" "$FULL_ECR_URI/$REPOSITORY:$tag"
 }
 
 # Main script
 CONFIG_FILE=".github/imageList.yml"
-IMAGES=$(yq -r '.images[] | "\(.name)|\(.type)|\(.source)|\(.owner)|\(.repo)|\(.tag)"' "$CONFIG_FILE")
+IMAGES=$(yq -r '.images[] | "\(.name)|\(.type)|\(.source)|\(.owner)|\(.repo)|\(.tag)|\(.semantic)"' "$CONFIG_FILE")
 
-echo "$IMAGES" | while IFS="|" read -r name type source owner repo tag; do
-  echo "Processing $name from $source with type $type"
+echo "$IMAGES" | while IFS="|" read -r name type source owner repo current_tag semantic; do
+  echo "Processing $name from $source with type $type and current tag $current_tag"
   REPOSITORY="$name"
 
-  # Variables accessible to functions:
-  # name, type, source, owner, repo, tag, REPOSITORY
-
+  # Check or create the repository in ECR Public
   check_or_create_repository
 
-  case "$type" in
-    image)
-      pull_docker_image
-      push_docker_image
-      ;;
-    oci)
-      OUTPUT_DIR="ociImage_$name"
-      mkdir -p "$OUTPUT_DIR"
-      pull_oci_artifact
-      cd "$OUTPUT_DIR"
-      echo '{}' > config.json
-      push_oci_artifact
-      cd ..
-      ;;
-    *)
-      echo "Unknown type $type"
-      ;;
-  esac
+  # Get the upstream tags greater than the current version
+  tag=$(get_upstream_tags)
+
+  if [ "$tag" != "$current_tag" ]; then
+    echo "New version found: $tag for $name"
+
+    # Pull the artifact from the upstream source
+    pull_artifact
+
+    # Push the artifact to the ECR Public repository
+    push_artifact
+  else
+    echo "No new version found for $name."
+  fi
 done
