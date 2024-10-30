@@ -58,12 +58,12 @@ CONFIG_FILE=".github/imageList.yml"
 IMAGES=$(yq -r '.images[] | "\(.name)|\(.type)|\(.source)|\(.owner)|\(.repo)|\(.semantic)"' "$CONFIG_FILE")
 
 echo "$IMAGES" | while IFS="|" read -r name type source owner repo semantic; do
+  REPOSITORY="$name"
   current_tag=$(regctl tag ls "$FULL_ECR_URI/$REPOSITORY" \
       | grep -E '^[0-9]+\.[0-9]+\.[0-9]+$' \
       | sort -Vr \
       | head -n 1)
   echo "Processing $name from $source with type $type and current tag $current_tag"
-  REPOSITORY="$name"
 
   # Check or create the repository in ECR Public
   check_or_create_repository
