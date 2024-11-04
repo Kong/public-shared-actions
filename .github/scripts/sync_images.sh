@@ -15,11 +15,13 @@ fi
 # Construct the full repository URI
 FULL_ECR_URI="public.ecr.aws/$REGISTRY_ALIAS"
 
-# Function to check or create repository
-function check_or_create_repository {
+# Function to check if repository exists
+function check_repository_exists {
   echo "Checking if repository $REPOSITORY exists in ECR Public..."
-  aws ecr-public describe-repositories --repository-name "$REPOSITORY" > /dev/null 2>&1 || \
-  aws ecr-public create-repository --repository-name "$REPOSITORY"
+  if ! aws ecr-public describe-repositories --repository-name "$REPOSITORY" > /dev/null 2>&1; then
+    echo "Repository $REPOSITORY does not exist. Exiting."
+    exit 1
+  fi
 }
 
 # Function to fetch tags greater than the current tag in imageList
@@ -74,7 +76,7 @@ echo "$IMAGES" | while IFS="|" read -r name type source owner repo semantic; do
   echo "Processing $name from $source with type $type and current tag $current_tag"
 
   # Check or create the repository in ECR Public
-  check_or_create_repository
+  check_repository_exists
 
   # Get the upstream tags greater than the current version
   tag=$(get_upstream_tags)
