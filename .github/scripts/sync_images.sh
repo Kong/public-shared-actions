@@ -73,10 +73,11 @@ echo "$IMAGES" | while IFS="|" read -r name type source owner repo semantic; do
   else
     # Extract the highest semantic version
     current_tag=$(echo "$tags_list" | grep -E "^[0-9]+(\.[0-9]+)*$" | sort --version-sort | tail -n 1)
+    echo "value of current tag is = $current_tag"
   fi
 
   echo "Processing $name from $source with type $type and current tag $current_tag"
-
+  aws ecr-public describe-repositories --repository-name trivy
   # Check or create the repository in ECR Public
   check_repository_exists
 
