@@ -43,7 +43,7 @@ function get_latest_upstream_tag {
 # Function to pull an image or OCI artifact using regctl
 function pull_artifact {
   echo "Pulling $type from $source with regctl..."
-  regctl image copy --platform linux/arm64,linux/amd64 "$source/$owner/$repo:$tag" "$FULL_ECR_URI/$REPOSITORY:$tag"
+  regctl image copy --platform linux/amd64 --platform linux/arm64 "$source/$owner/$repo:$tag" "$FULL_ECR_URI/$REPOSITORY:$tag"
 }
 
 # Main script

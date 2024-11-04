@@ -3,7 +3,7 @@ name: Multi-Registry Image Sync
 on:
   schedule:
     - cron: '0 0 * * *'
-  pull_request:
+  push:
     branches:
       - 'poc'
   workflow_dispatch:
