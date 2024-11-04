@@ -26,27 +26,31 @@ function check_repository_exists {
 
 # Function to fetch tags greater than the current tag in imageList
 function get_upstream_tags {
-  if [ "$semantic" = true ]; then
-    echo "Fetching available tags from the upstream registry for $repo..." >&2
-    
-    # Fetch all tags and filter out only semantic versions (e.g., 1.0.0, 2.3, etc.)
-    latest_version=$(regctl tag ls "$source/$owner/$repo" | grep -E "^[0-9]+(\.[0-9]+)*$" | sort --version-sort | tail -n 1)
+  echo "Fetching available tags from the upstream registry for $repo..." >&2
 
-    if [ -z "$latest_version" ]; then
-      echo "No semantic version tags found for $repo." >&2
-      return 1
+  # Fetch all tags
+  latest_version=$(regctl tag ls "$source/$owner/$repo" | grep -E "^[0-9]+(\.[0-9]+)*$" | sort --version-sort | tail -n 1)
+
+  if [ -z "$latest_version" ]; then
+    echo "No semantic version tags found for $repo." >&2
+
+    # Check for non-semantic integer tags
+    latest_fixed_tag=$(regctl tag ls "$source/$owner/$repo" | grep -E "^[0-9]+$" | sort -n | tail -n 1)
+
+    if [ -z "$latest_fixed_tag" ]; then
+      echo "No fixed tags found for $repo. Using current tag." >&2
+      echo "$current_tag"
+      return 0
+    else
+      echo "Latest fixed tag found: $latest_fixed_tag" >&2
+      echo "$latest_fixed_tag"
+      return 0
     fi
-    
-    echo "Latest semantic version found: $latest_version" >&2
-
-    # Return the latest version tag
-    echo "$latest_version"
-    return 0
-  else
-    echo "Semantic versioning is not enabled, using current tag." >&2
-    echo "$current_tag"
-    return 0
   fi
+
+  echo "Latest semantic version found: $latest_version" >&2
+  echo "$latest_version"
+  return 0
 }
 
 # Function to pull an image or OCI artifact using regctl
@@ -69,16 +73,19 @@ echo "$IMAGES" | while IFS="|" read -r name type source owner repo semantic; do
   # Check if the tags list is empty
   if [ -z "$tags_list" ]; then
     echo "No images found in $FULL_ECR_URI/$REPOSITORY. Skipping..."
-    current_tag=""  # Set current_tag to empty or handle as needed
+    current_tag=""
   else
-    # Extract the highest semantic version
+    # Extract the highest semantic or numeric version
     current_tag=$(echo "$tags_list" | grep -E "^[0-9]+(\.[0-9]+)*$" | sort --version-sort | tail -n 1)
-    echo "value of current tag is = $current_tag"
+    if [ -z "$current_tag" ]; then
+      current_tag=$(echo "$tags_list" | grep -E "^[0-9]+$" | sort -n | tail -n 1)
+    fi
+    echo "Current tag is = $current_tag"
   fi
 
   echo "Processing $name from $source with type $type and current tag $current_tag"
-  aws ecr-public describe-repositories --repository-name trivy
-  # Check or create the repository in ECR Public
+
+  # Check if the repository exists in ECR Public
   check_repository_exists
 
   # Get the upstream tags greater than the current version
@@ -86,9 +93,7 @@ echo "$IMAGES" | while IFS="|" read -r name type source owner repo semantic; do
 
   if [ "$tag" != "$current_tag" ]; then
     echo "New version found: $tag for $name"
-
     pull_artifact
-
   else
     echo "No new version found for $name."
   fi
