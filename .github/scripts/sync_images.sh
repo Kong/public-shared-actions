@@ -56,9 +56,11 @@ echo "$IMAGES" | while IFS="|" read -r name type source owner repo semantic; do
 
   # Get the list of tags
   tags_list=$(regctl tag ls "$FULL_ECR_URI/$REPOSITORY")
+  echo "Tag list is = $tag_list"
 
   # Determine the current tag (highest semantic or numeric)
   current_tag=$(echo "$tags_list" | grep -E "^[0-9]+(\.[0-9]+)*$" | sort --version-sort | tail -n 1)
+  echo "Current tag is = $current_tag"
 
   # Check if the returned tag is purely numeric or semantic
   if [[ "$current_tag" =~ ^[0-9]+$ ]]; then
@@ -68,13 +70,16 @@ echo "$IMAGES" | while IFS="|" read -r name type source owner repo semantic; do
   fi
 
   # Check if the repository exists in ECR Public
+  echo "Check if the repository exists in ECR Public"
   check_repository_exists
 
   # Get the latest upstream tag
+  echo "Get the latest upstream tag, function run get_latest_upstream_tag"
   tag=$(get_latest_upstream_tag)
 
   if [ "$tag" != "$current_tag" ]; then
     echo "New version found: $tag for $name"
+    echo "Pull new version from upstream"
     pull_artifact
   else
     echo "No new version found for $name."
