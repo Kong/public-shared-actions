@@ -55,12 +55,15 @@ echo "$IMAGES" | while IFS="|" read -r name type source owner repo semantic; do
   echo "Repo name is = $REPOSITORY"
 
   # Get the list of tags
-  tags_list=$(regctl tag ls "$FULL_ECR_URI/$REPOSITORY")
+  tags_list=$(regctl tag ls "$FULL_ECR_URI/$REPOSITORY" || true)
   echo "Tag list is = $tags_list"
+
+  # Determine if no tags are available
   if [ -z "$tags_list" ]; then
-    echo "No tags are available for $repo." >&2
-  else
-    tags_list=
+    echo "No tags are available for $repo. Pulling the latest version from upstream..."
+    tag=$(get_latest_upstream_tag)
+    pull_artifact
+    continue
   fi
 
   # Determine the current tag (highest semantic or numeric)
