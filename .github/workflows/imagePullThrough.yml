@@ -30,7 +30,7 @@ jobs:
             role-to-assume: arn:aws:iam::992382581569:role/ecr-publicrole
             role-session-name: GitHub_to_AWS_via_FederatedOIDC
             aws-region: us-east-1
-            # Hello from AWS: WhoAmI
+
       - name: Sts GetCallerIdentity
         run: |
             aws sts get-caller-identity
