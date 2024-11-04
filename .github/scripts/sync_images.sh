@@ -61,6 +61,8 @@ IMAGES=$(yq -r '.images[] | "\(.name)|\(.type)|\(.source)|\(.owner)|\(.repo)|\(.
 
 echo "$IMAGES" | while IFS="|" read -r name type source owner repo semantic; do
   REPOSITORY="$name"
+  echo "Repo name is = $REPOSITORY"
+
   # Get the list of tags
   tags_list=$(regctl tag ls "$FULL_ECR_URI/$REPOSITORY")
 
