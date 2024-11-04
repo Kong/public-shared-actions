@@ -59,7 +59,6 @@ echo "$IMAGES" | while IFS="|" read -r name type source owner repo semantic; do
   echo "Tag list is = $tags_list"
   if [ -z "$tags_list" ]; then
     echo "No tags are available for $repo." >&2
-    return 1
   else
     tags_list=
   fi
