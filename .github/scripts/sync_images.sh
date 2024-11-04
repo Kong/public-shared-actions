@@ -57,6 +57,12 @@ echo "$IMAGES" | while IFS="|" read -r name type source owner repo semantic; do
   # Get the list of tags
   tags_list=$(regctl tag ls "$FULL_ECR_URI/$REPOSITORY")
   echo "Tag list is = $tags_list"
+  if [ -z "$tags_list" ]; then
+    echo "No tags are available for $repo." >&2
+    return 1
+  else
+    tags_list=
+  fi
 
   # Determine the current tag (highest semantic or numeric)
   current_tag=$(echo "$tags_list" | grep -E "^[0-9]+(\.[0-9]+)*$" | sort --version-sort | tail -n 1)
