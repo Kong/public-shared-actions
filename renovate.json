@@ -1,0 +1,28 @@
+{
+  "extends": ["config:base"],
+  "packageRules": [
+    {
+      "description": "Update Trivy image in GitHub Actions workflows",
+      "matchDatasources": ["docker"],
+      "matchPackageNames": ["public.ecr.aws/k9g5m0d7/trivy"],
+      "registryUrls": ["https://public.ecr.aws"],
+      "updateSchedule": "daily",
+      "semanticCommitType": "chore",
+      "semanticCommitScope": "trivy",
+      "groupName": "trivy-image-updates",
+      "commitMessage": "chore(trivy): update trivy version to {{newVersion}}"
+    }
+  ],
+  "regexManagers": [
+    {
+      "description": "GitHub Actions Docker image in workflow files",
+      "fileMatch": [".github/workflows/.*\\.yml$"],
+      "matchStrings": [
+        "uses:\\s+public\\.ecr\\.aws/k9g5m0d7/trivy:(?<currentValue>[\\w.]+)"
+      ],
+      "datasourceTemplate": "docker",
+      "depNameTemplate": "public.ecr.aws/k9g5m0d7/trivy",
+      "versioningTemplate": "docker"
+    }
+  ]
+}
