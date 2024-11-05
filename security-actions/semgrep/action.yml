@@ -27,7 +27,7 @@ runs:
   steps:
 
     - name: SAST Scan
-      uses: docker://public.ecr.aws/k9g5m0d7/semgrep:1.86.0
+      uses: public.ecr.aws/k9g5m0d7/semgrep:1.86.0
       id: semgrep
       continue-on-error: true
       with:

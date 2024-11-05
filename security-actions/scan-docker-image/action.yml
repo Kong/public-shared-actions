@@ -303,7 +303,7 @@ runs:
         files: "${{ steps.meta.outputs.scan_image }}"
 
     - name: Generate docker-cis JSON report
-      uses: docker://public.ecr.aws/k9g5m0d7/trivy:0.55.2
+      uses: public.ecr.aws/k9g5m0d7/trivy:0.55.2
       if: ${{ inputs.skip_cis_scan != 'true' && steps.meta.outputs.scan_image != '' }}
       id: cis_json
       with:
@@ -324,7 +324,7 @@ runs:
 
     - name: Inspect docker-cis report
       if: ${{ inputs.skip_cis_scan != 'true' && steps.meta.outputs.scan_image != '' }}
-      uses: docker://public.ecr.aws/k9g5m0d7/trivy:0.55.2
+      uses: public.ecr.aws/k9g5m0d7/trivy:0.55.2
       with:
         entrypoint: trivy
         args: "image ${{ env.input }} ${{ steps.meta.outputs.scan_image }} --compliance ${{ env.compliance }} -f table --ignore-unfixed --exit-code ${{ env.exit-code }}"
