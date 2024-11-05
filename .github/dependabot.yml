@@ -28,6 +28,22 @@ updates:
     
   - package-ecosystem: docker
     directory: "/security-actions/scan-docker-image"
+    registries:
+      ecr-docker:
+        type: docker-registry
+        url: https://public.ecr.aws/k9g5m0d7
+    schedule:
+      interval: "daily"
+    commit-message:
+      prefix: "docker"
+      include: "scope"
+
+  - package-ecosystem: docker
+    directory: "/security-actions/semgrep"
+    registries:
+      ecr-docker:
+        type: docker-registry
+        url: https://public.ecr.aws/k9g5m0d7
     schedule:
       interval: "daily"
     commit-message:
