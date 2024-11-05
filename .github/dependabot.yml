@@ -34,6 +34,7 @@ updates:
         url: https://public.ecr.aws/k9g5m0d7
     schedule:
       interval: "daily"
+      time: "05:55"
     commit-message:
       prefix: "docker"
       include: "scope"
@@ -46,6 +47,7 @@ updates:
         url: https://public.ecr.aws/k9g5m0d7
     schedule:
       interval: "daily"
+      time: "05:55"
     commit-message:
       prefix: "docker"
       include: "scope"
