@@ -3,7 +3,14 @@ name: Multi-Registry Image Sync
 on:
   schedule:
     - cron: '0 0 * * *'
+  push:
+    branches:
+      - 'poc'
   workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: read
 
 jobs:
   sync_images:
@@ -13,12 +20,23 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v2
 
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v4
+#      - name: Configure AWS credentials
+#        uses: aws-actions/configure-aws-credentials@v4
+#        with:
+#          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+#          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+#          aws-region: us-east-1
+
+      - name: configure aws credentials
+        uses: aws-actions/configure-aws-credentials@v1.7.0
         with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: us-east-1
+            role-to-assume: arn:aws:iam::992382581569:role/ecr-publicrole
+            role-session-name: GitHub_to_AWS_via_FederatedOIDC
+            aws-region: us-east-1
+
+      - name: Sts GetCallerIdentity
+        run: |
+            aws sts get-caller-identity
 
       - name: Login to Amazon ECR Public
         id: login-ecr-public
@@ -35,6 +53,9 @@ jobs:
           sudo mv oras /usr/local/bin/
           chmod +x .github/scripts/sync_images.sh
 
+      - name: Install regctl
+        uses: regclient/actions/regctl-installer@main
+        
       - name: Execute the image sync script
         run: |
           ./.github/scripts/sync_images.sh "${{ steps.login-ecr-public.outputs.registry }}"
