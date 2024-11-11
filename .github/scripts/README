@@ -1,0 +1,9 @@
+# Sync OCI Artifacts to Kong AWS ECR
+
+A process (GH workflow) within the Public Shared actions repository. The process will be a GH action which will handle mirroring tasks.
+a. The GH action will be scheduled to run every X (i.e default 24h) to check for any version of dependency artifacts available in the Public artifact store(upstream registries).
+b. We will use a utility for OCI compliant tooling (eg: regctl)  for managing the artifact registry associated chores
+c. The utility will pull from public artifact stores(Eg: Dockerhub, ECR, GHCR, Kong managed stores i.e repositories) at the defined interval frequency.
+d. The pulled artifacts will be pushed to stores under the Kong Boundary (Kong AWS Private ECR)  to have granular control on how it is managed and scaled and distributed to consumers (Kong Application pipelines).
+
+More WIP

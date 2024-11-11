@@ -1,0 +1,20 @@
+# This artifact list file is to define the existing security tools which need to be mirrored from upstream
+# within Kong's artifact store.
+# Any future artifacts can also be added here
+
+images:
+  - name: trivy
+    type: image
+    source: docker.io
+    owner: aquasec
+    repo: trivy
+  - name: trivy-db
+    type: oci
+    source: public.ecr.aws
+    owner: aquasecurity
+    repo: trivy-db
+  - name: semgrep
+    type: image
+    source: docker.io
+    owner: returntocorp
+    repo: semgrep

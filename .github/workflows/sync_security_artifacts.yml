@@ -1,0 +1,48 @@
+name: Multi-Registry Artifact Sync
+
+on:
+  schedule:
+    - cron: '0 0 * * *'
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  sync_images:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-region: us-east-1
+          role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/ecr-private-role
+          role-session-name: GitHub_to_AWS_via_FederatedOIDC
+
+      - name: Sts GetCallerIdentity
+        run: |
+            aws sts get-caller-identity
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update && sudo apt-get install -y python3-pip
+          pip3 install yq
+          chmod +x .github/scripts/sync_security_artifacts.sh
+
+      - name: Install regctl
+        uses: regclient/actions/regctl-installer@main
+        
+      - name: Execute the image sync script
+        run: |
+          ./.github/scripts/sync_security_artifacts.sh "${{ steps.login-ecr.outputs.registry }}"
+        env:
+          AWS_ACCOUND_ID: ${{ secrets.AWS_ACCOUNT_ID }}
