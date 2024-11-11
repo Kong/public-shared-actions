@@ -2,7 +2,7 @@
 # within Kong's artifact store.
 # Any future artifacts can also be added here
 
-images:
+assets:
   - name: trivy
     type: image
     source: docker.io
