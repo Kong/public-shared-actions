@@ -89,6 +89,19 @@ runs:
   using: composite
   steps:
 
+    # Authenticate to AWS ECR
+    - name: Configure AWS Credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-region: us-east-1
+        role-to-assume: arn:aws:iam::<DEFINE_AWS_ACCOUNT_ID>:role/ecr-private-role-to-pull
+        role-session-name: GitHub_to_AWS_via_FederatedOIDC
+
+    # Authenticate Docker to an Amazon ECR registry
+    - name: Login to Amazon ECR
+      id: login-ecr
+      uses: aws-actions/amazon-ecr-login@v2
+
     - name: Set Scan Job Metadata
       shell: bash
       id: meta
@@ -302,16 +315,21 @@ runs:
       with:
         files: "${{ steps.meta.outputs.scan_image }}"
 
-    - name: Generate docker-cis JSON report
-      uses: docker://aquasec/trivy:0.55.2
+    - name: Run Trivy vulnerability scanner
       if: ${{ inputs.skip_cis_scan != 'true' && steps.meta.outputs.scan_image != '' }}
       id: cis_json
+      uses: aquasecurity/trivy-action@0.28.0
       with:
-        entrypoint: trivy
-        args: "image ${{ env.input }} ${{ steps.meta.outputs.scan_image }} --compliance ${{ env.compliance }} -f json --ignore-unfixed -o ${{ steps.meta.outputs.cis_json_file }}"
-      env:
-        compliance: docker-cis-1.6.0
+        scan-type: 'image'
+        image-ref: ${{ steps.meta.outputs.scan_image }}
+        format: 'json'
+        output: ${{ steps.meta.outputs.cis_json_file }}
+        ignore-unfixed: true
         input: ${{ steps.docker_tar.outputs.files_exists == 'true' && '--input' || '' }}
+      env:
+        TRIVY_DB_REPOSITORY: <DEFINE_AWS_ACCOUNT_ID>.dkr.ecr.us-east-1.amazonaws.com/trivy-db:2
+        TRIVY_COMPLIANCE: docker-cis-1.6.0
+
 
     - name: upload docker-cis JSON report
       if: ${{ inputs.skip_cis_scan != 'true' && steps.meta.outputs.scan_image != '' }}
@@ -322,13 +340,17 @@ runs:
           ${{ steps.meta.outputs.cis_json_file }}
         if-no-files-found: warn
 
+
     - name: Inspect docker-cis report
       if: ${{ inputs.skip_cis_scan != 'true' && steps.meta.outputs.scan_image != '' }}
-      uses: docker://aquasec/trivy:0.55.2
+      uses: aquasecurity/trivy-action@0.28.0
       with:
-        entrypoint: trivy
-        args: "image ${{ env.input }} ${{ steps.meta.outputs.scan_image }} --compliance ${{ env.compliance }} -f table --ignore-unfixed --exit-code ${{ env.exit-code }}"
-      env:
-        exit-code: ${{ (steps.meta.outputs.global_enforce_build_failure == 'true' || inputs.fail_build == 'true') && '1' || '0' }}
-        compliance: docker-cis-1.6.0
+        scan-type: 'image'
+        image-ref: ${{ steps.meta.outputs.scan_image }}
+        format: 'table'
+        ignore-unfixed: true
         input: ${{ steps.docker_tar.outputs.files_exists == 'true' && '--input' || '' }}
+        exit-code: ${{ (steps.meta.outputs.global_enforce_build_failure == 'true' || inputs.fail_build == 'true') && '1' || '0' }}
+      env:
+        TRIVY_DB_REPOSITORY: <DEFINE_AWS_ACCOUNT_ID>.dkr.ecr.us-east-1.amazonaws.com/trivy-db:2
+        TRIVY_COMPLIANCE: docker-cis-1.6.0
