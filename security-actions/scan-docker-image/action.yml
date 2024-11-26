@@ -318,10 +318,13 @@ runs:
         echo "repository=${REPO}" >> $GITHUB_OUTPUT
         echo "ref=${REF}" >> $GITHUB_OUTPUT
 
+      # Issue: https://github.com/aquasecurity/trivy/issues/7938
+      # Discussion: https://github.com/aquasecurity/trivy/discussions/7668
+      # Fix: Refer https://github.com/aquasecurity/trivy/discussions/7951 usign mirror.gcr.io 
     - name: Install Trivy
       shell: bash
       run: |
-        curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin v0.55.2
+        curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin v0.57.1
 
     - name: Checkout Trivy DB cache
       if: inputs.trivy_db_cache != ''
@@ -345,6 +348,8 @@ runs:
         cd ..
         rm -rf trivy-db-cache
 
+    # Issue: https://github.com/aquasecurity/trivy/issues/7938
+    # Fix: Refer https://github.com/aquasecurity/trivy/discussions/7951 usign mirror.gcr.io 
     - name: Generate docker-cis JSON report
       if: ${{ inputs.skip_cis_scan != 'true' && steps.meta.outputs.scan_image != '' }}
       id: cis_json
