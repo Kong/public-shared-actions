@@ -3,14 +3,39 @@
 This action uses Semgrep CI command to scan all supported platforms on a specified scan path
 
 The action runs the following:
-- Self detects config rules from semgrep registry
-- Applies any additional arguments / configuration rules passed to semgrep
-- Provides a optional input to fail downstream builds based on semgrep findings
+- Auto detects rules from semgrep registry using the default `--config auto` in **CI mode**
+- [Additional arguments / configuration](https://semgrep.dev/docs/cli-reference) can be supplied using `additional_config` input
+- Provides an optional input to fail downstream builds based on semgrep findings
 
-## Action Output
+## Inputs
+
+```yaml
+additional_config:
+    description: 'Provide additional config to semgrep ci command'
+    required: false
+    default: ''
+codeql_upload:
+  description: 'Toggle to upload results to Github code scanning for public repositories'
+  required: false
+  default: true
+  type: choice
+  options:
+  - 'true'
+  - 'false'
+fail_on_findings:
+  description: 'Fail build / job on semgrep findings/errors'
+  required: false
+  default: false
+  type: choice
+  options:
+  - 'true'
+  - 'false'
+```
+
+## Outputs
 
 - Report Semgrep Finding Summary as Console output
-- Report Findings 
+- Report Findings as follows:
   - Private repositories: workflow artifact file
   - Public repositories: Github Security tab 
 - The failure mode of build is configurable based on shared action outcome
@@ -18,11 +43,12 @@ The action runs the following:
 ## Detailed example
 
 > [!IMPORTANT]
-Create a GH workflow file `sast.yml` under `.github/workflows` folder
+Create a GH workflow file `sast.yml` under `.github/workflows` folder with the below:
 
 ```yaml
 name: Semgrep
 
+# Customize as suitable
 on:
   pull_request: {}
   push:
@@ -35,7 +61,7 @@ on:
 jobs:
   semgrep:
     name: SAST
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     permissions:
       # required for all workflows
       security-events: write
@@ -47,9 +73,5 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
-      - uses: Kong/public-shared-actions/security-actions/semgrep@main
-        with:
-          additional_config: '--config p/rust'
-            
-
+      - uses: Kong/public-shared-actions/security-actions/semgrep@<version> # Replace and pin public shared actions version
 ```
