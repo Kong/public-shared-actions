@@ -322,18 +322,9 @@ runs:
       # Discussion: https://github.com/aquasecurity/trivy/discussions/7668
       # Fix: Refer https://github.com/aquasecurity/trivy/discussions/7951 usign mirror.gcr.io 
     - name: Install Trivy
-      if: inputs.skip_cis_scan != 'true'
       shell: bash
       run: |
         curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin v0.57.1
-    
-    - name: Generate kong bot app token
-      id: github-app-token
-      if: inputs.trivy_db_cache != ''
-      uses: tibdex/github-app-token@3beb63f4bd073e61482598c45c71c1019b59b73a # v2.1.0
-      with:
-        app_id: ${{ vars.KONG_GH_APP_ID }}
-        private_key: ${{ secrets.KONG_GH_APP_PRIVATE_KEY }}
 
     - name: Checkout Trivy DB cache
       if: inputs.trivy_db_cache != ''
@@ -342,7 +333,7 @@ runs:
         repository: ${{ steps.parse_cache.outputs.repository }}
         ref: ${{ steps.parse_cache.outputs.ref }}
         path: trivy-db-cache
-        token: ${{ steps.github-app-token.outputs.token || inputs.trivy_db_cache_token }}
+        token: ${{ inputs.trivy_db_cache_token }}
 
     - name: Setup Trivy DB from cache
       if: inputs.trivy_db_cache != ''
