@@ -67,6 +67,12 @@ inputs:
     options:
       - 'true'
       - 'false'
+  trivy_db_cache:
+    description: 'GitHub repository containing Trivy DB cache (format: owner/repo@ref). Database should be named `db.tar.gz` on the default branch.'
+    required: false
+  trivy_db_cache_token:
+    description: 'Token for accessing `trivy_db_cache`.'
+    required: false
 
 outputs:
   cis-json-report:
@@ -302,13 +308,60 @@ runs:
       with:
         files: "${{ steps.meta.outputs.scan_image }}"
 
+    - name: Parse Trivy DB cache input
+      if: inputs.trivy_db_cache != ''
+      shell: bash
+      id: parse_cache
+      run: |
+        REPO=$(echo "${{ inputs.trivy_db_cache }}" | cut -d'@' -f1)
+        REF=$(echo "${{ inputs.trivy_db_cache }}" | cut -d'@' -f2)
+        echo "repository=${REPO}" >> $GITHUB_OUTPUT
+        echo "ref=${REF}" >> $GITHUB_OUTPUT
+
+      # Issue: https://github.com/aquasecurity/trivy/issues/7938
+      # Discussion: https://github.com/aquasecurity/trivy/discussions/7668
+      # Fix: Refer https://github.com/aquasecurity/trivy/discussions/7951 usign mirror.gcr.io 
+    - name: Install Trivy
+      shell: bash
+      run: |
+        curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin v0.57.1
+
+    - name: Checkout Trivy DB cache
+      if: inputs.trivy_db_cache != ''
+      uses: actions/checkout@v4
+      with:
+        repository: ${{ steps.parse_cache.outputs.repository }}
+        ref: ${{ steps.parse_cache.outputs.ref }}
+        path: trivy-db-cache
+        token: ${{ inputs.trivy_db_cache_token }}
+
+    - name: Setup Trivy DB from cache
+      if: inputs.trivy_db_cache != ''
+      shell: bash
+      run: |
+        # Create Trivy cache directory
+        mkdir -p ~/.cache/trivy/db
+        
+        # Extract the DB
+        cd trivy-db-cache
+        tar -xvf db.tar.gz -C ~/.cache/trivy/db
+        cd ..
+        rm -rf trivy-db-cache
+
+    # Issue: https://github.com/aquasecurity/trivy/issues/7938
+    # Fix: Refer https://github.com/aquasecurity/trivy/discussions/7951 usign mirror.gcr.io 
     - name: Generate docker-cis JSON report
-      uses: docker://aquasec/trivy:0.55.2
       if: ${{ inputs.skip_cis_scan != 'true' && steps.meta.outputs.scan_image != '' }}
       id: cis_json
-      with:
-        entrypoint: trivy
-        args: "image ${{ env.input }} ${{ steps.meta.outputs.scan_image }} --compliance ${{ env.compliance }} -f json --ignore-unfixed -o ${{ steps.meta.outputs.cis_json_file }}"
+      shell: bash
+      run: |
+        trivy image ${{ env.input }} \
+          ${{ steps.meta.outputs.scan_image }} \
+          --compliance ${{ env.compliance }} \
+          -f json \
+          --ignore-unfixed \
+          -o ${{ steps.meta.outputs.cis_json_file }} \
+          ${{ inputs.trivy_db_cache != '' && '--cache-dir ~/.cache/trivy --skip-db-update' || '' }}
       env:
         compliance: docker-cis-1.6.0
         input: ${{ steps.docker_tar.outputs.files_exists == 'true' && '--input' || '' }}
@@ -324,10 +377,15 @@ runs:
 
     - name: Inspect docker-cis report
       if: ${{ inputs.skip_cis_scan != 'true' && steps.meta.outputs.scan_image != '' }}
-      uses: docker://aquasec/trivy:0.55.2
-      with:
-        entrypoint: trivy
-        args: "image ${{ env.input }} ${{ steps.meta.outputs.scan_image }} --compliance ${{ env.compliance }} -f table --ignore-unfixed --exit-code ${{ env.exit-code }}"
+      shell: bash
+      run: |
+        trivy image ${{ env.input }} \
+          ${{ steps.meta.outputs.scan_image }} \
+          --compliance ${{ env.compliance }} \
+          -f table \
+          --ignore-unfixed \
+          --exit-code ${{ env.exit-code }} \
+          ${{ inputs.trivy_db_cache != '' && '--cache-dir ~/.cache/trivy --skip-db-update' || '' }}
       env:
         exit-code: ${{ (steps.meta.outputs.global_enforce_build_failure == 'true' || inputs.fail_build == 'true') && '1' || '0' }}
         compliance: docker-cis-1.6.0
