@@ -65,7 +65,6 @@ jobs:
         image: ${{env.IMAGE}}@${{ steps.image_manifest_metadata.outputs.amd64_sha }}
         skip_cis_scan: false
         trivy_db_cache: Kong/trivy-db-mirror@master
-        trivy_db_cache_token: ${{ secrets.PAT }}
 
     - name: Scan ARM64 Image digest
       if: steps.image_manifest_metadata.outputs.manifest_list_exists == 'true' && steps.image_manifest_metadata.outputs.arm64_sha != ''
