@@ -5,8 +5,8 @@
 - [Scan Docker Image](./action.yml) is a action for container SCA image scanning and CIS benchmarks. The action produces an SBOM, CVE, and CIS benchmark scanning and reports for a given image.
   - Tools used:
     - [syft](https://github.com/anchore/syft) generates a Software Bill of Materials (SBOM)
-    - [grype](https://github.com/anchore/grype) vulnerability scanner for container images
-    - [trivy](https://github.com/aquasecurity/trivy) compliance scanner for docker-cis 
+    - [grype](https://github.com/anchore/grype) vulnerability scanner for CVEs in container images
+    - [trivy](https://github.com/aquasecurity/trivy)  compliance scanner for docker-cis benchmarks
 
 ### Scan Docker Image
 
@@ -16,7 +16,7 @@
 
 - Leverages the syft action to generate an SBOM based on input parameters and uploads it as a github workflow artifact
 
-#### Vulnerability Scanning Working
+#### Grype Vulnerability Scanning Working
 
 - Action performs a scan of the sbom based on a user provided grype configuration:
   - First iteration:
@@ -31,6 +31,14 @@
     - Outputs table format in console log and fails build based on severity cutoff and input parameters
     - Additional grype ignore rules and matches are applied and suppressed in console log
     - Helps developers better prioritize cve's by suppressing false positives and bypass cve's during hot fixes using break glass strategy
+
+#### Trivy Compliance Scanner Working
+- By default, trivy scans the docker image against `docker-cis-1.6.0` benchmarks
+- Trivy compliance scanner leverages `trivy-db` for CIS benchmarks
+  - By default, it downloads the latest DB from upstream `mirror.gcr.io/aquasec/trivy-db`  pull through cache mirror
+  - __[_OPTIONAL_]__  For more availability of `trivy-db` (**i.e bypass rate limiting issues**), refer [how to access cached trivy db for running CIS benchmarks](https://github.com/Kong/trivy-db-mirror?tab=readme-ov-file#how-to-consume-cached-trivy-db-when-invoking-public-shared-actions)
+- Trivy complaince scanner  **DOESNOT** scan for any vulnerabilities in the container image. This process is handled by [grype](https://github.com/anchore/grype)
+
 
 #### Input specification
 
@@ -70,9 +78,12 @@ permissions:
 
 #### User provided input parameters
 
-- Inputs **image** is mandatory
+- Input `image` is **MANDATORY**
 
 - OCI tar balls / Docker archives (OCI compatible) are considered as input type  **Image**
+
+- Input `trivy_db_cache` and `trivy_db_cache_token` are **OPTIONAL**
+  - Refer [how access cached trivy db for CIS benchmarks](https://github.com/Kong/trivy-db-mirror?tab=readme-ov-file#how-to-consume-cached-trivy-db-when-invoking-public-shared-actions)
 
 ```yaml
   asset_prefix:
@@ -116,6 +127,12 @@ permissions:
     options:
     - 'true'
     - 'false'
+  trivy_db_cache:
+    description: 'GitHub repository containing Trivy DB cache (format: owner/repo@ref). Database should be named `db.tar.gz` on the default branch.'
+    required: false
+  trivy_db_cache_token:
+    description: 'Token for accessing `trivy_db_cache`.'
+    required: false
 ```
 
 #### Output specification
@@ -238,6 +255,7 @@ jobs:
       if: steps.image_manifest_metadata.outputs.amd64_sha != ''
       uses: Kong/public-shared-actions/security-actions/scan-docker-image@main
       with:
+        # Leverages trivy DB config from upstream mirror by default
         asset_prefix: kong-gateway-dev-linux-amd64
         image: ${{env.IMAGE}}@${{ steps.image_manifest_metadata.outputs.amd64_sha }}
 
@@ -248,4 +266,6 @@ jobs:
       with:
         asset_prefix: kong-gateway-dev-linux-arm64
         image: ${{env.IMAGE}}@${{ steps.image_manifest_metadata.outputs.arm64_sha }}
+        trivy_db_cache: <owner/repo@ref>
+        trivy_db_cache_token: ${{ secrets.PAT }} 
 ```
