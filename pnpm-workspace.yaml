@@ -1,0 +1,7 @@
+packages:
+  - code-build-actions/**
+  - code-check-actions/**
+  - login-aws-cloud
+  - pr-previews/**
+  - security-actions/**
+  - slack-actions/**
