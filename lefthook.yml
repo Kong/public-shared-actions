@@ -1,0 +1,7 @@
+# Reference:
+# https://github.com/evilmartians/lefthook/blob/master/docs/full_guide.md
+
+commit-msg:
+  commands:
+    commitlint:
+      run: pnpm commitlint --edit

@@ -324,7 +324,7 @@ runs:
     - name: Install Trivy
       shell: bash
       run: |
-        curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin v0.57.1
+        curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin v0.58.0
 
     - name: Checkout Trivy DB cache
       if: inputs.trivy_db_cache != ''
@@ -334,6 +334,7 @@ runs:
         ref: ${{ steps.parse_cache.outputs.ref }}
         path: trivy-db-cache
         token: ${{ inputs.trivy_db_cache_token }}
+
 
     - name: Setup Trivy DB from cache
       if: inputs.trivy_db_cache != ''

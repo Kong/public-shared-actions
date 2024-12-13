@@ -1,0 +1,14 @@
+{
+  "name": "@pr-previews/validate",
+  "version": "3.0.0",
+  "description": "Checks all package.json files in repository and throws error is detects any dependency on PR preview package",
+  "main": "index.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Kong/public-shared-actions",
+    "directory": "pr-previews/validate"
+  },
+  "private": false,
+  "author": "Kong, Inc.",
+  "license": "UNLICENSED"
+}

@@ -1,0 +1,134 @@
+name: Publish Release
+
+on:
+  workflow_run:
+    workflows: ["ci"]
+    types:
+      - completed
+    branches: [ main ]
+  workflow_dispatch: {}
+
+jobs:
+  release:
+    name: Release
+    if: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success' && github.repository_owner == 'Kong' }}
+    runs-on: ubuntu-latest
+    steps:
+      # ToDo when raising PR in Public shared actions
+      # Either a GitHub application or a Bot PAT should be used below
+      # Recommended approach is to use a GitHub App https://docs.github.com/en/apps/oauth-apps/building-oauth-apps/differences-between-github-apps-and-oauth-apps#machine-vs-bot-accounts
+      # Create a GH org Application, create a Private key
+      # Add the private key and app_id as PSA repo secret and use below
+      - name: Generate privileged push token to bypass branch protection settings
+        id: github-app-token
+        uses: tibdex/github-app-token@b62528385c34dbc9f38e5f4225ac829252d1ea92 # v1.8.0
+        with:
+          app_id: ${{ secrets.APP_ID }}
+          private_key: ${{ secrets.PRIVATE_KEY }}
+
+      - name: Checkout code
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+          token: ${{ steps.github-app-token.outputs.token }}
+
+      - uses: pnpm/action-setup@v4
+        name: Install pnpm
+        with:
+          version: 9
+          run_install: false
+
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Setup Git Config
+        shell: bash
+        run: |
+          git checkout ${{ github.head_ref }}
+          git config --local user.name "${{ vars.GH_APP__KONG__BOT_USERNAME }}"
+          git config --local user.email "${{ vars.GH_APP__KONG__BOT_EMAIL }}"
+
+      # This step will create a tag and also release
+      - name: Provision tags and make a release
+        if: ${{ github.event_name == 'workflow_run' && github.ref == 'refs/heads/main' }}
+        env:
+          GH_TOKEN: ${{ steps.github-app-token.outputs.token }}
+        shell: bash
+        run: |
+          pnpm version:ci
+
+
+  dry-run:
+    name: Dry Run
+    runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'workflow_dispatch' }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - uses: pnpm/action-setup@v4
+        name: Install pnpm
+        with:
+          version: 9
+          run_install: false
+
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Setup Git Config
+        shell: bash
+        run: |
+          git checkout ${{ github.head_ref }}
+          git config --local user.name "${{ vars.GH_APP__KONG__BOT_USERNAME }}"
+          git config --local user.email "${{ vars.GH_APP__KONG__BOT_EMAIL }}"
+
+      - name: Dry-run for tagging and releases
+        shell: bash
+        run: pnpm version:dry-run
+
+  # TODO when raising PR in Public shared actions
+  # A Slack Webhook will be provisioned depending upon notification type
+  # Update webhook URL as secret within Github PSA repo
+  # Create two SLACK Webhooks SLACK_WEBHOOK_URL_NOTIFY_RELEASE_SUCCESS and SLACK_WEBHOOK_URL_NOTIFY_RELEASE_FAILURE
+  slack_notification:
+    name: Slack Notification
+    runs-on: ubuntu-latest
+    needs: release
+    if: ${{ always() && github.event_name == 'workflow_run' && github.ref == 'refs/heads/main' }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # Success Notification
+      # Secret Name: SLACK_WEBHOOK_URL_NOTIFY_RELEASE_SUCCESS
+      # Slack channel "notify-public-shared-actions"
+      - name: Send Success Notification
+        if: ${{ needs.release.result == 'success' }}
+        uses: ./slack-actions/workflow-notification
+        with:
+          slack-webhook-url: ${{ secrets.SLACK_WEBHOOK_URL_NOTIFY_RELEASE_SUCCESS }}
+          status: success
+          success-message: ":white_check_mark: ${{ github.workflow }} workflow successfully ran within ${{ github.repository }}"
+    
+      # Failure Notification
+      # Secret Name: SLACK_WEBHOOK_URL_NOTIFY_RELEASE_FAILURE
+      # Slack channel "alert-public-shared-actions"
+      - name: Send Failure Notification
+        if: ${{ needs.release.result == 'failure' }}
+        uses: ./slack-actions/workflow-notification
+        with:
+          slack-webhook-url: ${{ secrets.SLACK_WEBHOOK_URL_NOTIFY_RELEASE_FAILURE }}
+          status: failure
+          failure-message: ":x: This is a *failure* notification from ${{ github.repository }} for workflow ${{ github.workflow }}"
