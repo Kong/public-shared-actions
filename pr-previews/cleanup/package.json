@@ -1,0 +1,14 @@
+{
+  "name": "@pr-previews/cleanup",
+  "version": "3.0.0",
+  "description": "Deprecate and unpublish PR preview package versions for closed PRs",
+  "main": "index.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Kong/public-shared-actions",
+    "directory": "pr-previews/cleanup"
+  },
+  "private": false,
+  "author": "Kong, Inc.",
+  "license": "UNLICENSED"
+}
