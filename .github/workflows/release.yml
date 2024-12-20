@@ -14,7 +14,6 @@ permissions:
 jobs:
   release:
     name: Release
-    if: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -37,7 +36,8 @@ jobs:
         with:
           node-version: 20
           cache: 'pnpm'
-
+      
+      # This is needed since we only cache ~/.pnpm_store instead of entire node_modules    
       - name: Install dependencies
         run: pnpm install
 
@@ -45,52 +45,20 @@ jobs:
         shell: bash
         run: |
           git checkout ${{ github.head_ref }}
-          git config --local user.name "${{ vars.GH_APP__KONG__BOT_USERNAME }}"
-          git config --local user.email "${{ vars.GH_APP__KONG__BOT_EMAIL }}"
+          git config --local user.name "kong-security-bot"
+          git config --local user.email "117922193+kong-security-bot@users.noreply.github.com"
 
       # This step will create a tag and also release
       - name: Provision tags and make a release
-        if: ${{ github.event_name == 'workflow_run' && github.ref == 'refs/heads/main' }}
+        if: ${{ (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success') || (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main') }}
         env:
           GH_TOKEN: ${{ secrets.SECURITY_BOT_PSA_PAT }}
         shell: bash
         run: |
           pnpm version:ci
-
-
-  dry-run:
-    name: Dry Run
-    runs-on: ubuntu-latest
-    if: ${{ github.event_name == 'workflow_dispatch' }}
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-        with:
-          token: ${{ secrets.SECURITY_BOT_PSA_PAT }}
-
-      - uses: pnpm/action-setup@v4
-        name: Install pnpm
-        with:
-          version: 9
-          run_install: false
-
-      - name: Install Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: 'pnpm'
-
-      - name: Install dependencies
-        run: pnpm install
-
-      - name: Setup Git Config
-        shell: bash
-        run: |
-          git checkout ${{ github.head_ref }}
-          git config --local user.name "${{ vars.GH_APP__KONG__BOT_USERNAME }}"
-          git config --local user.email "${{ vars.GH_APP__KONG__BOT_EMAIL }}"
-
+      
       - name: Dry-run for tagging and releases
+        if: ${{ github.ref != 'refs/heads/main' }}
         shell: bash
         run: pnpm version:dry-run
 
@@ -98,7 +66,7 @@ jobs:
     name: Slack Notification
     runs-on: ubuntu-latest
     needs: release
-    if: ${{ github.event_name == 'workflow_run' && github.ref == 'refs/heads/main' }}
+    if: ${{ (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main') || github.event_name == 'workflow_run' }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4

@@ -1,4 +1,4 @@
-name: ci
+name: CI
 
 on:
   pull_request:
@@ -12,60 +12,8 @@ permissions:
   pull-requests: read
 
 jobs:
-  files-changed:
+  setup-and-lint:
     runs-on: ubuntu-latest
-    outputs:
-      packages: ${{ steps.filter.outputs.changes }}
-    steps:
-      - uses: actions/checkout@v4
-      - uses: dorny/paths-filter@v3
-        id: filter
-        with:
-          predicate-quantifier: 'every'
-          filters: |
-            scan-docker-image: 
-              - 'security-actions/scan-docker-image/**'
-              - '!**/*.md'
-            sca: 
-              - 'security-actions/sca/**'
-              - '!**/*.md'
-            scan-rust: 
-              - 'security-actions/scan-rust/**'
-              - '!**/*.md'
-            semgrep: 
-              - 'security-actions/semgrep/**'
-              - '!**/*.md'
-            sign-docker-image: 
-              - 'security-actions/sign-docker-image/**'
-              - '!**/*.md'
-            code-build-actions: 
-              - 'code-build-actions/build-js-sdk/**'
-              - '!**/*.md'
-            lua-lint: 
-              - 'code-check-actions/lua-lint/**'
-              - '!**/*.md'
-            rust-lint: 
-              - 'code-check-actions/rust-lint/**'
-              - '!**/*.md'
-            slack-actions: 
-              - 'slack-actions/workflow-notification/**'
-              - '!**/*.md'
-            cleanup: 
-              - 'pr-previews/cleanup/**'
-              - '!**/*.md'
-            up-to-date: 
-              - 'pr-previews/up-to-date/**'
-              - '!**/*.md'
-            validate: 
-              - 'pr-previews/validate/**'
-              - '!**/*.md'
-
-  setup-dependencies:
-    needs: files-changed
-    runs-on: ubuntu-latest
-    if: ${{ needs.files-changed.outputs.packages != '[]' }}
-    outputs:
-      nodeVersion: ${{ steps.node-version.outputs.nodeVersion }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -88,62 +36,25 @@ jobs:
           pnpm install --frozen-lockfile
 
       - name: Commit lint
-        if: github.event_name == 'pull_request'
         uses: wagoid/commitlint-github-action@v5
         with:
           failOnWarnings: true
-
-  build:
-    needs: [ files-changed, setup-dependencies ]
-    if: ${{ needs.files-changed.outputs.packages != '[]' }}
-    runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        package: ${{ fromJSON(needs.files-changed.outputs.packages) }}
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - uses: pnpm/action-setup@v4
-        with:
-          version: 9
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: 'pnpm'
-
-      - name: Restore Dependencies
-        run: |
-          pnpm install --frozen-lockfile
-
-      - name: Run Tests
-        run: |
-          pnpm lint
-
-
-  no-file-change:
-    needs: [ files-changed ]
-    if: ${{ needs.files-changed.outputs.packages == '[]' }}
-    runs-on: ubuntu-latest
-    steps:
-      - name: No Changes Detected
-        run: echo "No changes detected in the monitored packages. Skipping build and tests."
-
+      
+      - name: Run ESLint
+        run: pnpm lint
 
   slack_notification:
     name: Slack Notification
     runs-on: ubuntu-latest
-    needs: build
+    needs: setup-and-lint
     if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
       # Success Notification
-      - name: Send Success Notification
-        if: ${{ needs.build.result == 'success' }}
+      - name: Send Success Slack Notification
+        if: ${{ needs.setup-and-lint.result == 'success' }}
         uses: ./slack-actions/workflow-notification
         with:
           slack-webhook-url: ${{ secrets.SLACK_WEBHOOK_URL_NOTIFY_PUBLIC_SHARED_ACTIONS }}
@@ -151,8 +62,8 @@ jobs:
           success-message: ":white_check_mark: ${{ github.workflow }} workflow successfully ran within ${{ github.repository }}"
     
       # Failure Notification
-      - name: Send Failure Notification
-        if: ${{ needs.build.result == 'failure' }}
+      - name: Send Failure Slack alert
+        if: ${{ needs.setup-and-lint.result == 'failure' }}
         uses: ./slack-actions/workflow-notification
         with:
           slack-webhook-url: ${{ secrets.SLACK_WEBHOOK_URL_ALERT_PUBLIC_SHARED_ACTIONS }}

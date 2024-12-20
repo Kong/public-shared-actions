@@ -17,7 +17,8 @@
     "version": "pnpm i --no-frozen-lockfile && git add .",
     "version:ci": "lerna version --yes --create-release github",
     "version:dry-run": "pnpm run version:ci --no-push",
-    "lint": "eslint '**/*.{js,jsx,ts,tsx,vue}' --ignore-path '.eslintignore'"
+    "lint": "eslint '**/*.{js,jsx,ts,tsx,vue}' --ignore-path '.eslintignore'",
+    "prepare": "lefthook run pre-commit"
   },
   "keywords": [],
   "devDependencies": {
@@ -32,6 +33,7 @@
     "conventional-changelog-metahub": "^4.0.1",
     "cz-conventional-changelog": "^3.3.0",
     "eslint": "^8.33.0",
+    "lefthook": "^1.10.1",
     "lerna": "^7.1.4"
   },
   "config": {
