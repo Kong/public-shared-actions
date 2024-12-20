@@ -1,0 +1,22 @@
+{
+  "$schema": "node_modules/lerna/schemas/lerna-schema.json",
+  "version": "independent",
+  "npmClient": "pnpm",
+  "packages": [
+    "code-build-actions/**",
+    "code-check-actions/**",
+    "login-aws-cloud",
+    "pr-previews/**",
+    "security-actions/**",
+    "slack-actions/**"
+  ],
+  "ignoreChanges": ["**/*.md"],
+  "command": {
+    "version": {
+      "message": "chore(release): publish [skip ci]",
+      "allowBranch": ["main"],
+      "conventionalCommits": true,
+      "changelogPreset": "metahub"
+    }
+  }
+}

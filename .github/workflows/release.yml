@@ -1,0 +1,122 @@
+name: Publish Release
+
+on:
+  workflow_run:
+    workflows: ["ci"]
+    types:
+      - completed
+    branches: [ main ]
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+jobs:
+  release:
+    name: Release
+    if: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+
+      - name: Checkout code
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.SECURITY_BOT_PSA_PAT }}
+
+      - uses: pnpm/action-setup@v4
+        name: Install pnpm
+        with:
+          version: 9
+          run_install: false
+
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Setup Git Config
+        shell: bash
+        run: |
+          git checkout ${{ github.head_ref }}
+          git config --local user.name "${{ vars.GH_APP__KONG__BOT_USERNAME }}"
+          git config --local user.email "${{ vars.GH_APP__KONG__BOT_EMAIL }}"
+
+      # This step will create a tag and also release
+      - name: Provision tags and make a release
+        if: ${{ github.event_name == 'workflow_run' && github.ref == 'refs/heads/main' }}
+        env:
+          GH_TOKEN: ${{ secrets.SECURITY_BOT_PSA_PAT }}
+        shell: bash
+        run: |
+          pnpm version:ci
+
+
+  dry-run:
+    name: Dry Run
+    runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'workflow_dispatch' }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.SECURITY_BOT_PSA_PAT }}
+
+      - uses: pnpm/action-setup@v4
+        name: Install pnpm
+        with:
+          version: 9
+          run_install: false
+
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Setup Git Config
+        shell: bash
+        run: |
+          git checkout ${{ github.head_ref }}
+          git config --local user.name "${{ vars.GH_APP__KONG__BOT_USERNAME }}"
+          git config --local user.email "${{ vars.GH_APP__KONG__BOT_EMAIL }}"
+
+      - name: Dry-run for tagging and releases
+        shell: bash
+        run: pnpm version:dry-run
+
+  slack_notification:
+    name: Slack Notification
+    runs-on: ubuntu-latest
+    needs: release
+    if: ${{ github.event_name == 'workflow_run' && github.ref == 'refs/heads/main' }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # Success Notification
+      - name: Send Success Notification
+        if: ${{ needs.release.result == 'success' }}
+        uses: ./slack-actions/workflow-notification
+        with:
+          slack-webhook-url: ${{ secrets.SLACK_WEBHOOK_URL_NOTIFY_PUBLIC_SHARED_ACTIONS }}
+          status: success
+          success-message: ":white_check_mark: ${{ github.workflow }} workflow successfully ran within ${{ github.repository }}"
+    
+      # Failure Notification
+      - name: Send Failure Notification
+        if: ${{ needs.release.result == 'failure' }}
+        uses: ./slack-actions/workflow-notification
+        with:
+          slack-webhook-url: ${{ secrets.SLACK_WEBHOOK_URL_ALERT_PUBLIC_SHARED_ACTIONS }}
+          status: failure
+          failure-message: ":x: This is a *failure* notification from ${{ github.repository }} for workflow ${{ github.workflow }}"
