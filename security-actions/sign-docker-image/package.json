@@ -1,0 +1,14 @@
+{
+  "name": "@security-actions/sign-docker-image",
+  "version": "3.0.0",
+  "description": "A unified action for container image signing. The action leverages keyless signing to produce an Signature and uploads to Docker Image layer and Public Rekor for transaprency",
+  "main": "index.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Kong/public-shared-actions",
+    "directory": "security-actions/sign-docker-image"
+  },
+  "private": false,
+  "author": "Kong, Inc.",
+  "license": "UNLICENSED"
+}

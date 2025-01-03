@@ -1,0 +1,14 @@
+{
+  "name": "@security-actions/scan-rust",
+  "version": "3.0.0",
+  "description": "This action uses Grype for source code analysis. It will only support scanning source code directories / files and will not support the container images",
+  "main": "index.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Kong/public-shared-actions",
+    "directory": "security-actions/scan-rust"
+  },
+  "private": false,
+  "author": "Kong, Inc.",
+  "license": "UNLICENSED"
+}

@@ -1,0 +1,14 @@
+{
+  "name": "@slack-actions/workflow-notification",
+  "version": "3.0.0",
+  "description": "Slack notification workflow",
+  "main": "index.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Kong/public-shared-actions",
+    "directory": "slack-actions/workflow-notification"
+  },
+  "private": false,
+  "author": "Kong, Inc.",
+  "license": "UNLICENSED"
+}

@@ -1,0 +1,14 @@
+{
+  "name": "@code-check-actions/rust-lint",
+  "version": "3.0.0",
+  "description": "This action uses Rust Clippy for code quality checks",
+  "main": "index.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Kong/public-shared-actions",
+    "directory": "code-check-actions/rust-lint"
+  },
+  "private": false,
+  "author": "Kong, Inc.",
+  "license": "UNLICENSED"
+}

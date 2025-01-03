@@ -1,0 +1,44 @@
+{
+  "name": "Public-shared-actions",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Reusable Public shared actions maintained by Kong",
+  "repository": "https://github.com/Kong/public-shared-actions",
+  "author": "Kong, Inc.",
+  "license": "UNLICENSED",
+  "main": "index.js",
+  "engines": {
+    "node": ">=20",
+    "pnpm": ">=9"
+  },
+  "scripts": {
+    "commit": "cz",
+    "lerna": "lerna",
+    "version": "pnpm i --no-frozen-lockfile && git add .",
+    "version:ci": "lerna version --yes --create-release github",
+    "version:dry-run": "pnpm run version:ci --no-push",
+    "lint": "eslint '**/*.{js,jsx,ts,tsx,vue}' --ignore-path '.eslintignore'",
+    "prepare": "lefthook run pre-commit"
+  },
+  "keywords": [],
+  "devDependencies": {
+    "@commitlint/cli": "^17.6.6",
+    "@commitlint/config-conventional": "^17.6.6",
+    "@commitlint/config-lerna-scopes": "^17.6.6",
+    "@evilmartians/lefthook": "^1.9.2",
+    "@rushstack/eslint-patch": "^1.2.0",
+    "@typescript-eslint/eslint-plugin": "^5.51.0",
+    "@typescript-eslint/parser": "^5.51.0",
+    "commitizen": "^4.3.1",
+    "conventional-changelog-metahub": "^4.0.1",
+    "cz-conventional-changelog": "^3.3.0",
+    "eslint": "^8.33.0",
+    "lefthook": "^1.10.1",
+    "lerna": "^7.1.4"
+  },
+  "config": {
+    "commitizen": {
+      "path": "./node_modules/cz-conventional-changelog"
+    }
+  }
+}
