@@ -29,7 +29,7 @@ Refer to the official Lefthook [installation guide](https://github.com/evilmarti
 
 ## Step 4: Sync Lefthook Hooks
 This repo should already contain a `lefthook.yml` configuration file in the root directory. The configuration in the lefthook.yml file enforces commit message linting using Commitlint.
-For a user to be able to use lefthook, run the following command to sync the Lefthook configuration with your Git hooks:
+Package.json runs the below command as part of `pnpm install` to sync the Lefthook configuration with your Git hooks:
 
 ```bash
 lefthook run pre-commit

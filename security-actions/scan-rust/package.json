@@ -1,6 +1,6 @@
 {
   "name": "@security-actions/scan-rust",
-  "version": "4.0.0",
+  "version": "3.0.0",
   "description": "This action uses Grype for source code analysis. It will only support scanning source code directories / files and will not support the container images",
   "main": "index.js",
   "repository": {

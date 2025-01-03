@@ -1,6 +1,6 @@
 {
   "name": "@code-check-actions/lua-lint",
-  "version": "4.0.0",
+  "version": "3.0.0",
   "description": "This action analyzes all changed lua files using [lunarmodules/luacheck](https://github.com/lunarmodules/luacheck)",
   "main": "index.js",
   "repository": {
