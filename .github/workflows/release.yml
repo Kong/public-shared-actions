@@ -44,7 +44,6 @@ jobs:
       - name: Setup Git Config
         shell: bash
         run: |
-          git checkout ${{ github.head_ref }}
           git config --local user.name "kong-security-bot"
           git config --local user.email "117922193+kong-security-bot@users.noreply.github.com"
 
