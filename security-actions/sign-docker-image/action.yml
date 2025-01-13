@@ -118,6 +118,8 @@ runs:
           -a "repo=${{ github.repository }}" \
           -a "workflow=${{ github.workflow }}" \
           -a "sha=${{ github.sha }}" \
+          --oidc-provider=github-actions \
+          --oidc-issuer=https://token.actions.githubusercontent.com \
           "$img"@${{ env.IMAGE_DIGEST }}
         done
 
