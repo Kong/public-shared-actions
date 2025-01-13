@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [4.0.1](https://github.com/Kong/public-shared-actions/compare/@security-actions/sign-docker-image@4.0.0...@security-actions/sign-docker-image@4.0.1) (2025-01-13)
+
+
+### ♻️ Chores
+
+* **sign-docker-image:** set issuer to github-action ([#206](https://github.com/Kong/public-shared-actions/issues/206)) ([8f62a1d](https://github.com/Kong/public-shared-actions/commit/8f62a1ddf8c9c57c80ca0968a0d49e07902c0020))
+
+
+
+
+
 # 4.0.0 (2025-01-03)
 
 
