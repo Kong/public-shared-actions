@@ -1,4 +1,4 @@
-name: Publish Release
+name: Release
 
 on:
   workflow_run:
@@ -12,8 +12,9 @@ permissions:
   contents: read
 
 jobs:
-  release:
-    name: Release
+  publish:
+    name: publish
+    if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch' }}
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -49,7 +50,7 @@ jobs:
 
       # This step will create a tag and also release
       - name: Provision tags and make a release
-        if: ${{ (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success') || (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main') }}
+        if: ${{ github.ref == 'refs/heads/main') }}
         env:
           GH_TOKEN: ${{ secrets.SECURITY_BOT_PSA_PAT }}
         shell: bash
@@ -64,15 +65,15 @@ jobs:
   slack_notification:
     name: Slack Notification
     runs-on: ubuntu-latest
-    needs: release
-    if: ${{ (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main') || github.event_name == 'workflow_run' }}
+    needs: publish
+    if: always() && github.ref == 'refs/heads/main'
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
       # Success Notification
       - name: Send Success Notification
-        if: ${{ needs.release.result == 'success' }}
+        if: ${{ needs.publish.result == 'success' }}
         uses: ./slack-actions/workflow-notification
         with:
           slack-webhook-url: ${{ secrets.SLACK_WEBHOOK_URL_NOTIFY_PUBLIC_SHARED_ACTIONS }}
@@ -81,7 +82,7 @@ jobs:
     
       # Failure Notification
       - name: Send Failure Notification
-        if: ${{ needs.release.result == 'failure' }}
+        if: ${{ needs.publish.result == 'failure' }}
         uses: ./slack-actions/workflow-notification
         with:
           slack-webhook-url: ${{ secrets.SLACK_WEBHOOK_URL_ALERT_PUBLIC_SHARED_ACTIONS }}
