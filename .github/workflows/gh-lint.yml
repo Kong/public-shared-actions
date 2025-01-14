@@ -1,0 +1,111 @@
+# Secrets are inherited from calling workflow within same org or enterprise
+# Explicit secrets forr all other calling wortkflows outside org or enterprise
+
+on:
+  workflow_call:
+
+    inputs:
+      TARGET_SCAN_REPOSITORY:
+        required: false
+        description: Target repository to scan
+        type: string
+      TARGET_SCAN_REF:
+        required: false
+        description: Target ref/branch to scan
+        type: string
+      FAIL_GHLINT:
+        required: true
+        type: string
+      GHLINT_FILES_SCAN_REGEX:
+        description: Space separated regex/paths to GH actions and workflow files
+        required: true
+        type: string
+      ASSET_PREFIX:
+        description: Prefix for workflow assets files
+        required: false
+        type: string
+      CODEQL_UPLOAD:
+        description: Upload results to codeql for public repositories
+        required: false
+        type: string
+    secrets:
+      TOKEN:
+        required: false
+
+# Permissions should be specified on calling workflow
+# Permissions specified here in reusable workflow can only be downgraded but elevated
+permissions: {}
+
+env:
+  repository: ${{ inputs.TARGET_SCAN_REPOSITORY || github.repository }}
+  ref: ${{ inputs.TARGET_SCAN_REF || '' }}
+  asset_prefix: ${{ inputs.ASSET_PREFIX || '' }}
+  filter_mode: ${{ github.event_name == 'pull_request' && 'file' || 'nofilter' }}
+  reporter: ${{ github.event_name == 'pull_request' && 'github-pr-check' || 'github-check' }}
+  codeql_upload: ${{ inputs.CODEQL_UPLOAD == 'true' && github.event.repository.visibility == 'public' && 'true' || 'false' }}
+
+jobs:
+
+  ghlint:
+    runs-on: ubuntu-24.04
+    name: ghlint
+    env:
+      REPORT_NAME: ${{ inputs.ASSET_PREFIX!= '' && format('{0}_{1}', inputs.ASSET_PREFIX, 'ghlint') || 'ghlint' }}
+      GHLINT_REPO: TWiStErRob/net.twisterrob.ghlint
+    steps:
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+        with:
+          token: ${{ secrets.TOKEN || github.token }}  # Use the passed token for checkout
+          repository: ${{env.repository}}
+          ref: ${{ env.ref }}
+
+      - name: "Download GH-Lint"
+        working-directory: ${{ runner.temp }}
+        env:
+          GHLINT_VERSION: '0.5.0'
+          GH_TOKEN: ${{ secrets.TOKEN || github.token }}
+        run: |
+          gh release download --repo ${{env.GHLINT_REPO}} \
+          "v${GHLINT_VERSION}" --pattern "ghlint.jar"
+      
+      - name: "Run GH-Lint for workflows and composite actions"
+        id: ghlint
+        continue-on-error: true
+        run: |
+          java -jar ${RUNNER_TEMP}/ghlint.jar ${{env.args}} ${{env.scan_patterns}} 
+        env:
+          scan_patterns: ${{inputs.GHLINT_FILES_SCAN_REGEX}}
+          args: >-
+            --exit
+            --ghcommands
+            --sarif=${{env.REPORT_NAME}}.sarif
+
+      - name: Upload GH lint report to Workflow
+        if: always() && steps.ghlint.conclusion == 'success'
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{env.REPORT_NAME}}.zip
+          path: |
+            ${{env.REPORT_NAME}}.sarif
+          if-no-files-found: error
+
+      - name: "Publish 'GH-Lint' GitHub Code Scanning analysis."
+        if: ${{ always() && env.codeql_upload == 'true' && steps.ghlint.conclusion == 'success'}}
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          # Path to SARIF file relative to the root of the repository
+          sarif_file: ${{env.REPORT_NAME}}.sarif
+          # Optional category for the results
+          # Used to differentiate multiple results for one commit
+          category: ghlint
+
+      - name: Fail on findings
+        if: always()
+        run: |
+          if [[ ${SCAN_STATUS} == 'failure' ]] && [[ ${FAIL_BUILD} == 'true' ]]; then
+            echo "::error::ghlint has detected findings. For findings, check workflow artifact: ghlint-report.zip / Github Security analysis"
+            exit 1
+          fi
+        env: 
+          SCAN_STATUS: ${{ steps.ghlint.outcome }}
+          FAIL_BUILD: "${{inputs.FAIL_GHLINT}}"

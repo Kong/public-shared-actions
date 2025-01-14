@@ -1,0 +1,81 @@
+# Secrets are inherited from calling workflow within same org or enterprise
+# Explicit secrets forr all other calling wortkflows outside org or enterprise
+
+on:
+  workflow_call:
+
+    inputs:
+      TARGET_SCAN_REPOSITORY:
+        required: false
+        description: Target repository to scan
+        type: string
+        default: ${{github.repository}}
+      TARGET_SCAN_REF:
+        required: false
+        description: Target ref/branch to scan
+        type: string
+        default: ${{github.ref}}
+      ASSET_PREFIX:
+        description: Prefix for workflow assets files
+        required: false
+        type: string
+    secrets:
+      TOKEN:
+        required: false
+
+# Permissions should be specified on calling workflow
+# Permissions specified here in reusable workflow can only be downgraded but elevated
+permissions: {}
+
+env:
+  repository: ${{inputs.TARGET_SCAN_REPOSITORY}}
+  ref: ${{inputs.TARGET_SCAN_REF}}
+  filter_mode: ${{ github.event_name == 'pull_request' && 'file' || 'nofilter' }}
+  reporter: ${{ github.event_name == 'pull_request' && 'github-pr-check' || 'github-check' }}
+
+jobs:
+  check-gh-anti-patterns:
+    runs-on: ubuntu-24.04
+    name: gh-sast - (${{inputs.TARGET_SCAN_REF}})
+    steps:
+      - name: Generate Asset Prefix
+        id: meta
+        run: |
+          SCAN_TIMESTAMP=$(date --utc +%Y%m%d_%H%M%S)
+          echo "scan_timestamp=$SCAN_TIMESTAMP" >> "$GITHUB_OUTPUT"
+
+          REPO_SLUG="${FULL_REPO_NAME//\//-}"
+
+          if [[ "${{github.event_name}}" == "pull_request" ]]; then
+            REF_SLUG="pr-${{github.event.pull_request.number}}"
+          else
+            REF_SLUG="${TARGET_SCAN_REF//\//-}"
+          fi
+
+          ASSET_PREFIX="report_${REPO_SLUG}_${REF_SLUG}_${SCAN_TIMESTAMP}"
+          echo "REPO_SLUG=${REPO_SLUG}" >> "$GITHUB_OUTPUT"
+          echo "REF_SLUG=${REF_SLUG}" >> "$GITHUB_OUTPUT"
+          echo "ASSET_PREFIX=$ASSET_PREFIX" >> "$GITHUB_OUTPUT"
+        env:
+          FULL_REPO_NAME: ${{env.repository}}
+          TARGET_SCAN_REF: ${{env.ref}}
+
+      # Helps to run the scan on a local directory at the triggered ref
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+        with:
+          token: ${{ secrets.TOKEN || github.token }}
+          repository: ${{ env.repository}}
+          ref: ${{ env.ref }}
+          path: ${{ env.repository }}
+          persist-credentials: false
+
+      - name: Check GH anti-pattern using zizmor
+        id: zizmor
+        uses: Kong/public-shared-actions/security-actions/scan-gh-workflows@feat/gh-anti-pattern-scan
+        with:
+          scan_path: ${{github.workspace}}/${{env.repository}}
+          github_token: ${{ secrets.TOKEN || github.token }}
+          asset_prefix: ${{ steps.meta.outputs.ASSET_PREFIX }}
+          offline_audit_checks: ${{vars.ZIZMOR_OFFLINE_AUDIT_CHECKS || 'true'}}
+          persona: ${{vars.ZIZMOR_PERSONA || 'regular'}}
+          fail_on_findings: ${{vars.FAIL_ZIZMOR || 'false'}}

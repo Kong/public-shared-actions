@@ -1,0 +1,62 @@
+# Secrets are inherited from calling workflow within same org or enterprise
+# Explicit secrets forr all other calling wortkflows outside org or enterprise
+
+on:
+  workflow_call:
+
+    inputs:
+      TARGET_SCAN_REPOSITORY:
+        required: false
+        description: Target repository to scan
+        type: string
+      TARGET_SCAN_REF:
+        required: false
+        description: Target ref/branch to scan
+        type: string
+      FAIL_SHELLCHECK_LEVEL:
+        required: true
+        type: string
+      ASSET_PREFIX:
+        description: Prefix for workflow assets files
+        required: false
+        type: string
+      CODEQL_UPLOAD:
+        description: Upload results to codeql for public repositories
+        required: false
+        type: string
+    secrets:
+      TOKEN:
+        required: false
+
+# Permissions should be specified on calling workflow
+# Permissions specified here in reusable workflow can only be downgraded but elevated
+permissions: {}
+
+env:
+  repository: ${{ inputs.TARGET_SCAN_REPOSITORY || github.repository }}
+  ref: ${{ inputs.TARGET_SCAN_REF || '' }}
+  asset_prefix: ${{ inputs.ASSET_PREFIX || '' }}
+  filter_mode: ${{ github.event_name == 'pull_request' && 'file' || 'nofilter' }}
+  reporter: ${{ github.event_name == 'pull_request' && 'github-pr-check' || 'github-check' }}
+  codeql_upload: ${{ inputs.CODEQL_UPLOAD == 'true' && github.event.repository.visibility == 'public' && 'true' || 'false' }}
+
+jobs:
+  
+  shellcheck:
+    runs-on: ubuntu-24.04
+    name: shellcheck
+    steps:
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+        with:
+          token: ${{ secrets.TOKEN || github.token }}  # Use the passed token for checkout
+          repository: ${{ env.repository }}
+          ref: ${{ env.ref }}
+
+      - uses: reviewdog/action-shellcheck@6e0e63d1750d02d761b3df0f2c5ba9f9ac4a9ed7
+        with:
+          # When used as required workflow in ruleset, this parameter has can block pushes
+          filter_mode: ${{ env.filter_mode }}
+          reporter: ${{ env.reporter }}
+          check_all_files_with_shebangs: "true"
+          fail_level: ${{inputs.FAIL_SHELLCHECK_LEVEL}}
+          github_token: ${{ secrets.TOKEN || github.token}}
