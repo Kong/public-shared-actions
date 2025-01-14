@@ -50,7 +50,7 @@ jobs:
 
       # This step will create a tag and also release
       - name: Provision tags and make a release
-        if: ${{ github.ref == 'refs/heads/main') }}
+        if: ${{ github.ref == 'refs/heads/main' }}
         env:
           GH_TOKEN: ${{ secrets.SECURITY_BOT_PSA_PAT }}
         shell: bash
