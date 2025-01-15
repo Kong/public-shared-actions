@@ -106,7 +106,7 @@ runs:
 
     # Must upload artifact for output file parameter to have effect
     - name: Generate SPDX SBOM Using Syft
-      uses: anchore/sbom-action@v0.17.8
+      uses: anchore/sbom-action@55dc4ee22412511ee8c3142cbea40418e6cec693 # v0.17.8
       id: sbom_spdx
       with:
         config: ${{ inputs.config }}
@@ -122,7 +122,7 @@ runs:
         github-token: ${{ inputs.github-token }}
 
     - name: Generate CycloneDX SBOM Using Syft
-      uses: anchore/sbom-action@v0.17.8
+      uses: anchore/sbom-action@55dc4ee22412511ee8c3142cbea40418e6cec693 # v0.17.8
       id: sbom_cyclonedx
       with:
         config: ${{ inputs.config }}
@@ -138,14 +138,14 @@ runs:
         github-token: ${{ inputs.github-token }}
 
     - name: Check SBOM files existence
-      uses: andstor/file-existence-action@v3
+      uses: andstor/file-existence-action@076e0072799f4942c8bc574a82233e1e4d13e9d6 # v3
       id: sbom_report
       with:
         files: "${{ steps.meta.outputs.sbom_spdx_file }}, ${{ steps.meta.outputs.sbom_cyclonedx_file }}"
         fail: true
     
     - name: Download Grype
-      uses: anchore/scan-action/download-grype@v4.1.2
+      uses: anchore/scan-action/download-grype@64a33b277ea7a1215a3c142735a1091341939ff5 # v4.1.2
 
     # Skip Cache Restoration: If skip_grype_db_cache is true, skip the restoration of the cache.
     # Check for any existing cache to reuse
@@ -223,7 +223,7 @@ runs:
     # Grype is invoked first time ever 
     # Don't fail during report generation
     - name: Vulnerability analysis of SBOM
-      uses: anchore/scan-action@v4.1.2
+      uses: anchore/scan-action@64a33b277ea7a1215a3c142735a1091341939ff5 # v4.1.2
       id: grype_analysis_sarif
       if: ${{ steps.sbom_report.outputs.files_exists == 'true' && steps.grype_db_check_updates.outputs.GRYPE_DB_UPDATE_STATUS == 0 }}
       with:
@@ -238,7 +238,7 @@ runs:
     # Don't fail during report generation
     # JSON format will report  any ignored rules
     - name: Vulnerability analysis of SBOM
-      uses: anchore/scan-action@v4.1.2
+      uses: anchore/scan-action@64a33b277ea7a1215a3c142735a1091341939ff5 # v4.1.2
       id: grype_analysis_json
       if: ${{ steps.sbom_report.outputs.files_exists == 'true' && steps.grype_db_check_updates.outputs.GRYPE_DB_UPDATE_STATUS == 0 }}
       with:
@@ -252,7 +252,7 @@ runs:
 
     - name: Check vulnerability analysis report existence
       if: ${{ steps.grype_db_check_updates.outputs.GRYPE_DB_UPDATE_STATUS == 0 }} # Run only if DB is available on the runner
-      uses: andstor/file-existence-action@v3
+      uses: andstor/file-existence-action@076e0072799f4942c8bc574a82233e1e4d13e9d6 # v3
       id: grype_report
       with:
         files: "${{ steps.grype_analysis_sarif.outputs.sarif }}, ${{ steps.grype_analysis_json.outputs.json }}"
@@ -290,7 +290,7 @@ runs:
     # Notify grype quick scan results in table format
     # Table format will supress any specified ignore rules
     - name: Inspect Vulnerability analysis of SBOM
-      uses: anchore/scan-action@v4.1.2
+      uses: anchore/scan-action@64a33b277ea7a1215a3c142735a1091341939ff5 # v4.1.2
       if: ${{ steps.sbom_report.outputs.files_exists == 'true' && steps.grype_db_check_updates.outputs.GRYPE_DB_UPDATE_STATUS == 0  }}
       with:
         sbom: ${{ steps.meta.outputs.sbom_spdx_file }}
@@ -303,7 +303,7 @@ runs:
 
     - name: Check docker OCI tar existence
       if: ${{ steps.meta.outputs.scan_image != '' }}
-      uses: andstor/file-existence-action@v3
+      uses: andstor/file-existence-action@076e0072799f4942c8bc574a82233e1e4d13e9d6 # v3
       id: docker_tar
       with:
         files: "${{ steps.meta.outputs.scan_image }}"
