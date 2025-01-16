@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [4.0.1](https://github.com/Kong/public-shared-actions/compare/@code-check-actions/lua-lint@4.0.0...@code-check-actions/lua-lint@4.0.1) (2025-01-16)
+
+
+### ♻️ Chores
+
+* **ci:** pin 3rd-party actions to specific commit hashes ([#210](https://github.com/Kong/public-shared-actions/issues/210)) ([d2a3cdb](https://github.com/Kong/public-shared-actions/commit/d2a3cdbb2aa62d29cbc05042c6148a9155761367))
+
+
+
+
+
 # 4.0.0 (2025-01-03)
 
 

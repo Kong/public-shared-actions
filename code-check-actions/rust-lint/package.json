@@ -1,6 +1,6 @@
 {
   "name": "@code-check-actions/rust-lint",
-  "version": "4.0.0",
+  "version": "4.0.1",
   "description": "This action uses Rust Clippy for code quality checks",
   "main": "index.js",
   "repository": {
