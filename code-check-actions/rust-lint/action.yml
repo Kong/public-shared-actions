@@ -26,9 +26,9 @@ runs:
         manifest_dir: ${{ inputs.manifest_dir }}
       run: $GITHUB_ACTION_PATH/scripts/set-env.sh
     
-    - uses: Swatinem/rust-cache@v1
+    - uses: Swatinem/rust-cache@81d053bdb0871dcd3f10763c8cc60d0adc41762b # v1
 
-    - uses: actions-rs/clippy-check@v1
+    - uses: actions-rs/clippy-check@b5b5f21f4797c02da247df37026fcd0a5024aa4d # v1
       continue-on-error: true
       with:
         token: ${{ inputs.token }}

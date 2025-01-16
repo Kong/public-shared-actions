@@ -50,7 +50,7 @@ runs:
     # Ref: https://github.com/EnricoMi/publish-unit-test-result-action/issues/181
     # Publishing: https://github.com/EnricoMi/publish-unit-test-result-action#publishing-test-results
     - name: Luacheck Report
-      uses: EnricoMi/publish-unit-test-result-action@v2
+      uses: EnricoMi/publish-unit-test-result-action@170bf24d20d201b842d7a52403b73ed297e6645b # v2
       if: always() && github.actor != 'dependabot[bot]'
       with:
         files: |
