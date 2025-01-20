@@ -15,7 +15,7 @@ jobs:
   setup-and-lint:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
         with:
           fetch-depth: 0
 
@@ -50,7 +50,7 @@ jobs:
     if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
 
       # Success Notification
       - name: Send Success Slack Notification
@@ -88,7 +88,7 @@ jobs:
                     },
                     {
                       "type": "mrkdwn",
-                      "text": "*TriggeredByCommit:*\n<${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }}|${{ steps.slack-variables.outputs.short-commit-hash }}>"
+                      "text": "*TriggeredByCommit:*\n<${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }}|${{ github.sha }}>"
                     },
                     {
                       "type": "mrkdwn",

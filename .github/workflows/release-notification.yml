@@ -1,0 +1,43 @@
+name: Release Notifications
+on:
+  release:
+    types: [published]
+
+jobs:
+
+  notify-slack:
+    name: Slack Notification
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Send notification
+        uses: ./slack-actions/workflow-notification
+        with:
+          slack-webhook-url: ${{ secrets.SLACK_WEBHOOK_URL_NOTIFY_PUBLIC_SHARED_ACTIONS }}
+          status: ${{ job.status }}
+          payload: |
+            {
+              "text": "Completely custom Slack message for release",
+              "blocks": [
+                {
+                  "type": "header",
+                  "text": {
+                    "type": "plain_text",
+                    "emoji": true,
+                    "text": " "
+                  }
+                },
+                {
+                  "type": "section",
+                  "fields": [
+                    {
+                      "type": "mrkdwn",
+                      "text": ":rocket: Released Package <${{ github.server_url }}/${{ github.repository }}/releases/tag/${{ github.event.release.tag_name }}|${{ github.event.release.tag_name }}>"
+                    }
+                  ]
+                }
+              ]
+            }
