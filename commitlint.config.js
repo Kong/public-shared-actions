@@ -10,7 +10,7 @@ module.exports = {
     'scope-enum': async (ctx) => [
       2,
       'always',
-      [...(await getPackages(ctx)), 'release', 'deps', 'docs', 'ci']
+      [...(await getPackages(ctx)), 'release', 'deps', 'ci']
     ]
   },
   helpUrl: 'https://github.com/Kong/public-shared-actions',
