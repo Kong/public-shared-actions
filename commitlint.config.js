@@ -13,7 +13,7 @@ module.exports = {
       [...(await getPackages(ctx)), 'release', 'deps', 'ci']
     ]
   },
-  // TODO: Add a custom ignore function to ignore Dependabot commits
+// TODO:  Perform ignores based on Commit Author instead of Message to avoid spoofing
   // Temporary solution: Ignore function to ignore any commit message which match the regex.
   // Example commit message: `github-actions(deps): bump anchore/scan-action from 4.1.2 to 6.1.0` 
   ignores: [
