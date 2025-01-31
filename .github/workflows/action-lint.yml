@@ -1,0 +1,63 @@
+# Secrets are inherited from calling workflow within same org or enterprise
+# Explicit secrets forr all other calling wortkflows outside org or enterprise
+
+on:
+  workflow_call:
+
+    inputs:
+      TARGET_SCAN_REPOSITORY:
+        required: false
+        description: Target repository to scan
+        type: string
+      TARGET_SCAN_REF:
+        required: false
+        description: Target ref/branch to scan
+        type: string
+      FAIL_ACTIONLINT_LEVEL:
+        required: true
+        type: string
+      ASSET_PREFIX:
+        description: Prefix for workflow assets files
+        required: false
+        type: string
+      CODEQL_UPLOAD:
+        description: Upload results to codeql for public repositories
+        required: false
+        type: string
+    secrets:
+      TOKEN:
+        required: false
+
+# Permissions should be specified on calling workflow
+# Permissions specified here in reusable workflow can only be downgraded but elevated
+permissions: {}
+
+env:
+  repository: ${{ inputs.TARGET_SCAN_REPOSITORY || github.repository }}
+  ref: ${{ inputs.TARGET_SCAN_REF || '' }}
+  asset_prefix: ${{ inputs.ASSET_PREFIX || '' }}
+  filter_mode: ${{ github.event_name == 'pull_request' && 'file' || 'nofilter' }}
+  reporter: ${{ github.event_name == 'pull_request' && 'github-pr-check' || 'github-check' }}
+  codeql_upload: ${{ inputs.CODEQL_UPLOAD == 'true' && github.event.repository.visibility == 'public' && 'true' || 'false' }}
+
+jobs:
+
+  actionlint:
+    runs-on: ubuntu-24.04
+    name: actionlint
+    steps:
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+        with:
+          token: ${{ secrets.TOKEN || github.token }}  # Use the passed token for checkout
+          repository: ${{ env.repository }}
+          ref: ${{ env.ref }}
+
+        # shellcheck is enabled by default on scripts using the run: block within workflows
+      - uses: reviewdog/action-actionlint@f3dcc52bc6039e5d736486952379dce3e869e8a2
+        with:
+          # When used as required workflow in ruleset, this parameter has can block pushes
+          fail_level: ${{inputs.FAIL_ACTIONLINT_LEVEL}}
+          # Run for all sh files even when not added/modifier
+          filter_mode: ${{ env.filter_mode }}
+          reporter: ${{ env.reporter }}
+          github_token: ${{ secrets.TOKEN || github.token}}

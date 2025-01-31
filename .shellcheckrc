@@ -1,0 +1,7 @@
+# Comma separated list of checks to ignore
+disable=SC2129
+
+max-line-length=80
+
+# Ignore specific files or directories
+exclude-dir=node_modules
