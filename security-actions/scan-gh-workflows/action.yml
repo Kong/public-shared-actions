@@ -69,6 +69,18 @@ runs:
         SCAN_ARGS: ${{ steps.meta.outputs.scan_args }}
         SCAN_PATH: ${{ inputs.scan_path }}
         GH_TOKEN: ${{ inputs.github_token }}
+
+    - name: Run GH Actions SAST - [JSON format]
+      shell: bash
+      # Continue on error to upload results
+      continue-on-error: true
+      id: gh_actions_sast_json
+      run: |
+        zizmor ${{ env.SCAN_ARGS }} ${{ env.SCAN_PATH }} --format plain > ${{ steps.meta.outputs.json_file }}
+      env:
+        SCAN_ARGS: ${{ steps.meta.outputs.scan_args }}
+        SCAN_PATH: ${{ inputs.scan_path }}
+        GH_TOKEN: ${{ inputs.github_token }}
     
     - name: Run GH Actions SAST - [Plain format]
       shell: bash
@@ -89,6 +101,7 @@ runs:
         name: ${{ steps.meta.outputs.report_file_name }}.zip
         path: |
           ${{ steps.meta.outputs.sarif_file }}
+          ${{ steps.meta.outputs.json_file }}
           ${{ steps.meta.outputs.out_file}}
         if-no-files-found: warn
     
