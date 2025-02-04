@@ -1,0 +1,8 @@
+assets:
+  - name: trivy
+    workspace_name: scan-docker-image
+    build: true
+    cron: '0 0 * * *'
+    build_args:
+      BASE_TOOL_IMAGE: docker.io/aquasec/trivy:0.59.0@sha256:addfb8fd6b9e520c25b22c61d8aa5d58ecd7879177aa959f952bf4734f4e3f60
+      BASE_IMAGE: gcr.io/distroless/base@sha256:7a4bffcb07307d97aa731b50cb6ab22a68a8314426f4e4428335939b5b1943a5

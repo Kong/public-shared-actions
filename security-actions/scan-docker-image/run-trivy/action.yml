@@ -1,0 +1,57 @@
+name: Trivy Docker Scan
+description: Scan a Docker image using Trivy from a private ECR repository
+author: 'KONG'
+
+inputs:
+  scan_image:
+    description: 'Docker image or tar file to scan'
+    required: true
+  output_file:
+    description: 'Path to save the JSON report (required for JSON output)'
+    required: false
+  output_format:
+    description: 'Specify the output format (e.g., json, table)'
+    required: true
+    default: json
+  fail_build:
+    description: 'Fail the build if vulnerability is found (only applicable for table format)'
+    required: false
+    default: false
+    type: choice
+    options:
+      - 'true'
+      - 'false'
+  ignore_unfixed:
+    description: 'Ignore unfixed vulnerabilities'
+    required: false
+    default: false
+    type: choice
+    options:
+      - 'true'
+      - 'false'
+  input_tar:
+    description: 'Specify --input if using a tar file instead of an image reference'
+    required: false
+    default: ''
+
+runs:
+  using: composite
+  steps:
+
+    - name: Generate docker-cis report
+      # TODO: Define a tagging mechanism for dependency manager version updates 
+      # Also for controlled rollouts
+      # TODO: Replace with the actual AWS ACCOUNT ID
+      uses: docker://4182XXXXXXX.dkr.ecr.us-east-1.amazonaws.com/trivy:latest
+      with:
+        entrypoint: trivy
+        args:
+          image ${{ inputs.input_tar != '' && '--input ' || '' }}${{ inputs.input_tar != '' && inputs.input_tar || inputs.scan_image }} --debug
+      env:
+        TRIVY_FORMAT: ${{ inputs.output_format }}
+        TRIVY_OUTPUT: ${{ inputs.output_file }}
+        TRIVY_IGNORE_UNFIXED: ${{ inputs.ignore_unfixed }}
+        TRIVY_COMPLIANCE: docker-cis-1.6.0
+        TRIVY_EXIT_CODE: ${{ inputs.fail_build == 'true' && '1' || '0' }}
+        TRIVY_DB_REPOSITORY: 41827XXXXXX.dkr.ecr.us-east-1.amazonaws.com/trivy-db:2
+        TRIVY_SKIP_CHECK_UPDATE: 'true'
