@@ -2,12 +2,9 @@ name: Mirroring
 
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - 'asset-mirroring-workflow-for-security-tools'
-  schedule:
-    - cron: '0 0 * * *'    # For trivy (default schedule)
-    - cron: '0 0 * * *'    # For semgrep
+  #schedule:
+  #  - cron: '0 0 * * *'    # For trivy (default schedule)
+  #  - cron: '0 0 * * *'    # For semgrep
 
 
 permissions:

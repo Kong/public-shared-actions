@@ -2,11 +2,8 @@ name: Mirroring Trivy VulnDB
 
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - 'asset-mirroring-workflow-for-security-tools'
-  schedule:
-    - cron:  '0 */6 * * *'  # Runs every 6 hrs
+  # schedule:
+  #  - cron:  '0 */6 * * *'  # Runs every 6 hrs
 
 
 env:
