@@ -1,0 +1,212 @@
+name: Mirroring
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - 'asset-mirroring-workflow-for-security-tools'
+  schedule:
+    - cron: '0 0 * * *'    # For trivy (default schedule)
+    - cron: '0 0 * * *'    # For semgrep
+
+
+permissions:
+  contents: read
+  discussions: read
+  issues: read
+  pull-requests: read
+  id-token: write
+
+env:
+  # TODO: Replace with the actual AWS ACCOUNT ID
+  AWS_ACCOUNT_ID: 418272XXXXXX
+  REGION: us-east-1
+
+jobs:
+  metadata:
+    name: Metadata
+    runs-on: ubuntu-latest
+    
+    outputs:
+      assets: ${{ steps.config.outputs.assets }}
+      ecr_registry: ${{ steps.config.outputs.ecr_registry }}
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Get changed files
+      id: changed-files
+      uses: tj-actions/changed-files@v35
+      with:
+        files: |
+          security-actions/scan-docker-image/build/trivy.yml
+          security-actions/semgrep/build/*.yml
+
+    - name: Construct tooling matrix from changed files
+      id: config
+      run: |
+        changed_files="${{ steps.changed-files.outputs.all_changed_files }}"
+        echo "Changed files: $changed_files"
+
+        # Initialize assets list
+        assets=""
+
+        # Loop over changed files and construct JSON objects
+        for file in $changed_files; do
+          asset=$(yq eval -o=json '.assets[]' $file)
+          name=$(echo "$asset" | jq -r '.name')
+          workspace_name=$(echo "$asset" | jq -r '.workspace_name')
+          cron=$(echo "$asset" | jq -r '.cron // "0 0 * * *"')
+
+          # Format build_args as key=value pairs
+          build_args=$(echo "$asset" | jq -r '
+            if (.build_args // null) == null then
+              ""
+            else
+              .build_args |
+              to_entries |
+              map("\(.key)=\(.value)") |
+              join(" ")
+            end
+          ')
+
+          # Construct compact JSON object
+          formatted_asset=$(jq -c -n \
+            --arg name "$name" \
+            --arg workspace_name "$workspace_name" \
+            --arg cron "$cron" \
+            --arg build_args "$build_args" \
+            '{name: $name, workspace_name: $workspace_name, cron: $cron, build_args: $build_args}'
+          )
+
+          # Append to assets list
+          assets="${assets}${formatted_asset},"
+        done
+
+        # Create compact JSON array
+        assets="[${assets%,}]"
+
+        # Set outputs properly
+        echo "ASSETS_JSON=$assets" >> $GITHUB_ENV
+        echo "ASSETS_JSON=$assets" >> $GITHUB_OUTPUT
+        echo "ecr_registry=${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.REGION }}.amazonaws.com" >> $GITHUB_OUTPUT
+        echo "assets=$assets" >> $GITHUB_OUTPUT
+  
+  # TODO: Enhance this job to run per asset frequency schedule
+  build-publish-assets:
+    runs-on: ubuntu-latest
+    needs: metadata
+    name: Build Asset - ${{ matrix.asset.name }}
+    permissions:
+      id-token: write
+
+    strategy:
+      fail-fast: false
+      matrix:
+        asset: ${{ fromJSON(needs.metadata.outputs.assets) }}
+
+    if: ${{ github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || github.event_name == 'push' }}
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: Configure AWS Credentials
+        uses: ./login-aws-cloud
+    
+      - name: Set Docker build args
+        id: format_build_args
+        run: |
+          platforms="linux/amd64,linux/arm64"
+          echo "platforms=$platforms" >> $GITHUB_ENV
+
+          # Accessing the matrix asset to get build_args
+          build_args="${{ matrix.asset.build_args }}"
+          if [[ -z ${build_args} ]]; then
+           # Pass empty string for build_args
+           echo "build_args=$build_args" >> $GITHUB_ENV
+          else
+            # Expose the build args as individual GH Env
+            echo "$build_args" | tr ' ' '\n' >> $GITHUB_ENV
+
+            # New line separated formmated string (base_image:<name>\nbase_tag:<x.y.z>\n)
+            formatted_build_args=$(echo "$build_args" | tr ' ' '\n' | sed 's/\([^=]*\)=\([^ ]*\)/"\1=\2"/')
+
+            # Expose a single multi-line string for YAML block for Docker build args
+            # Set output to a single multi-line block
+            echo "build_args<<EOF" >> $GITHUB_ENV
+            echo "$formatted_build_args" >> $GITHUB_ENV
+            echo "EOF" >> $GITHUB_ENV
+          fi
+
+      - name: Parse vendor specific image tag
+        id: base_tool_image_meta
+        run: |
+          image=${{env.BASE_TOOL_IMAGE}}
+          full_image_version=${image#*:}
+          echo "full_image_version=$full_image_version" >> $GITHUB_OUTPUT
+          echo "image_name=${image%%:*}" >> $GITHUB_OUTPUT
+          echo "image_sha=${image#*@}" >> $GITHUB_OUTPUT
+          echo "image_tag=${full_image_version%%@*}" >> $GITHUB_OUTPUT
+
+
+      - name: Docker meta
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ needs.metadata.outputs.ecr_registry }}/${{ matrix.asset.name }}
+          sep-tags: ","
+          tags: |
+            type=raw,enable=true,value=latest
+            type=raw,enable=true,value=${{ steps.base_tool_image_meta.outputs.image_tag }}
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v2
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and Push Docker Image
+        if: ${{ github.event.schedule == matrix.asset.cron || github.event_name == 'workflow_dispatch' || github.event_name == 'push' }}
+        uses: docker/build-push-action@v5
+        id: image
+        with:
+          file: security-actions/${{ matrix.asset.workspace_name }}/build/dockerfiles/${{ matrix.asset.name }}.Dockerfile
+          context: .
+          push: true
+          pull: true
+          tags: ${{ steps.meta.outputs.tags }}
+          platforms: ${{ env.platforms }}
+          build-args: ${{ env.build_args }}
+          labels: |
+            org.opencontainers.image.base_tool_image=${{ env.BASE_TOOL_IMAGE }}
+            org.opencontainers.image.base_image=${{ env.BASE_IMAGE }}
+            org.opencontainers.image.url="https://github.com/Kong/public-shared-actions"
+            org.opencontainers.image.documentation="https://github.com/Kong/public-shared-actions"
+          # these 2 options are needed so that the MediaType of the manifest is
+          # OCI-compliant for other downstream integrations
+          # see also:
+          #   - https://github.com/docker/buildx/issues/1507
+          #   - https://github.com/docker/buildx/issues/1509#issuecomment-1378538197
+          provenance: false
+          outputs: type=image,oci-mediatypes=true
+
+  # TODO
+  # Get webhook creation approval from Slack Admin
+  # Update webhook URL as secret within Github PSA repo
+  # Secret Name: SLACK_WEBHOOK_URL_NOTIFY_SLACK_NOTIFICATION
+  # Slack channel "notify-public-shared-actions" already created
+  slack_notification:
+    name: Slack Notification for Image Mirroring Process
+    runs-on: ubuntu-latest
+    needs: [metadata, build-publish-assets]
+    if: always()
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Send Slack Notification
+        uses: ./slack-actions/workflow-notification
+        with:
+          slack-webhook-url: ${{ secrets.SLACK_WEBHOOK_URL_NOTIFY_SLACK_NOTIFICATION }}
+          status: ${{ needs.build-publish-assets.result }}
+          success-message: ":white_check_mark: ${{ github.workflow }} workflow successfully ran within ${{ github.repository }}"
+          failure-message: ":x: This is a *failure* notification from ${{ github.repository }} for workflow ${{ github.workflow }}"
+          cancelled-message: ":no_entry_sign: Workflow ${{ github.workflow }} was *cancelled* in ${{ github.repository }}"
