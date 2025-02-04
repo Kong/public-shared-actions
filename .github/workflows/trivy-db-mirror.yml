@@ -1,0 +1,69 @@
+name: Mirroring Trivy VulnDB
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - 'asset-mirroring-workflow-for-security-tools'
+  schedule:
+    - cron:  '0 */6 * * *'  # Runs every 6 hrs
+
+
+env:
+  # TODO: Replace with the actual AWS ACCOUNT ID
+  AWS_ACCOUNT_ID: 418272XXXXXX
+  REGION: us-east-1
+
+
+permissions:
+  id-token: write
+
+
+jobs:
+  trivy-db-mirror:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure AWS Credentials
+        uses: ./login-aws-cloud
+
+      - name: Install regctl
+        uses: regclient/actions/regctl-installer@main
+
+      - name: Load Matrix File
+        id: load-matrix
+        run: |
+          echo "Loading matrix from Matrix"
+          DB_IMAGE=$(yq e '.assets[] | select(.name == "trivy-db") | .build_args.DB_IMAGE' security-actions/scan-docker-image/build/trivy-db.yml)
+          DB_TAG=$(echo $DB_IMAGE | cut -d ":" -f2)
+          echo "DB_IMAGE=${DB_IMAGE}" >> $GITHUB_ENV
+          echo "DB_TAG=${DB_TAG}" >> $GITHUB_ENV
+
+      # TODO: Replace with the actual AWS ACCOUNT ID
+      - name: Pull and Push to ECR
+        run: |
+          regctl image copy $DB_IMAGE <AWS_ACCOUNT_ID>.dkr.ecr.us-east-1.amazonaws.com/trivy-db:$DB_TAG
+
+  # TODO
+  # Get webhook creation approval from Slack Admin
+  # Update webhook URL as secret within Github PSA repo
+  # Secret Name: SLACK_WEBHOOK_URL_NOTIFY_SLACK_NOTIFICATION
+  # Slack channel "notify-public-shared-actions" already created
+  slack_notification:
+    name: Slack Notification for Trivy DB Mirroring Process
+    runs-on: ubuntu-latest
+    needs: trivy-db-mirror
+    if: always()
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Send Slack Notification
+        uses: ./slack-actions/workflow-notification
+        with:
+          slack-webhook-url: ${{ secrets.SLACK_WEBHOOK_URL_NOTIFY_SLACK_NOTIFICATION }}
+          status: ${{ needs.trivy-db-mirror.result }}
+          success-message: ":white_check_mark: ${{ github.workflow }} workflow successfully ran within ${{ github.repository }}"
+          failure-message: ":x: This is a *failure* notification from ${{ github.repository }} for workflow ${{ github.workflow }}"
+          cancelled-message: ":no_entry_sign: Workflow ${{ github.workflow }} was *cancelled* in ${{ github.repository }}"
