@@ -1,0 +1,8 @@
+assets:
+  - name: semgrep
+    workspace_name: semgrep
+    build: true
+    cron: '0 0 * * *'
+    build_args:
+      BASE_TOOL_IMAGE: docker.io/semgrep/semgrep:1.106.0@sha256:027ea6e8a009cbf0031df5abe9d1491ca82656fe7c584257c198ab680d770eb7
+      BASE_IMAGE: docker.io/semgrep/semgrep:1.106.0@sha256:027ea6e8a009cbf0031df5abe9d1491ca82656fe7c584257c198ab680d770eb7
