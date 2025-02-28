@@ -54,7 +54,7 @@ jobs:
       packages: write # needed to upload to packages to registry
       id-token: write # needed for signing the images with GitHub OIDC Token
     if: ${{ github.repository_owner == 'Kong' }}
-    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@v2.0.0
+    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@main
     with:
       image: "${{ needs.provenance-metadata.outputs.IMAGE }}"
       digest: "${{ needs.provenance-metadata.outputs.IMAGE_MANIFEST_DIGEST }}"
