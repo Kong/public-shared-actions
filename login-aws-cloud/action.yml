@@ -1,0 +1,21 @@
+name: Login to Kong AWS Cloud
+description: Step to authenticate to AWS and login to ECR
+author: 'Kong'
+
+runs:
+  using: composite
+  steps:
+  - name: Configure AWS Credentials
+    uses: aws-actions/configure-aws-credentials@v4
+    id: creds
+    with:
+      aws-region: us-east-1
+      role-to-assume: arn:aws:iam::<AWS-ACCOUNT-ID>:role/ecr-identity-provider-role
+      role-session-name: GitHub_to_AWS_via_FederatedOIDC
+
+  - name: Login to ECR
+    uses: docker/login-action@v3
+    with:
+      registry: <AWS-ACCOUNT-ID>.dkr.ecr.us-east-1.amazonaws.com
+      username: ${{ steps.creds.outputs.aws-access-key-id }}
+      password: ${{ steps.creds.outputs.aws-secret-access-key }}
