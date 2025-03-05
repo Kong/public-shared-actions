@@ -324,7 +324,7 @@ runs:
     - name: Install Trivy
       shell: bash
       run: |
-        curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin v0.57.1
+        curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin v0.58.2
 
     - name: Checkout Trivy DB cache
       if: inputs.trivy_db_cache != ''
