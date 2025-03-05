@@ -8,7 +8,7 @@ module.exports = {
     // see: https://github.com/conventional-changelog/commitlint/blob/master/docs/reference-rules.md
     'scope-empty': [2, 'never'],
     'body-max-line-length': [0, 'always', Infinity], // Disable max line length
-    'body-max-length': [0, 'always', Infinity] // Disable max body length
+    'body-max-length': [0, 'always', Infinity], // Disable max body length
     'scope-enum': async (ctx) => [
       2,
       'always',
