@@ -33,7 +33,7 @@ runs:
         # get the list of the "-pr." published version for the packages
         pkgDetails=$(npm view "${pkgName}" --json)
         echo "pkgDetails:${pkgDetails}"
-        echo "${pkgDetails}" | jq -r '.time' | jq -r 'to_entries' | jq --arg jq_oldestDate ${oldestDate} '[.[] | select(.value |.[0:19] +"Z" | fromdateiso8601 > ($jq_oldestDate|tonumber))]' | jq '[.[] | .key]'| grep "\-pr." | tac | sed 's/[,\"]//g')
+        echo "${pkgDetails}" | jq -r '.time' | jq -r 'to_entries' | jq --arg jq_oldestDate ${oldestDate} '[.[] | select(.value |.[0:19] +"Z" | fromdateiso8601 > ($jq_oldestDate|tonumber))]' | jq '[.[] | .key]'| grep "\-pr." | tac | sed 's/[,\"]//g'
 
         prVersions=($(echo "${pkgDetails}" | jq -r '.time' | jq -r 'to_entries' | jq --arg jq_oldestDate ${oldestDate} '[.[] | select(.value |.[0:19] +"Z" | fromdateiso8601 > ($jq_oldestDate|tonumber))]' | jq '[.[] | .key]'| grep "\-pr." | tac | sed 's/[,\"]//g'))
         echo "prVersions:"${prVersions[@]}
