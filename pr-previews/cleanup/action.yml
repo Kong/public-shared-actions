@@ -17,6 +17,9 @@ runs:
     - name: Get PR Info
       shell: bash
       run: |
+        # need this to not fail on arithmetic expansions
+        set +o errexit
+
         pkgName=${{ inputs.package }}
         openPRs=${{ inputs.openPRs }}
 
@@ -39,7 +42,6 @@ runs:
         fi
 
         distTags=$(echo ${pkgDetails}|jq -r '."dist-tags"')
-
         total="${#prVersions[@]}"
 
         for verToRemove in "${prVersions[@]}"
