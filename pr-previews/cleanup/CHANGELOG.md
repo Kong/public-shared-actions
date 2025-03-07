@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [4.0.1](https://github.com/Kong/public-shared-actions/compare/@pr-previews/cleanup@4.0.0...@pr-previews/cleanup@4.0.1) (2025-03-07)
+
+
+### 🐛 Bug Fixes
+
+* **ci:** handle err exit in cleanup action [KHCP-14704] ([#227](https://github.com/Kong/public-shared-actions/issues/227)) ([89eab72](https://github.com/Kong/public-shared-actions/commit/89eab72e4eaf35b968461bcc66f6ed904fb278f5))
+
+
+
+
+
 # 4.0.0 (2025-01-03)
 
 
