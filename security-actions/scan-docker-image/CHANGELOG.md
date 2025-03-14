@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [4.1.2](https://github.com/Kong/public-shared-actions/compare/@security-actions/scan-docker-image@4.1.1...@security-actions/scan-docker-image@4.1.2) (2025-03-14)
+
+
+### 🐛 Bug Fixes
+
+* **scan-docker-image:** disable trivy exit-code for docker-cis ([#228](https://github.com/Kong/public-shared-actions/issues/228)) ([9f086e1](https://github.com/Kong/public-shared-actions/commit/9f086e1de6a02db2b1c9ab937d0f045d560c7742))
+
+
+
+
+
 ## [4.1.1](https://github.com/Kong/public-shared-actions/compare/@security-actions/scan-docker-image@4.1.0...@security-actions/scan-docker-image@4.1.1) (2025-03-05)
 
 
