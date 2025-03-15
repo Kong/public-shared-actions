@@ -28,11 +28,12 @@ Refer to the official Lefthook [installation guide](https://github.com/evilmarti
 ---
 
 ## Step 4: Sync Lefthook Hooks
-This repo should already contain a `lefthook.yml` configuration file in the root directory. The configuration in the lefthook.yml file enforces commit message linting using Commitlint.
-Package.json runs the below command as part of `pnpm install` to sync the Lefthook configuration with your Git hooks:
+This repo should already contain a `lefthook.yml` configuration file in the root directory.
+
+The lefthook hooks are synced as part of `pnpm install` command using a `postinstall` hook that runs the below command automatically
 
 ```bash
-lefthook run pre-commit
+lefthook install
 ```
 
 ---
@@ -70,4 +71,9 @@ To verify that Lefthook is correctly set up:
 
 By setting up Lefthook, you ensure that all developers adhere to the commit message conventions..
 
+# Setting Up zizmor for GH workflows Analysis
 
+This guide will help you install and configure zizmor to analyze GH workflows and Actions locally.
+
+## Step 1: Install zizmor
+Installed as dependency during `pnpm install` along with all the other  dependencies.

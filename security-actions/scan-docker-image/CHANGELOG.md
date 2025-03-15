@@ -3,6 +3,39 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [4.1.2](https://github.com/Kong/public-shared-actions/compare/@security-actions/scan-docker-image@4.1.1...@security-actions/scan-docker-image@4.1.2) (2025-03-14)
+
+
+### 🐛 Bug Fixes
+
+* **scan-docker-image:** disable trivy exit-code for docker-cis ([#228](https://github.com/Kong/public-shared-actions/issues/228)) ([9f086e1](https://github.com/Kong/public-shared-actions/commit/9f086e1de6a02db2b1c9ab937d0f045d560c7742))
+
+
+
+
+
+## [4.1.1](https://github.com/Kong/public-shared-actions/compare/@security-actions/scan-docker-image@4.1.0...@security-actions/scan-docker-image@4.1.1) (2025-03-05)
+
+
+### ♻️ Chores
+
+* **ci:** bump trivy from v0.57.1 to v0.58.2 ([#225](https://github.com/Kong/public-shared-actions/issues/225)) ([7091a73](https://github.com/Kong/public-shared-actions/commit/7091a73d67a08634ec150129ab3d66f3f0244a21))
+
+
+
+
+
+# [4.1.0](https://github.com/Kong/public-shared-actions/compare/@security-actions/scan-docker-image@4.0.1...@security-actions/scan-docker-image@4.1.0) (2025-02-27)
+
+
+### ✨ Features
+
+* **ci:** gha analyzer action for anti-patterns ([#214](https://github.com/Kong/public-shared-actions/issues/214)) ([fc095d4](https://github.com/Kong/public-shared-actions/commit/fc095d45e81a8107a5b710b4b6a67cf4b0cf6aa5))
+
+
+
+
+
 ## [4.0.1](https://github.com/Kong/public-shared-actions/compare/@security-actions/scan-docker-image@4.0.0...@security-actions/scan-docker-image@4.0.1) (2025-01-16)
 
 

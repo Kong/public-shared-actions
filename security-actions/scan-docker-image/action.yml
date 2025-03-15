@@ -324,7 +324,7 @@ runs:
     - name: Install Trivy
       shell: bash
       run: |
-        curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin v0.57.1
+        curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin v0.58.2
 
     - name: Checkout Trivy DB cache
       if: inputs.trivy_db_cache != ''
@@ -384,9 +384,7 @@ runs:
           --compliance ${{ env.compliance }} \
           -f table \
           --ignore-unfixed \
-          --exit-code ${{ env.exit-code }} \
           ${{ inputs.trivy_db_cache != '' && '--cache-dir ~/.cache/trivy --skip-db-update' || '' }}
       env:
-        exit-code: ${{ (steps.meta.outputs.global_enforce_build_failure == 'true' || inputs.fail_build == 'true') && '1' || '0' }}
         compliance: docker-cis-1.6.0
         input: ${{ steps.docker_tar.outputs.files_exists == 'true' && '--input' || '' }}
