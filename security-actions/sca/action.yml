@@ -247,7 +247,7 @@ runs:
 
     - name: Upload grype analysis report
       if: ${{ steps.grype_db_check_updates.outputs.GRYPE_DB_UPDATE_STATUS == 0 }} # Run only if DB is available on the runner
-      uses: actions/upload-artifact@4cec3d8aa04e39d1a68397de0c4cd6fb9dce8ec1
+      uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
       with:
         name: ${{ steps.meta.outputs.grype_sarif_file }}
         path: |
@@ -257,7 +257,7 @@ runs:
     # Upload grype cve reports
     - name: Upload grype analysis report
       if: ${{ steps.grype_db_check_updates.outputs.GRYPE_DB_UPDATE_STATUS == 0 }} # Run only if DB is available on the runner
-      uses: actions/upload-artifact@4cec3d8aa04e39d1a68397de0c4cd6fb9dce8ec1
+      uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
       with:
         name: ${{ steps.meta.outputs.grype_json_file }}
         path: |
