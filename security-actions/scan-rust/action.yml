@@ -62,7 +62,7 @@ runs:
     - name: Publish SARIF to github code scanning
       if: ${{ always() && inputs.codeql_upload == 'true' && github.event.repository.visibility == 'public' }}
       continue-on-error: true
-      uses: github/codeql-action/upload-sarif@v3
+      uses: github/codeql-action/upload-sarif@5f8171a638ada777af81d42b55959a643bb29017
       with:
         sarif_file: ${{ steps.scan.outputs.sarif }}
         category: sca_rust
@@ -76,7 +76,7 @@ runs:
 
     - name: Publish SARIF to github workflow artifact
       if: always()
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@4cec3d8aa04e39d1a68397de0c4cd6fb9dce8ec1
       with:
         name: ${{ steps.meta.outputs.grype_sarif_file }}
         path: |

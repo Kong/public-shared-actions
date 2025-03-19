@@ -65,7 +65,7 @@ jobs:
     
     steps:
     - name: Checkout source code
-      uses: actions/checkout@v3
+      uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
 
     - name: Rust Check
       uses: Kong/public-shared-actions/code-check-actions/rust-lint@main

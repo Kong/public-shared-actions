@@ -35,37 +35,3 @@ runs:
         # Explicitly report all findings as warnings to not fail the reporiting status check
         args: --manifest-path ${{ steps.meta.outputs.manifest_path }} -- -W clippy::correctness -W clippy::cargo -W clippy::suspicious -W clippy::style
         name: Rust Clippy Report
-
-    # - uses: actions-rs/cargo@ae10961054e4aa8b4aa7dffede299aaf087aa33b
-    #   continue-on-error: true
-    #   with:
-    #     command: install
-    #     args: "clippy-sarif sarif-fmt"
-
-    # - name: Run Cargo Clippy
-    #   shell: bash
-    #   continue-on-error: true
-    #   run: |
-    #     cargo clippy --manifest-path ${{ steps.meta.outputs.manifest_path }} --message-format=json -- -W clippy::correctness -W clippy::cargo -W clippy::pedantic | clippy-sarif | tee rust_clippy_${{github.sha}}.sarif | sarif-fmt
-
-    # - name: Upload Rust Linting SARIF file to CodeQL
-    #   if: ${{ github.event.repository.visibility == 'public' }}
-    #   uses: github/codeql-action/upload-sarif@v2
-    #   with:
-    #     sarif_file: rust_clippy_${{github.sha}}.sarif
-    #     category: clippy_rust
-   
-    # - name: Upload Rust Linting results to workflow
-    #   if: always()
-    #   uses: actions/upload-artifact@v3
-    #   with:
-    #     name: rust_clippy_results.sarif
-    #     path: |
-    #       rust_clippy_${{github.sha}}.sarif
-    #     if-no-files-found: warn 
-    
-    # # Rust Clippy - Linting report
-    # - name:  Rust Linting Report - SARIF
-    #   shell: bash
-    #   run: |
-    #     cat rust_clippy_${{github.sha}}.sarif
