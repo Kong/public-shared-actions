@@ -54,7 +54,7 @@ jobs:
 
     steps:
     - name: Checkout source code
-      uses: actions/checkout@v3
+      uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
     
     # Optional step to run on only changed files
     - name: Get changed files

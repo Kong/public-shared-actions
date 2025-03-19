@@ -117,7 +117,7 @@ COSIGN_REPOSITORY=kong/notary cosign verify -a repo="Kong/kong-ee" -a workflow="
         PRERELEASE_IMAGE: kongcloud/security-test-repo-pub:ubuntu_23_10 # multi arch image input
       steps:
 
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
 
       - name: Install regctl
         uses: regclient/actions/regctl-installer@main
