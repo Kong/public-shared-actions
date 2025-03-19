@@ -152,7 +152,7 @@ runs:
     - name: Grype DB Cache
       id: grype_db_cache
       if: ${{ inputs.skip_grype_db_cache != 'true' && inputs.force_grype_db_update != 'true' }}
-      uses: actions/cache@d4323d4df104b026a6aa633fdb11d772146be0bf
+      uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684
       with:
         # Grype cache files are stored in `~/.cache/grype/db` on Linux/macOS
         path: ~/.cache/grype/db
@@ -213,7 +213,7 @@ runs:
     - name: Update Cache / Save Grype DB updates
       if: ${{ inputs.skip_grype_db_cache != 'true' && steps.grype_db.outputs.GRYPE_DB_CHECK_UPDATE_STATUS != 0 && steps.grype_db.outputs.GRYPE_DB_UPDATE_STATUS }}
       id: save_grype_db_cache_updates
-      uses: actions/cache/save@d4323d4df104b026a6aa633fdb11d772146be0bf
+      uses: actions/cache/save@5a3ec84eff668545956fd18022155c47e93e2684
       with:
         # Grype cache files are stored in `~/.cache/grype/db` on Linux/macOS
         path: ~/.cache/grype/db
