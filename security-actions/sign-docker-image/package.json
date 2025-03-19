@@ -1,6 +1,6 @@
 {
   "name": "@security-actions/sign-docker-image",
-  "version": "4.1.0",
+  "version": "4.1.1",
   "description": "A unified action for container image signing. The action leverages keyless signing to produce an Signature and uploads to Docker Image layer and Public Rekor for transaprency",
   "main": "index.js",
   "repository": {

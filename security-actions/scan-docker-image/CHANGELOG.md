@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [4.1.3](https://github.com/Kong/public-shared-actions/compare/@security-actions/scan-docker-image@4.1.2...@security-actions/scan-docker-image@4.1.3) (2025-03-19)
+
+
+### ♻️ Chores
+
+* **ci:** pin actions ([#231](https://github.com/Kong/public-shared-actions/issues/231)) ([b20e862](https://github.com/Kong/public-shared-actions/commit/b20e862374458b5a3be19d2934de79e0529e0c88))
+
+
+
+
+
 ## [4.1.2](https://github.com/Kong/public-shared-actions/compare/@security-actions/scan-docker-image@4.1.1...@security-actions/scan-docker-image@4.1.2) (2025-03-14)
 
 
