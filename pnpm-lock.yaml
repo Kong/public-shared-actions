@@ -18,8 +18,8 @@ importers:
         specifier: ^17.6.6
         version: 17.8.1(lerna@7.4.2(encoding@0.1.13))
       '@evilmartians/lefthook':
-        specifier: ^1.9.2
-        version: 1.9.2
+        specifier: ^1.10.10
+        version: 1.10.10
       '@rushstack/eslint-patch':
         specifier: ^1.2.0
         version: 1.10.4
@@ -63,6 +63,8 @@ importers:
   security-actions/sca: {}
 
   security-actions/scan-docker-image: {}
+
+  security-actions/scan-gh-workflows: {}
 
   security-actions/scan-rust: {}
 
@@ -202,8 +204,8 @@ packages:
     resolution: {integrity: sha512-d9zaMRSTIKDLhctzH12MtXvJKSSUhaHcjV+2Z+GK+EEY7XKpP5yR4x+N3TAcHTcu963nIr+TMcCb4DBCYX1z6Q==}
     engines: {node: ^12.22.0 || ^14.17.0 || >=16.0.0}
 
-  '@evilmartians/lefthook@1.9.2':
-    resolution: {integrity: sha512-bcYrzoRh8toQTk/kHgzJbRiWPmogIn9jHxFpPFj/mbhz5y6CmIy1ebfncIRYTJl8XhztSlr2Zf7/5t1FNgi+bA==}
+  '@evilmartians/lefthook@1.10.10':
+    resolution: {integrity: sha512-MRIA0zJzUBbmcbecI7QjI08li4ffpmZ6DeVydEiZSg0vSx5mElEMEjDEjkI60eSV0XOm7LRbQKz2rfW6NqH8Cw==}
     cpu: [x64, arm64, ia32]
     os: [darwin, linux, win32]
     hasBin: true
@@ -3215,7 +3217,7 @@ snapshots:
 
   '@eslint/js@8.57.1': {}
 
-  '@evilmartians/lefthook@1.9.2': {}
+  '@evilmartians/lefthook@1.10.10': {}
 
   '@gar/promisify@1.1.3': {}
 

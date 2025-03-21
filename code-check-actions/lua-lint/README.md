@@ -54,12 +54,12 @@ jobs:
 
     steps:
     - name: Checkout source code
-      uses: actions/checkout@v3
+      uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
     
     # Optional step to run on only changed files
     - name: Get changed files
       id: changed-files
-      uses: tj-actions/changed-files@v36
+      uses: kong/changed-files@4edd678ac3f81e2dc578756871e4d00c19191daf
       with: 
         files: |
           **.lua

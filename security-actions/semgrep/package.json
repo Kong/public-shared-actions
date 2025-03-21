@@ -1,6 +1,6 @@
 {
   "name": "@security-actions/semgrep",
-  "version": "4.0.0",
+  "version": "4.0.1",
   "description": "This action uses Semgrep CI command to scan all supported platforms on a specified scan path",
   "main": "index.js",
   "repository": {

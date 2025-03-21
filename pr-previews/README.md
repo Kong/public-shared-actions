@@ -39,7 +39,7 @@ If action returns `true` this means that the code in PR was `up-to-date` wih mai
 
   # code should be checked in with fetch-depth=0 before up-to-date action could be used
   - name: Check out the code
-    uses: actions/checkout@v3
+    uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
     with:
       fetch-depth: 0
 
@@ -59,7 +59,7 @@ Deprecates and Unpublishes PR preview packages for closed PRs. To be executed fr
 
   # code should be checked out
   - name: Check out the code
-    uses: actions/checkout@v3
+    uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
 
   - name: Cleanup
     uses: Kong/public-shared-actions/pr-previews/cleanup@main

@@ -72,6 +72,6 @@ jobs:
     if: (github.actor != 'dependabot[bot]')
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
       - uses: Kong/public-shared-actions/security-actions/semgrep@<version> # Replace and pin public shared actions version
 ```

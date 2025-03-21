@@ -1,12 +1,12 @@
 {
-  "name": "@code-check-actions/rust-lint",
+  "name": "@security-actions/scan-gh-workflows",
   "version": "4.1.1",
-  "description": "This action uses Rust Clippy for code quality checks",
+  "description": "The package scans github actions and workflows for anti-patterns",
   "main": "index.js",
   "repository": {
     "type": "git",
     "url": "https://github.com/Kong/public-shared-actions",
-    "directory": "code-check-actions/rust-lint"
+    "directory": "security-actions/scan-gh-workflows"
   },
   "private": false,
   "author": "Kong, Inc.",

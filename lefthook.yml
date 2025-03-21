@@ -1,6 +1,14 @@
 # Reference:
 # https://github.com/evilmartians/lefthook/blob/master/docs/full_guide.md
 
+pre-commit:
+  # Run `zizmor` only on matching files
+  commands:
+    gh-analyze:
+      run: zizmor --no-exit-codes --collect=all --persona=pedantic --format plain {staged_files}
+      glob: "{**/action,.github/workflows/*}.{yml,yaml}"
+      continue: true
+
 commit-msg:
   commands:
     commitlint:

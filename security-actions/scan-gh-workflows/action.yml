@@ -1,0 +1,145 @@
+name:  GH Actions SAST
+description: Static analyzer for GH actions
+author: 'Kong'
+inputs:
+  scan_path:
+    description: 'File, Dir, Repository formatted: "owner/repo[@<sha>]" containing workflow files'
+    required: true
+    default: '.' #Default is workspace
+  github_token:
+    description: 'PAT for fetching remote "scan_path" of format "owner/repo[@<sha>]"'
+    required: false
+    default: ''
+  asset_prefix:
+    description: 'prefix for generated artifacts'
+    required: false
+  offline_audit_checks:
+    description: "Runs offline audit checks but performs repository pulls"
+    required: true
+    default: true
+    type: choice
+    options:
+    - 'true'
+    - 'false'
+  persona:
+    description: 'Run specific audit checks based on selected persona.'
+    required: true
+    type: choice
+    default: 'regular'
+    options:
+    - 'regular'
+    - 'pedantic'
+    - 'auditor'
+  fail_on_findings:
+    description: 'Fail build / job on findings/errors'
+    required: true
+    type: choice
+    default: false
+    options:
+    - 'true'
+    - 'false'
+
+runs:
+  using: 'composite'
+  steps:
+
+    - name: Set Scan metadata
+      shell: bash
+      id: meta
+      env:
+        SCAN_PATH: ${{ inputs.SCAN_PATH }}
+        PERSONA: ${{ inputs.persona }}
+        OFFLINE_AUDIT_CHECKS: ${{ inputs.offline_audit_checks }}
+        GITHUB_TOKEN: ${{ inputs.github_token }}
+        ASSET_PREFIX: ${{ inputs.asset_prefix }}
+      run: $GITHUB_ACTION_PATH/scripts/scan-metadata.sh
+
+    - name: Install cargo-hack from crates.io
+      uses: baptiste0928/cargo-install@91c5da15570085bcde6f4d7aed98cb82d6769fd3
+      with:
+        crate: zizmor
+        locked: true
+        version: '~1'
+    
+    - name: Run GH Actions SAST - [SARIF format]
+      shell: bash
+      id: gh_actions_sast_sarif
+      # Continue on error to upload results
+      continue-on-error: true
+      run: |
+        zizmor ${{ env.SCAN_ARGS }} ${{ env.SCAN_PATH }} --format sarif > ${{ steps.meta.outputs.sarif_file }}
+      env:
+        SCAN_ARGS: ${{ steps.meta.outputs.scan_args }}
+        SCAN_PATH: ${{ inputs.scan_path }}
+        GH_TOKEN: ${{ inputs.github_token }}
+
+    - name: Run GH Actions SAST - [JSON format]
+      shell: bash
+      # Continue on error to upload results
+      continue-on-error: true
+      id: gh_actions_sast_json
+      run: |
+        zizmor ${{ env.SCAN_ARGS }} ${{ env.SCAN_PATH }} --format plain > ${{ steps.meta.outputs.json_file }}
+      env:
+        SCAN_ARGS: ${{ steps.meta.outputs.scan_args }}
+        SCAN_PATH: ${{ inputs.scan_path }}
+        GH_TOKEN: ${{ inputs.github_token }}
+    
+    - name: Run GH Actions SAST - [Plain format]
+      shell: bash
+      # Continue on error to upload results
+      continue-on-error: true
+      id: gh_actions_sast_plain
+      run: |
+        zizmor ${{ env.SCAN_ARGS }} ${{ env.SCAN_PATH }} --format plain > ${{ steps.meta.outputs.out_file }}
+      env:
+        SCAN_ARGS: ${{ steps.meta.outputs.scan_args }}
+        SCAN_PATH: ${{ inputs.scan_path }}
+        GH_TOKEN: ${{ inputs.github_token }}
+
+    - name: Upload GH Actions SAST reports to Workflow
+      if: always() && steps.gh_actions_sast_plain.conclusion == 'success' && steps.gh_actions_sast_sarif.conclusion == 'success'
+      uses: actions/upload-artifact@4cec3d8aa04e39d1a68397de0c4cd6fb9dce8ec1
+      with:
+        name: ${{ steps.meta.outputs.report_file_name }}.zip
+        path: |
+          ${{ steps.meta.outputs.sarif_file }}
+          ${{ steps.meta.outputs.json_file }}
+          ${{ steps.meta.outputs.out_file}}
+        if-no-files-found: warn
+    
+    # - name: Add findings as check summary
+    #   if: always() 
+    #   shell: bash
+    #   run: |
+    #     if [[ -f "${OUT_FILE}" ]]; then
+    #       echo "## GH Actions SAST CI Scan Summary Report" >> $GITHUB_STEP_SUMMARY
+    #       while IFS= read -r line; do
+    #         echo "- $line" >> $GITHUB_STEP_SUMMARY
+    #       done < ${OUT_FILE}
+    #     fi
+    #   env:
+    #     OUT_FILE: ${{ steps.meta.outputs.out_file}}
+
+    - name: Print findings to console out
+      if: always() 
+      shell: bash
+      run: |
+        echo "::group::Github Actions SAST Scan Summary Report"
+        if [[ -f "${OUT_FILE}" ]]; then
+         cat ${OUT_FILE}
+        fi
+        echo "::endgroup::"   
+      env:
+        OUT_FILE: ${{ steps.meta.outputs.out_file}}
+
+    - name: Fail on findings
+      if: always()
+      shell: bash
+      run: |
+        if [[ ${SCAN_STATUS} == 'failure' ]] && [[ ${FAIL_BUILD} == 'true' ]]; then
+          exit 1
+        fi
+      env: 
+        SCAN_STATUS: ${{ steps.gh_actions_sast_plain.outcome }}
+        FAIL_BUILD: ${{ steps.meta.outputs.global_enforce_build_failure == 'true' && steps.meta.outputs.global_enforce_build_failure || inputs.fail_on_findings }}

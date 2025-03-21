@@ -22,10 +22,10 @@ jobs:
       IMAGE_MANIFEST_DIGEST: ${{ steps.image_manifest_metadata.outputs.manifest_sha }}
       IMAGE: ${{ env.PRERELEASE_IMAGE }}
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
 
     - name: Install regctl
-      uses: regclient/actions/regctl-installer@main
+      uses: regclient/actions/regctl-installer@ce5fd131e371ffcdd7508b478cb223b3511a9183
 
     - name: Parse Image Manifest Digest
       id: image_manifest_metadata
@@ -54,7 +54,7 @@ jobs:
       packages: write # needed to upload to packages to registry
       id-token: write # needed for signing the images with GitHub OIDC Token
     if: ${{ github.repository_owner == 'Kong' }}
-    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@v2.0.0
+    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@v2.1.0
     with:
       image: "${{ needs.provenance-metadata.outputs.IMAGE }}"
       digest: "${{ needs.provenance-metadata.outputs.IMAGE_MANIFEST_DIGEST }}"
