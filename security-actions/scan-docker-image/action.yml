@@ -355,6 +355,7 @@ runs:
       id: cis_json
       shell: bash
       run: |
+        trivy image --download-db-only
         trivy image ${{ env.input }} \
           ${{ steps.meta.outputs.scan_image }} \
           --compliance ${{ env.compliance }} \
