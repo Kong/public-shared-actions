@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [4.1.4](https://github.com/Kong/public-shared-actions/compare/@security-actions/scan-docker-image@4.1.3...@security-actions/scan-docker-image@4.1.4) (2025-03-28)
+
+
+### 🐛 Bug Fixes
+
+* **ci:** use embedded compliance checks across trivy runs when cache input is specified ([#239](https://github.com/Kong/public-shared-actions/issues/239)) ([7ab471c](https://github.com/Kong/public-shared-actions/commit/7ab471c4eb15591efde88c5ced2a1ba8c8b3b803))
+
+
+
+
+
 ## [4.1.3](https://github.com/Kong/public-shared-actions/compare/@security-actions/scan-docker-image@4.1.2...@security-actions/scan-docker-image@4.1.3) (2025-03-19)
 
 
