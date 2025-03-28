@@ -324,7 +324,7 @@ runs:
     - name: Install Trivy
       shell: bash
       run: |
-        curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin v0.58.2
+        curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin v0.60.0
 
     - name: Checkout Trivy DB cache
       if: inputs.trivy_db_cache != ''
@@ -359,6 +359,7 @@ runs:
           ${{ steps.meta.outputs.scan_image }} \
           --compliance ${{ env.compliance }} \
           -f json \
+          --debug \
           --ignore-unfixed \
           -o ${{ steps.meta.outputs.cis_json_file }} \
           ${{ inputs.trivy_db_cache != '' && '--cache-dir ~/.cache/trivy --skip-db-update' || '' }}
@@ -375,6 +376,13 @@ runs:
           ${{ steps.meta.outputs.cis_json_file }}
         if-no-files-found: warn
 
+    # Hack: Force Trivy to use embedded compliance checks instead of expecting CIS yaml file on-disk when cache is populated/used across multiple runs
+    # Removes/clean trivy runtime generated policy/ and fanal/ folders from Cache folder
+    # Refer: https://github.com/aquasecurity/trivy/blob/main/pkg/compliance/spec/compliance.go#L98C17-L108
+    - name: Trivy Clean Scan Cache and Checks Bundle to use embedded checks and downloaded vuln-db
+      shell: bash
+      run: trivy clean --scan-cache --checks-bundle
+
     - name: Inspect docker-cis report
       if: ${{ inputs.skip_cis_scan != 'true' && steps.meta.outputs.scan_image != '' }}
       shell: bash
@@ -384,6 +392,7 @@ runs:
           --compliance ${{ env.compliance }} \
           -f table \
           --ignore-unfixed \
+          --debug \
           ${{ inputs.trivy_db_cache != '' && '--cache-dir ~/.cache/trivy --skip-db-update' || '' }}
       env:
         compliance: docker-cis-1.6.0
