@@ -25,13 +25,29 @@ inputs:
 runs:
   using: 'composite'
   steps:
+    # Configure credentails to login into AWS Cloud Account
+    # TODO: Update AWS Account & IAM Role Details
+    - name: Configure AWS Credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      id: creds
+      with:
+        aws-region: us-east-1
+        role-to-assume: arn:aws:iam::AWS-ACCOUNT-ID-PLACEHOLDER:role/ECR-ROLE-PLACEHOLDER
+        role-session-name: GitHub_to_AWS_via_FederatedOIDC
+
+    # To Authenticate client to ECR
+    # TODO: Update AWS Account & IAM Role Details
+    - name: Login to ECR
+      uses: docker/login-action@v3
+      with:
+        registry: AWS-ACCOUNT-ID-PLACEHOLDER.dkr.ecr.REGION-PLACEHOLDER.amazonaws.com
+        username: ${{ steps.creds.outputs.aws-access-key-id }}
+        password: ${{ steps.creds.outputs.aws-secret-access-key }}
 
     - name: SAST Scan
-      uses: docker://returntocorp/semgrep:1.86.0
+      uses: ./security-actions/semgrep/run-semgrep
       id: semgrep
       continue-on-error: true
-      with:
-        args: "semgrep ci --config auto --sarif -o semgrep_${{github.sha}}.sarif --no-autofix ${{ inputs.additional_config }}"
 
     # Upload grype cve reports
     - name: Upload Semgrep SARIF to Workflow

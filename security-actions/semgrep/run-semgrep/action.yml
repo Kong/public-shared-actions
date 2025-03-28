@@ -1,0 +1,15 @@
+name: Semgrep SAST
+description: Semgrep SAST
+author: 'Kong'
+
+
+runs:
+  using: composite
+  steps:
+    # TODO: Update Semgrep Image URL
+    - name: SAST Scan
+      uses: docker://<AWS-ECR-SEMGREP-IMAGE-URL>
+      with:
+        entrypoint: semgrep
+        args:
+          ci --config auto --sarif -o semgrep_${{ github.sha }}.sarif --no-autofix ${{ inputs.additional_config }}
