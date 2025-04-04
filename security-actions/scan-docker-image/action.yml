@@ -80,10 +80,10 @@ outputs:
     value: ${{ steps.meta.outputs.cis_json_file }}
   grype-json-report:
     description: 'vulnerability json report'
-    value: ${{ steps.meta.outputs.grype_json_report }}
+    value: ${{ steps.meta.outputs.grype_json_file }}
   grype-sarif-report:
     description: 'vulnerability sarif report'
-    value: ${{ steps.meta.outputs.grype_sarif_report }}
+    value: ${{ steps.meta.outputs.grype_sarif_file }}
   sbom-spdx-report:
     description: 'SBOM spdx report'
     value: ${{ steps.meta.outputs.sbom_spdx_file }}
