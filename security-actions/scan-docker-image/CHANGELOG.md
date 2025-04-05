@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [4.1.5](https://github.com/Kong/public-shared-actions/compare/@security-actions/scan-docker-image@4.1.4...@security-actions/scan-docker-image@4.1.5) (2025-04-05)
+
+
+### 🐛 Bug Fixes
+
+* **scan-docker-image:** grype outputs ([#241](https://github.com/Kong/public-shared-actions/issues/241)) ([971ba65](https://github.com/Kong/public-shared-actions/commit/971ba6548dc1fd1d9a60dd9527f6596905efff12))
+
+
+
+
+
 ## [4.1.4](https://github.com/Kong/public-shared-actions/compare/@security-actions/scan-docker-image@4.1.3...@security-actions/scan-docker-image@4.1.4) (2025-03-28)
 
 
