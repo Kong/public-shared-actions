@@ -73,3 +73,8 @@ updates:
     commit-message:
       prefix: "github-actions"
       include: "scope"
+  
+  - package-ecosystem: pip
+    directory: "/security-actions/semgrep"
+    schedule:
+      interval: "daily"
