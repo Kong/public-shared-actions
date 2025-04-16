@@ -10,5 +10,8 @@
   },
   "private": false,
   "author": "Kong, Inc.",
-  "license": "UNLICENSED"
+  "license": "UNLICENSED",
+  "scripts": {
+    "install-zizmor": "pip install -r requirements.txt"
+  }
 }

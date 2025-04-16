@@ -78,3 +78,14 @@ updates:
     directory: "/security-actions/semgrep"
     schedule:
       interval: "daily"
+    commit-message:
+      prefix: "python"
+      include: "scope"
+  
+  - package-ecosystem: pip
+    directory: "/security-actions/scan-gh-workflows"
+    schedule:
+      interval: "daily"
+    commit-message:
+      prefix: "python"
+      include: "scope"
