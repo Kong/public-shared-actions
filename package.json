@@ -18,8 +18,8 @@
     "version:ci": "lerna version --yes --create-release github",
     "version:dry-run": "pnpm run version:ci --no-push",
     "lint": "eslint '**/*.{js,jsx,ts,tsx,vue}' --ignore-path '.eslintignore'",
-    "install-python-dependencies": "pip install -r requirements.txt",
-    "prepare": "pnpm run install-python-dependencies",
+    "install-zizmor": "pnpm run -F ./security-actions/scan-gh-workflows",
+    "prepare": "pnpm run install-zizmor",
     "postinstall": "lefthook install",
     "pre-commit": "lefthook run pre-commit"
   },
