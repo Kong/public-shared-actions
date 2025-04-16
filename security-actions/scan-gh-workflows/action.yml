@@ -54,12 +54,15 @@ runs:
         ASSET_PREFIX: ${{ inputs.asset_prefix }}
       run: $GITHUB_ACTION_PATH/scripts/scan-metadata.sh
 
-    - name: Install cargo-hack from crates.io
-      uses: baptiste0928/cargo-install@91c5da15570085bcde6f4d7aed98cb82d6769fd3
+    - name: Install Python 
+      uses: actions/setup-python@3605726ffa6ef7750b99ff496e5b88248b414e26
       with:
-        crate: zizmor
-        locked: true
-        version: '~1'
+        python-version: '3.12'
+
+    - name: Install zizmor dependency
+      shell: bash
+      run: pip install -r $GITHUB_ACTION_PATH/requirements.txt
+
     
     - name: Run GH Actions SAST - [SARIF format]
       shell: bash
