@@ -145,7 +145,10 @@ runs:
         fail: true
     
     - name: Download Grype
-      uses: anchore/scan-action/download-grype@64a33b277ea7a1215a3c142735a1091341939ff5 # v4.1.2
+      # uses: anchore/scan-action/download-grype@2c901ab7378897c01b8efaa2d0c9bf519cc64b9e # v6.2.0
+      shell: bash
+      run: |
+        curl -sSfL https://raw.githubusercontent.com/anchore/grype/main/install.sh | sh -s -- -b /usr/local/bin v0.92.2
 
     # Skip Cache Restoration: If skip_grype_db_cache is true, skip the restoration of the cache.
     # Check for any existing cache to reuse
@@ -223,7 +226,7 @@ runs:
     # Grype is invoked first time ever 
     # Don't fail during report generation
     - name: Vulnerability analysis of SBOM
-      uses: anchore/scan-action@64a33b277ea7a1215a3c142735a1091341939ff5 # v4.1.2
+      uses: anchore/scan-action@2c901ab7378897c01b8efaa2d0c9bf519cc64b9e # v6.2.0
       id: grype_analysis_sarif
       if: ${{ steps.sbom_report.outputs.files_exists == 'true' && steps.grype_db_check_updates.outputs.GRYPE_DB_UPDATE_STATUS == 0 }}
       with:
@@ -238,7 +241,7 @@ runs:
     # Don't fail during report generation
     # JSON format will report  any ignored rules
     - name: Vulnerability analysis of SBOM
-      uses: anchore/scan-action@64a33b277ea7a1215a3c142735a1091341939ff5 # v4.1.2
+      uses: anchore/scan-action@2c901ab7378897c01b8efaa2d0c9bf519cc64b9e # v6.2.0
       id: grype_analysis_json
       if: ${{ steps.sbom_report.outputs.files_exists == 'true' && steps.grype_db_check_updates.outputs.GRYPE_DB_UPDATE_STATUS == 0 }}
       with:
@@ -290,7 +293,7 @@ runs:
     # Notify grype quick scan results in table format
     # Table format will supress any specified ignore rules
     - name: Inspect Vulnerability analysis of SBOM
-      uses: anchore/scan-action@64a33b277ea7a1215a3c142735a1091341939ff5 # v4.1.2
+      uses: anchore/scan-action@2c901ab7378897c01b8efaa2d0c9bf519cc64b9e # v6.2.0
       if: ${{ steps.sbom_report.outputs.files_exists == 'true' && steps.grype_db_check_updates.outputs.GRYPE_DB_UPDATE_STATUS == 0  }}
       with:
         sbom: ${{ steps.meta.outputs.sbom_spdx_file }}
