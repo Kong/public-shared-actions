@@ -120,11 +120,21 @@ runs:
         github-token: ${{ inputs.github-token }}
 
     - name: Check SBOM files existence
-      uses: andstor/file-existence-action@076e0072799f4942c8bc574a82233e1e4d13e9d6 # v3
       id: sbom_report
-      with:
-        files: "${{ steps.meta.outputs.sbom_spdx_file }}, ${{ steps.meta.outputs.sbom_cyclonedx_file }}"
-        fail: true
+      shell: bash
+      run: |
+        echo "::group::Check for SBOM files existence"
+        spdx_file=${{ steps.meta.outputs.sbom_spdx_file }}
+        cyclonedx_file=${{ steps.meta.outputs.sbom_cyclonedx_file }}
+        if [[ -f "${spdx_file}" ]] && [[ -f "${cyclonedx_file}" ]]; then
+          echo "SPDX and CYCLONEDX SBOM files exist"
+          echo "files_exists=true" >> $GITHUB_OUTPUT
+        else
+          echo "::error::SBOM report files missing"
+          echo "files_exists=false" >> $GITHUB_OUTPUT
+          exit 1
+        fi
+        echo "::endgroup::"
 
     - name: Download Grype
       uses: anchore/scan-action/download-grype@64a33b277ea7a1215a3c142735a1091341939ff5 # v4.1.2
@@ -230,11 +240,21 @@ runs:
 
     - name: Check vulnerability analysis report existence
       if: ${{ steps.grype_db_check_updates.outputs.GRYPE_DB_UPDATE_STATUS == 0 }}
-      uses: andstor/file-existence-action@076e0072799f4942c8bc574a82233e1e4d13e9d6 # v3
       id: grype_report
-      with:
-        files: "${{ steps.grype_analysis_sarif.outputs.sarif }}, ${{ steps.grype_analysis_json.outputs.json }}"
-        fail: true
+      shell: bash
+      run: |
+        echo "::group::Check for Vulnerabibility report existence"
+        sarif_file=${{ steps.grype_analysis_sarif.outputs.sarif }}
+        json_file=${{ steps.grype_analysis_json.outputs.json }}
+        if [[ -f "${sarif_file}" ]] && [[ -f "${json_file}" ]]; then
+          echo "JSON and SARIF CVE files exist"
+          echo "files_exists=true" >> $GITHUB_OUTPUT
+        else
+          echo "::error::Grype report files missing"
+          echo "files_exists=false" >> $GITHUB_OUTPUT
+          exit 1
+        fi
+        echo "::endgroup::"
 
     # Grype CVE Action generates an ./results.sarif or ./results.report and no way to customize output file name
     # Hack to increase readability of grype artifacts attached to workflows and releases
