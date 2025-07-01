@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [4.2.1](https://github.com/Kong/public-shared-actions/compare/@security-actions/scan-docker-image@4.2.0...@security-actions/scan-docker-image@4.2.1) (2025-07-01)
+
+
+### 🐛 Bug Fixes
+
+* **ci:** remove file existence dependency ([#262](https://github.com/Kong/public-shared-actions/issues/262)) ([8e97a58](https://github.com/Kong/public-shared-actions/commit/8e97a58608feade65ebf1ba3b8af397247a1749c))
+
+
+
+
+
 # [4.2.0](https://github.com/Kong/public-shared-actions/compare/@security-actions/scan-docker-image@4.1.5...@security-actions/scan-docker-image@4.2.0) (2025-05-21)
 
 
