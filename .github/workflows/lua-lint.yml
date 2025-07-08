@@ -4,11 +4,15 @@ on:
   pull_request:
     branches:
     - main
+    paths:
+    - code-check-actions/lua-*/**
   push:
     branches:
     - main
     tags:
     - '*'
+    paths:
+    - code-check-actions/lua-*/**
   workflow_dispatch: {}
 
 jobs:

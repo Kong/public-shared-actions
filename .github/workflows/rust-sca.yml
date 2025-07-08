@@ -4,11 +4,15 @@ on:
   pull_request:
     branches:
     - main
+    paths:
+    - code-check-actions/rust-*/**
   push:
     branches:
     - main
     tags:
     - '*'
+    paths:
+    - code-check-actions/rust-*/**
   workflow_dispatch: {}
 
 jobs:
