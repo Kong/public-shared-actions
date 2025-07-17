@@ -3,6 +3,25 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [4.1.3](https://github.com/Kong/public-shared-actions/compare/@security-actions/sca@4.1.2...@security-actions/sca@4.1.3) (2025-07-17)
+
+**Note:** Version bump only for package @security-actions/sca
+
+
+
+
+
+## [4.1.2](https://github.com/Kong/public-shared-actions/compare/@security-actions/sca@4.1.1...@security-actions/sca@4.1.2) (2025-07-01)
+
+
+### 🐛 Bug Fixes
+
+* **ci:** remove file existence dependency ([#262](https://github.com/Kong/public-shared-actions/issues/262)) ([8e97a58](https://github.com/Kong/public-shared-actions/commit/8e97a58608feade65ebf1ba3b8af397247a1749c))
+
+
+
+
+
 ## [4.1.1](https://github.com/Kong/public-shared-actions/compare/@security-actions/sca@4.1.0...@security-actions/sca@4.1.1) (2025-03-19)
 
 

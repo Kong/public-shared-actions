@@ -3,6 +3,58 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [4.2.2](https://github.com/Kong/public-shared-actions/compare/@security-actions/scan-docker-image@4.2.1...@security-actions/scan-docker-image@4.2.2) (2025-07-17)
+
+**Note:** Version bump only for package @security-actions/scan-docker-image
+
+
+
+
+
+## [4.2.1](https://github.com/Kong/public-shared-actions/compare/@security-actions/scan-docker-image@4.2.0...@security-actions/scan-docker-image@4.2.1) (2025-07-01)
+
+
+### 🐛 Bug Fixes
+
+* **ci:** remove file existence dependency ([#262](https://github.com/Kong/public-shared-actions/issues/262)) ([8e97a58](https://github.com/Kong/public-shared-actions/commit/8e97a58608feade65ebf1ba3b8af397247a1749c))
+
+
+
+
+
+# [4.2.0](https://github.com/Kong/public-shared-actions/compare/@security-actions/scan-docker-image@4.1.5...@security-actions/scan-docker-image@4.2.0) (2025-05-21)
+
+
+### ✨ Features
+
+* **scan-docker-image:** update grype version to v6.2.0 ([#255](https://github.com/Kong/public-shared-actions/issues/255)) ([b2dcb5b](https://github.com/Kong/public-shared-actions/commit/b2dcb5bffa26707224e00c7ba9759b2082bc3742))
+
+
+
+
+
+## [4.1.5](https://github.com/Kong/public-shared-actions/compare/@security-actions/scan-docker-image@4.1.4...@security-actions/scan-docker-image@4.1.5) (2025-04-05)
+
+
+### 🐛 Bug Fixes
+
+* **scan-docker-image:** grype outputs ([#241](https://github.com/Kong/public-shared-actions/issues/241)) ([971ba65](https://github.com/Kong/public-shared-actions/commit/971ba6548dc1fd1d9a60dd9527f6596905efff12))
+
+
+
+
+
+## [4.1.4](https://github.com/Kong/public-shared-actions/compare/@security-actions/scan-docker-image@4.1.3...@security-actions/scan-docker-image@4.1.4) (2025-03-28)
+
+
+### 🐛 Bug Fixes
+
+* **ci:** use embedded compliance checks across trivy runs when cache input is specified ([#239](https://github.com/Kong/public-shared-actions/issues/239)) ([7ab471c](https://github.com/Kong/public-shared-actions/commit/7ab471c4eb15591efde88c5ced2a1ba8c8b3b803))
+
+
+
+
+
 ## [4.1.3](https://github.com/Kong/public-shared-actions/compare/@security-actions/scan-docker-image@4.1.2...@security-actions/scan-docker-image@4.1.3) (2025-03-19)
 
 
