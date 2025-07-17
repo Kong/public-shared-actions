@@ -236,7 +236,7 @@ runs:
     # Grype is invoked first time ever 
     # Don't fail during report generation
     - name: Vulnerability analysis of SBOM
-      uses: anchore/scan-action@2c901ab7378897c01b8efaa2d0c9bf519cc64b9e # v6.2.0
+      uses: anchore/scan-action@16910ac423301c6d30554b83a7f71ac6ff4a51f3 # v6.4.0
       id: grype_analysis_sarif
       if: ${{ steps.sbom_report.outputs.files_exists == 'true' && steps.grype_db_check_updates.outputs.GRYPE_DB_UPDATE_STATUS == 0 }}
       with:
@@ -251,7 +251,7 @@ runs:
     # Don't fail during report generation
     # JSON format will report  any ignored rules
     - name: Vulnerability analysis of SBOM
-      uses: anchore/scan-action@2c901ab7378897c01b8efaa2d0c9bf519cc64b9e # v6.2.0
+      uses: anchore/scan-action@16910ac423301c6d30554b83a7f71ac6ff4a51f3 # v6.4.0
       id: grype_analysis_json
       if: ${{ steps.sbom_report.outputs.files_exists == 'true' && steps.grype_db_check_updates.outputs.GRYPE_DB_UPDATE_STATUS == 0 }}
       with:
@@ -313,7 +313,7 @@ runs:
     # Notify grype quick scan results in table format
     # Table format will supress any specified ignore rules
     - name: Inspect Vulnerability analysis of SBOM
-      uses: anchore/scan-action@2c901ab7378897c01b8efaa2d0c9bf519cc64b9e # v6.2.0
+      uses: anchore/scan-action@16910ac423301c6d30554b83a7f71ac6ff4a51f3 # v6.4.0
       if: ${{ steps.sbom_report.outputs.files_exists == 'true' && steps.grype_db_check_updates.outputs.GRYPE_DB_UPDATE_STATUS == 0  }}
       with:
         sbom: ${{ steps.meta.outputs.sbom_spdx_file }}
