@@ -25,13 +25,21 @@ inputs:
 runs:
   using: 'composite'
   steps:
+    - name: Install Python 
+      uses: actions/setup-python@3605726ffa6ef7750b99ff496e5b88248b414e26
+      with:
+        python-version: '3.12'
+
+    - name: Install dependencies
+      shell: bash
+      run: pip install -r $GITHUB_ACTION_PATH/requirements.txt
 
     - name: SAST Scan
-      uses: docker://returntocorp/semgrep:1.86.0
       id: semgrep
+      shell: bash
       continue-on-error: true
-      with:
-        args: "semgrep ci --config auto --sarif -o semgrep_${{github.sha}}.sarif --no-autofix ${{ inputs.additional_config }}"
+      run: |
+        semgrep ci --config auto --sarif -o semgrep_${{github.sha}}.sarif --no-autofix ${{ inputs.additional_config }}
 
     # Upload grype cve reports
     - name: Upload Semgrep SARIF to Workflow
