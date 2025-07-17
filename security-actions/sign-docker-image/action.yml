@@ -59,7 +59,7 @@ runs:
       run: $GITHUB_ACTION_PATH/scripts/cosign-metadata.sh
     
     - name: Install Cosign
-      uses: sigstore/cosign-installer@398d4b0eeef1380460a10c8013a76f728fb906ac
+      uses: sigstore/cosign-installer@d58896d6a1865668819e1d91763c7751a165e159
 
     - name: Check install!
       shell: bash
