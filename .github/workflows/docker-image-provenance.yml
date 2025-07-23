@@ -9,8 +9,8 @@ on:
   workflow_dispatch: {}
 
 env:
-  PRERELEASE_IMAGE: kongcloud/security-test-repo-pub:ubuntu_23_10 #particular reason for the choice of image: test multi arch image
-  TAGS: kongcloud/security-test-repo-pub:ubuntu_23_10,kongcloud/security-test-repo:ubuntu_23_10
+  IMAGE: "docker.io/library/ubuntu"
+  TAG: "24.10"
 
 jobs:
 
@@ -20,32 +20,28 @@ jobs:
     if: ${{ github.repository_owner == 'Kong' }}
     outputs:
       IMAGE_MANIFEST_DIGEST: ${{ steps.image_manifest_metadata.outputs.manifest_sha }}
-      IMAGE: ${{ env.PRERELEASE_IMAGE }}
+      IMAGE: ${{env.IMAGE}}
     steps:
     - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
 
     - name: Install regctl
       uses: regclient/actions/regctl-installer@ce5fd131e371ffcdd7508b478cb223b3511a9183
 
+    - name: Login to Docker Hub
+      uses: docker/login-action@74a5d142397b4f367a81961eba4e8cd7edddf772
+      with:
+        username: ${{ secrets.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKER_PROVENANCE_CI_TEST_TOKEN }}
+
     - name: Parse Image Manifest Digest
       id: image_manifest_metadata
       run: |
-        manifest_list_exists="$(
-            if regctl manifest get "${PRERELEASE_IMAGE}" --format raw-body --require-list -v panic &> /dev/null; then
-            echo true
-            else
-            echo false
-            fi
-        )"
-        echo "manifest_list_exists=$manifest_list_exists"
-        echo "manifest_list_exists=$manifest_list_exists" >> $GITHUB_OUTPUT
-
-        manifest_sha="$(regctl image digest "${PRERELEASE_IMAGE}")"
+        manifest_sha="$(regctl image digest "${IMAGE}:${TAG}")"
 
         echo "manifest_sha=$manifest_sha"
         echo "manifest_sha=$manifest_sha" >> $GITHUB_OUTPUT
 
-  test-docker-image-provenance:
+  generate-docker-image-provenance:
     name: Test Docker Image Provenance
     needs: [provenance-metadata]
     permissions:
@@ -58,9 +54,9 @@ jobs:
     with:
       image: "${{ needs.provenance-metadata.outputs.IMAGE }}"
       digest: "${{ needs.provenance-metadata.outputs.IMAGE_MANIFEST_DIGEST }}"
-      provenance-repository: kongcloud/security-test-repo-sig-pub
+      provenance-repository: kong/notary-internal
     secrets:
-      registry-password: ${{ secrets.DOCKERHUB_PUSH_USERNAME }}
-      registry-username: ${{ secrets.DOCKERHUB_PUSH_TOKEN }}
-      provenance-registry-username: ${{ secrets.DOCKERHUB_PUSH_USERNAME }}
-      provenance-registry-password: ${{ secrets.DOCKERHUB_PUSH_TOKEN }}
+      registry-password: ${{ secrets.DOCKERHUB_USERNAME }}
+      registry-username: ${{ secrets.DOCKER_PROVENANCE_CI_TEST_TOKEN }}
+      provenance-registry-username: ${{ secrets.DOCKERHUB_USERNAME }}
+      provenance-registry-password: ${{ secrets.DOCKER_PROVENANCE_CI_TEST_TOKEN }}

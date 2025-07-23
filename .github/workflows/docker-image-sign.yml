@@ -13,7 +13,9 @@ on:
 
 jobs:
   test-sign-docker-image:
-
+    # We dont use this deployment environment
+    # Exists only to avoid custom for OIDC ECR conditions
+    environment: dev
     permissions:
       contents: read
       packages: write # needed to upload to packages to registry
@@ -23,8 +25,8 @@ jobs:
     name: Test Sign Docker Image
     runs-on: ubuntu-22.04
     env:
-      PRERELEASE_IMAGE: kongcloud/security-test-repo-pub:ubuntu_23_10 #particular reason for the choice of image: test multi arch image
-      TAGS: kongcloud/security-test-repo-pub:ubuntu_23_10,kongcloud/security-test-repo:ubuntu_23_10
+      IMAGE: "ubuntu"
+      TAG: "24.10"
     steps:
 
     - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
@@ -32,11 +34,18 @@ jobs:
     - name: Install regctl
       uses: regclient/actions/regctl-installer@ce5fd131e371ffcdd7508b478cb223b3511a9183
 
+    # Auth login to dockerhub
+    - name: Login to Docker Hub
+      uses: docker/login-action@74a5d142397b4f367a81961eba4e8cd7edddf772
+      with:
+        username: ${{ secrets.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKER_PROVENANCE_CI_TEST_TOKEN }}
+
     - name: Parse Image Manifest Digest
       id: image_manifest_metadata
       run: |
         manifest_list_exists="$(
-          if regctl manifest get "${PRERELEASE_IMAGE}" --format raw-body --require-list -v panic &> /dev/null; then
+          if regctl manifest get "${IMAGE}:${TAG}" --format raw-body --require-list -v panic &> /dev/null; then
             echo true
           else
             echo false
@@ -45,44 +54,94 @@ jobs:
         echo "manifest_list_exists=$manifest_list_exists"
         echo "manifest_list_exists=$manifest_list_exists" >> $GITHUB_OUTPUT
 
-        manifest_sha="$(regctl image digest "${PRERELEASE_IMAGE}")"
+        manifest_sha="$(regctl image digest "${IMAGE}:${TAG}")"
 
         echo "manifest_sha=$manifest_sha"
         echo "manifest_sha=$manifest_sha" >> $GITHUB_OUTPUT
-
+    
+      # For multiple images of the same digest, all images must be pushed to remote repositories before they can signed
+      # This is required for digest to exist which is only generated when pushed to remote registry 
+      # Always use the generated remote digest obtained from pushing to registry and is different from the Builder generated local digest on the runner.
     - name: Sign Image digest
       id: sign_image
       if: steps.image_manifest_metadata.outputs.manifest_sha != ''
       uses: ./security-actions/sign-docker-image
       with:
-        cosign_output_prefix: ubuntu-23-10
-        signature_registry: kongcloud/security-test-repo-sig-pub
-        tags: ${{ env.TAGS }} 
+        cosign_output_prefix: ${{env.IMAGE}}-${{env.TAG}}
+        tags: ${{ env.IMAGE }} # Image repository without digest or tags
         image_digest: ${{ steps.image_manifest_metadata.outputs.manifest_sha }}
         local_save_cosign_assets: true
-        registry_username: ${{ secrets.DOCKERHUB_PUSH_USERNAME }}
-        registry_password: ${{ secrets.DOCKERHUB_PUSH_TOKEN }}
+        signature_registry: kong/notary-internal
+        signature_registry_username: ${{ secrets.DOCKERHUB_USERNAME }}
+        signature_registry_password: ${{ secrets.DOCKER_PROVENANCE_CI_TEST_TOKEN }}
 
-    - name: Push Images
-      env:
-        RELEASE_TAG: kongcloud/security-test-repo:v1
-      run: |
-        docker pull ${PRERELEASE_IMAGE}
-        for tag in $RELEASE_TAG; do
-          regctl -v debug image copy ${PRERELEASE_IMAGE} $tag
-        done
+    - name: Configure AWS credentials
+      id: creds
+      uses: aws-actions/configure-aws-credentials@ececac1a45f3b08a01d2dd070d28d111c5fe6722 # v4.1.0
+      with:
+        role-to-assume: ${{secrets.ECR_PSA_ROLE}}
+        aws-region: us-east-2
+        role-duration-seconds: 1200
+        mask-aws-account-id: 'true'
     
-    - name: Sign Image digest
-      id: sign_image_v1
+    # Login in to ECR registry to push retagged testing images
+    - name: Log in to AWS ECR
+      uses: aws-actions/amazon-ecr-login@062b18b96a7aff071d4dc91bc00c4c1a7945b076 # v2.0.1
+      with:
+        registries: ${{secrets.ECR_REGISTRY_ID}}
+    
+    - name: Docker meta for ECR Retagged images
+      id: meta
+      uses: docker/metadata-action@902fa8ec7d6ecbf8d84d538b9b233a880e428804
+      with:
+        images: |
+          ${{secrets.ECR_REGISTRY_ID}}.dkr.ecr.us-east-2.amazonaws.com/${{secrets.ECR_REPOSITORY}}
+        tags: |
+          type=raw,value=${{env.IMAGE}}-${{env.TAG}}
+          type=raw,value=${{env.IMAGE}}-${{ steps.image_manifest_metadata.outputs.manifest_sha }}
+    
+    - name: Push Retagged Images to ECR
+      run: |
+        docker pull $IMAGE
+        for tag in $TAGS; do
+          regctl -v debug image copy ${IMAGE} $tag
+        done
+      env:
+        TAGS: ${{steps.meta.outputs.tags}}
+
+    - name: Parse ECR Image Manifest Digest
+      id: ecr_image_manifest_metadata
+      run: |
+        manifest_list_exists="$(
+          if regctl manifest get "${IMAGE}:${TAG}" --format raw-body --require-list -v panic &> /dev/null; then
+            echo true
+          else
+            echo false
+          fi
+        )"
+        echo "manifest_list_exists=$manifest_list_exists"
+        echo "manifest_list_exists=$manifest_list_exists" >> $GITHUB_OUTPUT
+
+        manifest_sha="$(regctl image digest "${IMAGE}:${TAG}")"
+
+        echo "manifest_sha=$manifest_sha"
+        echo "manifest_sha=$manifest_sha" >> $GITHUB_OUTPUT
+      env:
+        TAG: ${{steps.meta.outputs.version}}
+        IMAGE: ${{secrets.ECR_REGISTRY_ID}}.dkr.ecr.us-east-2.amazonaws.com/${{secrets.ECR_REPOSITORY}}
+
+    # No need for registry inputs to pull the ECR image. ECR prior login exists'
+    # Signature is pushed to Dockerhub
+    - name: Sign Retagged ECR Image digest
+      id: sign_ecr_retagged_image
       if: steps.image_manifest_metadata.outputs.manifest_sha != ''
       uses: ./security-actions/sign-docker-image
-      env:
-        RELEASE_TAG: kongcloud/security-test-repo:v1
       with:
-        cosign_output_prefix: v1 # Optional
+        cosign_output_prefix: ecr-psa-${{env.IMAGE}}-${{env.TAG}} # Optional
         local_save_cosign_assets: true # Optional
-        signature_registry: kongcloud/security-test-repo-sig-pub
-        tags: ${{ env.RELEASE_TAG }} 
-        image_digest: ${{ steps.image_manifest_metadata.outputs.manifest_sha }}
-        registry_username: ${{ secrets.DOCKERHUB_PUSH_USERNAME }}
-        registry_password: ${{ secrets.DOCKERHUB_PUSH_TOKEN }}
+        signature_registry: kong/notary-internal
+        tags: ${{secrets.ECR_REGISTRY_ID}}.dkr.ecr.us-east-2.amazonaws.com/${{secrets.ECR_REPOSITORY}}
+        image_digest: ${{ steps.ecr_image_manifest_metadata.outputs.manifest_sha }}
+        signature_registry_username: ${{ secrets.DOCKERHUB_USERNAME }}
+        signature_registry_password: ${{ secrets.DOCKER_PROVENANCE_CI_TEST_TOKEN }}
+        signature_registry_domain: docker.io
