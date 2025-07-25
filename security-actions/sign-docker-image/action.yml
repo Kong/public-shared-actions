@@ -87,7 +87,7 @@ runs:
     # By default cosign publishes image signatures alongside image repositories in the same registry
     # This step is needed for pulling image from / pushing image sig to private registry
     - name: Login to Image Registry - ${{ inputs.image_registry_domain }}
-      uses: docker/login-action@9780b0c442fbb1117ed29e0efdff1e18412f7567 # v3.3.0
+      uses: docker/login-action@74a5d142397b4f367a81961eba4e8cd7edddf772 # v3.4.0
       if: ${{ inputs.registry_username != '' && inputs.registry_password != '' }}
       with:
         registry: ${{ inputs.image_registry_domain }}
@@ -96,7 +96,7 @@ runs:
     
     # This step runs if signature registry is different from image registry
     - name: Login to Signature Registry - ${{ inputs.signature_registry_domain }}
-      uses: docker/login-action@9780b0c442fbb1117ed29e0efdff1e18412f7567 # v3.3.0
+      uses: docker/login-action@74a5d142397b4f367a81961eba4e8cd7edddf772 # v3.4.0
       if: ${{ inputs.signature_registry_username != '' && inputs.signature_registry_password != '' }}
       with:
         registry: ${{ inputs.signature_registry_domain }}
