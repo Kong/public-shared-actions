@@ -155,10 +155,9 @@ runs:
         echo "::endgroup::"
     
     - name: Download Grype
-      # uses: anchore/scan-action/download-grype@2c901ab7378897c01b8efaa2d0c9bf519cc64b9e # v6.2.0
       shell: bash
       run: |
-        curl -sSfL https://raw.githubusercontent.com/anchore/grype/main/install.sh | sh -s -- -b /usr/local/bin v0.92.2
+        curl -sSfL https://raw.githubusercontent.com/anchore/grype/main/install.sh | sh -s -- -b /usr/local/bin v0.96.1
 
     # Skip Cache Restoration: If skip_grype_db_cache is true, skip the restoration of the cache.
     # Check for any existing cache to reuse
