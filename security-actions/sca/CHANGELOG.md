@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [4.1.4](https://github.com/Kong/public-shared-actions/compare/@security-actions/sca@4.1.3...@security-actions/sca@4.1.4) (2025-07-28)
+
+
+### 🐛 Bug Fixes
+
+* **sca,scan-docker-image:** trigger release for grype install update ([#276](https://github.com/Kong/public-shared-actions/issues/276)) ([6328fe4](https://github.com/Kong/public-shared-actions/commit/6328fe4e5cc60bda2b060bf91d3d1895b2f6817c))
+
+
+
+
+
 ## [4.1.3](https://github.com/Kong/public-shared-actions/compare/@security-actions/sca@4.1.2...@security-actions/sca@4.1.3) (2025-07-17)
 
 **Note:** Version bump only for package @security-actions/sca
