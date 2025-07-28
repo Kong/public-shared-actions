@@ -136,7 +136,7 @@ runs:
         fi
         echo "::endgroup::"
 
-    - name: Download Grype
+    - name: Download Grype binary
       shell: bash
       run: |
         curl -sSfL https://raw.githubusercontent.com/anchore/grype/main/install.sh | sh -s -- -b /usr/local/bin v0.96.1
