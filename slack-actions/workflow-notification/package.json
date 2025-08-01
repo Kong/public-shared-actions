@@ -1,5 +1,5 @@
 {
-  "name": "@slack-actions/workflow-notification",
+  "name": "slack-workflow-notification",
   "version": "4.0.1",
   "description": "Slack notification workflow",
   "main": "index.js",
