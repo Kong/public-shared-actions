@@ -1,5 +1,5 @@
 {
-  "name": "@pr-previews/up-to-date",
+  "name": "pr-previews-up-to-date",
   "version": "4.0.0",
   "description": "Is/was the PR associated with the workflow commit up to date? Works for open PRs and Squash Merges.",
   "main": "index.js",

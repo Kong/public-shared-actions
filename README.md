@@ -4,7 +4,7 @@ Shared actions available to both public and private repositories
 ## Usage
   
 ```yaml
-- uses: Kong/public-shared-actions/<action-name>@<tag>
+- uses: Kong/public-shared-actions/<action-name>@<SHA>
 ```
 
 For example:

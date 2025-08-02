@@ -1,5 +1,5 @@
 {
-  "name": "@pr-previews/cleanup",
+  "name": "pr-previews-cleanup",
   "version": "4.0.1",
   "description": "Deprecate and unpublish PR preview package versions for closed PRs",
   "main": "index.js",
