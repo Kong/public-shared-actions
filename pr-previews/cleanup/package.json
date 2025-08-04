@@ -1,6 +1,6 @@
 {
   "name": "pr-previews-cleanup",
-  "version": "4.0.1",
+  "version": "5.0.0",
   "description": "Deprecate and unpublish PR preview package versions for closed PRs",
   "main": "index.js",
   "repository": {

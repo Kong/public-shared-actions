@@ -1,6 +1,6 @@
 {
   "name": "scan-gh-workflows",
-  "version": "4.1.2",
+  "version": "5.0.0",
   "description": "The package scans github actions and workflows for anti-patterns",
   "main": "index.js",
   "repository": {
