@@ -36,7 +36,7 @@ jobs:
           pnpm install --frozen-lockfile
 
       - name: Commit lint
-        uses: wagoid/commitlint-github-action@9763196e10f27aef304c9b8b660d31d97fce0f99
+        uses: wagoid/commitlint-github-action@b948419dd99f3fd78a6548d48f94e3df7f6bf3ed
         with:
           failOnWarnings: true
       
