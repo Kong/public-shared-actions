@@ -1,6 +1,6 @@
 {
-  "name": "@pr-previews/validate",
-  "version": "4.0.0",
+  "name": "pr-previews-validator",
+  "version": "5.0.0",
   "description": "Checks all package.json files in repository and throws error is detects any dependency on PR preview package",
   "main": "index.js",
   "repository": {

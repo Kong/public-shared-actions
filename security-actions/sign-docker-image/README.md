@@ -114,19 +114,23 @@ COSIGN_REPOSITORY=kong/notary cosign verify -a repo="Kong/kong-ee" -a workflow="
       name: Sign Docker Image
       runs-on: ubuntu-22.04
       env:
-        PRERELEASE_IMAGE: kongcloud/security-test-repo-pub:ubuntu_23_10 # multi arch image input
+        IMAGE: ubuntu:latest # multi arch image input
       steps:
 
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
 
       - name: Install regctl
-        uses: regclient/actions/regctl-installer@main
+        uses: regclient/actions/regctl-installer@<SHA>
+
+      - name: Login to Image registry
+
+      - name: Login to Signature registry (optional)
 
       - name: Parse Image Manifest Digest
         id: image_manifest_metadata
         run: |
           manifest_list_exists="$(
-            if regctl manifest get "${PRERELEASE_IMAGE}" --format raw-body --require-list -v panic &> /dev/null; then
+            if regctl manifest get "${IMAGE}" --format raw-body --require-list -v panic &> /dev/null; then
               echo true
             else
               echo false
@@ -135,7 +139,7 @@ COSIGN_REPOSITORY=kong/notary cosign verify -a repo="Kong/kong-ee" -a workflow="
           echo "manifest_list_exists=$manifest_list_exists"
           echo "manifest_list_exists=$manifest_list_exists" >> $GITHUB_OUTPUT
 
-          manifest_sha="$(regctl image digest "${PRERELEASE_IMAGE}")"
+          manifest_sha="$(regctl image digest "${IMAGE}")"
 
           echo "manifest_sha=$manifest_sha"
           echo "manifest_sha=$manifest_sha" >> $GITHUB_OUTPUT
@@ -145,11 +149,9 @@ COSIGN_REPOSITORY=kong/notary cosign verify -a repo="Kong/kong-ee" -a workflow="
         if: steps.image_manifest_metadata.outputs.manifest_sha != ''
         uses: Kong/public-shared-actions/security-actions/sign-docker-image@main
         with:
-          cosign_output_prefix: ubuntu-23-10
-          signature_registry: kongcloud/security-test-repo-sig-pub # overrides repository to push image signatures; defaults to image repository
-          tags: ${{ env.PRERELEASE_IMAGE }}
+          cosign_output_prefix: <artifact-prefix>
+          signature_registry: <alternative repository store for signatures> # overrides repository to push image signatures; defaults to image repository
+          tags: ${{ env.IMAGE }}
           image_digest: ${{ steps.image_manifest_metadata.outputs.manifest_sha }}
           local_save_cosign_assets: true
-          registry_username: ${{ secrets.GHA_DOCKERHUB_PUSH_USER }}
-          registry_password: ${{ secrets.GHA_KONG_ORG_DOCKERHUB_PUSH_TOKEN }}
 ```

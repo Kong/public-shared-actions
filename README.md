@@ -4,15 +4,45 @@ Shared actions available to both public and private repositories
 ## Usage
   
 ```yaml
-- uses: Kong/public-shared-actions/<action-name>@<tag>
+- uses: Kong/public-shared-actions/<action-name>@<SHA>
 ```
 
 For example:
   
 ```yaml
-- uses:  Kong/public-shared-actions/code-build-actions/build-js-sdk@v1.6.0
+- uses:  Kong/public-shared-actions/code-build-actions/build-js-sdk@a18abf762d6e2444bcbfd20de70451ea1e3bc1b1 # v4.0.1
 ```
 
+## How to keep Public Shared Action dependencies up-to-date in downstream workflows
+The `public-shared-actions` (PSA) repository is a monorepo that hosts multiple GitHub Shared Actions, each with its own release. Updating PSA references in downstream workflows is a manual and often delayed process, leading to inconsistencies and slow adoption of changes. Since each shared action can have its own GitHub release, managing dependencies at the action level is essential. To address this, centralized dependency management needs to be introduced to automate across repositories by raising pull requests whenever a shared action is released, solving both timeliness and consistency challenges at scale.
+
+### Using Renovate dependency manager
+To ensure downstream workflows can get timely automated updates on releases of public shared actions, [Renovate](https://github.com/renovatebot/renovate) can be leveraged.
+
+The [Public Shared Renovate](https://github.com/Kong/public-shared-renovate) config provides a centralized and reusable Renovate [configuration](https://github.com/Kong/public-shared-renovate/blob/main/github-actions.json) tailored for managing release updates of `Kong/public-shared-actions`. The shared renovate config for PSA can detect and updates action references in GitHub workflow files, supporting both versioned tags (e.g., `@v2.8.0`) and pinned digests (e.g., `@sha256:... # v2.8.0`).
+
+**Usage**
+- **Latest Version of the Shared Config**  
+To use the latest version of the shared config from `Kong/public-shared-renovate`, add the following to the top of your `renovate.json` or `renovate-config.json` file:
+
+```yaml
+{
+  "extends": [
+    "github>Kong/public-shared-renovate:github-actions"
+  ]
+}
+```
+
+- **Specific Release Version**
+To pin Renovate to a specific version of the shared config (e.g., 1.6.0), use:
+
+```yaml
+{
+  "extends": [
+    "github>Kong/public-shared-renovate:github-actions#1.6.0"
+  ]
+}
+```
 
 # Setting Up Lefthook for Commit Message Verification
 

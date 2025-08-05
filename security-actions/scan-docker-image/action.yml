@@ -80,10 +80,10 @@ outputs:
     value: ${{ steps.meta.outputs.cis_json_file }}
   grype-json-report:
     description: 'vulnerability json report'
-    value: ${{ steps.meta.outputs.grype_json_report }}
+    value: ${{ steps.meta.outputs.grype_json_file }}
   grype-sarif-report:
     description: 'vulnerability sarif report'
-    value: ${{ steps.meta.outputs.grype_sarif_report }}
+    value: ${{ steps.meta.outputs.grype_sarif_file }}
   sbom-spdx-report:
     description: 'SBOM spdx report'
     value: ${{ steps.meta.outputs.sbom_spdx_file }}
@@ -106,7 +106,7 @@ runs:
 
     # Must upload artifact for output file parameter to have effect
     - name: Generate SPDX SBOM Using Syft
-      uses: anchore/sbom-action@55dc4ee22412511ee8c3142cbea40418e6cec693 # v0.17.8
+      uses: anchore/sbom-action@cee1b8e05ae5b2593a75e197229729eabaa9f8ec # v0.20.2
       id: sbom_spdx
       with:
         config: ${{ inputs.config }}
@@ -122,7 +122,7 @@ runs:
         github-token: ${{ inputs.github-token }}
 
     - name: Generate CycloneDX SBOM Using Syft
-      uses: anchore/sbom-action@55dc4ee22412511ee8c3142cbea40418e6cec693 # v0.17.8
+      uses: anchore/sbom-action@cee1b8e05ae5b2593a75e197229729eabaa9f8ec # v0.20.2
       id: sbom_cyclonedx
       with:
         config: ${{ inputs.config }}
@@ -138,14 +138,26 @@ runs:
         github-token: ${{ inputs.github-token }}
 
     - name: Check SBOM files existence
-      uses: andstor/file-existence-action@076e0072799f4942c8bc574a82233e1e4d13e9d6 # v3
       id: sbom_report
-      with:
-        files: "${{ steps.meta.outputs.sbom_spdx_file }}, ${{ steps.meta.outputs.sbom_cyclonedx_file }}"
-        fail: true
+      shell: bash
+      run: |
+        echo "::group::Check for SBOM files existence"
+        spdx_file=${{ steps.meta.outputs.sbom_spdx_file }}
+        cyclonedx_file=${{ steps.meta.outputs.sbom_cyclonedx_file }}
+        if [[ -f "${spdx_file}" ]] && [[ -f "${cyclonedx_file}" ]]; then
+          echo "SPDX and CYCLONEDX SBOM files exist"
+          echo "files_exists=true" >> $GITHUB_OUTPUT
+        else
+          echo "::error::SBOM report files missing"
+          echo "files_exists=false" >> $GITHUB_OUTPUT
+          exit 1
+        fi
+        echo "::endgroup::"
     
-    - name: Download Grype
-      uses: anchore/scan-action/download-grype@64a33b277ea7a1215a3c142735a1091341939ff5 # v4.1.2
+    - name: Download Grype binary
+      shell: bash
+      run: |
+        curl -sSfL https://raw.githubusercontent.com/anchore/grype/main/install.sh | sh -s -- -b /usr/local/bin v0.96.1
 
     # Skip Cache Restoration: If skip_grype_db_cache is true, skip the restoration of the cache.
     # Check for any existing cache to reuse
@@ -223,7 +235,7 @@ runs:
     # Grype is invoked first time ever 
     # Don't fail during report generation
     - name: Vulnerability analysis of SBOM
-      uses: anchore/scan-action@64a33b277ea7a1215a3c142735a1091341939ff5 # v4.1.2
+      uses: anchore/scan-action@16910ac423301c6d30554b83a7f71ac6ff4a51f3 # v6.4.0
       id: grype_analysis_sarif
       if: ${{ steps.sbom_report.outputs.files_exists == 'true' && steps.grype_db_check_updates.outputs.GRYPE_DB_UPDATE_STATUS == 0 }}
       with:
@@ -238,7 +250,7 @@ runs:
     # Don't fail during report generation
     # JSON format will report  any ignored rules
     - name: Vulnerability analysis of SBOM
-      uses: anchore/scan-action@64a33b277ea7a1215a3c142735a1091341939ff5 # v4.1.2
+      uses: anchore/scan-action@16910ac423301c6d30554b83a7f71ac6ff4a51f3 # v6.4.0
       id: grype_analysis_json
       if: ${{ steps.sbom_report.outputs.files_exists == 'true' && steps.grype_db_check_updates.outputs.GRYPE_DB_UPDATE_STATUS == 0 }}
       with:
@@ -251,12 +263,22 @@ runs:
         GRYPE_DB_AUTO_UPDATE: false # Use grype db pointed from grype_db step above
 
     - name: Check vulnerability analysis report existence
-      if: ${{ steps.grype_db_check_updates.outputs.GRYPE_DB_UPDATE_STATUS == 0 }} # Run only if DB is available on the runner
-      uses: andstor/file-existence-action@076e0072799f4942c8bc574a82233e1e4d13e9d6 # v3
+      if: ${{ steps.grype_db_check_updates.outputs.GRYPE_DB_UPDATE_STATUS == 0 }}
       id: grype_report
-      with:
-        files: "${{ steps.grype_analysis_sarif.outputs.sarif }}, ${{ steps.grype_analysis_json.outputs.json }}"
-        fail: true
+      shell: bash
+      run: |
+        echo "::group::Check for Vulnerabibility report existence"
+        sarif_file=${{ steps.grype_analysis_sarif.outputs.sarif }}
+        json_file=${{ steps.grype_analysis_json.outputs.json }}
+        if [[ -f "${sarif_file}" ]] && [[ -f "${json_file}" ]]; then
+          echo "JSON and SARIF CVE files exist"
+          echo "files_exists=true" >> $GITHUB_OUTPUT
+        else
+          echo "::error::Grype report files missing"
+          echo "files_exists=false" >> $GITHUB_OUTPUT
+          exit 1
+        fi
+        echo "::endgroup::"
 
     # Grype CVE Action generates an ./results.sarif or ./results.report and no way to customize output file name
     # Hack to increase readability of grype artifacts attached to workflows and releases
@@ -290,7 +312,7 @@ runs:
     # Notify grype quick scan results in table format
     # Table format will supress any specified ignore rules
     - name: Inspect Vulnerability analysis of SBOM
-      uses: anchore/scan-action@64a33b277ea7a1215a3c142735a1091341939ff5 # v4.1.2
+      uses: anchore/scan-action@16910ac423301c6d30554b83a7f71ac6ff4a51f3 # v6.4.0
       if: ${{ steps.sbom_report.outputs.files_exists == 'true' && steps.grype_db_check_updates.outputs.GRYPE_DB_UPDATE_STATUS == 0  }}
       with:
         sbom: ${{ steps.meta.outputs.sbom_spdx_file }}
@@ -303,10 +325,18 @@ runs:
 
     - name: Check docker OCI tar existence
       if: ${{ steps.meta.outputs.scan_image != '' }}
-      uses: andstor/file-existence-action@076e0072799f4942c8bc574a82233e1e4d13e9d6 # v3
       id: docker_tar
-      with:
-        files: "${{ steps.meta.outputs.scan_image }}"
+      shell: bash
+      run: |
+        echo "::group::Check for Vulnerabibility report existence"
+        docker_archive_file=${{ steps.meta.outputs.scan_image }}
+        if [[ -f "${docker_archive_file}" ]]; then
+          echo "Docker Archive file exists"
+          echo "files_exists=true" >> $GITHUB_OUTPUT
+        else
+          echo "files_exists=false" >> $GITHUB_OUTPUT
+        fi
+        echo "::endgroup::"
 
     - name: Parse Trivy DB cache input
       if: inputs.trivy_db_cache != ''
@@ -324,7 +354,7 @@ runs:
     - name: Install Trivy
       shell: bash
       run: |
-        curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin v0.58.2
+        curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin v0.60.0
 
     - name: Checkout Trivy DB cache
       if: inputs.trivy_db_cache != ''
@@ -359,6 +389,7 @@ runs:
           ${{ steps.meta.outputs.scan_image }} \
           --compliance ${{ env.compliance }} \
           -f json \
+          --debug \
           --ignore-unfixed \
           -o ${{ steps.meta.outputs.cis_json_file }} \
           ${{ inputs.trivy_db_cache != '' && '--cache-dir ~/.cache/trivy --skip-db-update' || '' }}
@@ -375,6 +406,13 @@ runs:
           ${{ steps.meta.outputs.cis_json_file }}
         if-no-files-found: warn
 
+    # Hack: Force Trivy to use embedded compliance checks instead of expecting CIS yaml file on-disk when cache is populated/used across multiple runs
+    # Removes/clean trivy runtime generated policy/ and fanal/ folders from Cache folder
+    # Refer: https://github.com/aquasecurity/trivy/blob/main/pkg/compliance/spec/compliance.go#L98C17-L108
+    - name: Trivy Clean Scan Cache and Checks Bundle to use embedded checks and downloaded vuln-db
+      shell: bash
+      run: trivy clean --scan-cache --checks-bundle
+
     - name: Inspect docker-cis report
       if: ${{ inputs.skip_cis_scan != 'true' && steps.meta.outputs.scan_image != '' }}
       shell: bash
@@ -384,6 +422,7 @@ runs:
           --compliance ${{ env.compliance }} \
           -f table \
           --ignore-unfixed \
+          --debug \
           ${{ inputs.trivy_db_cache != '' && '--cache-dir ~/.cache/trivy --skip-db-update' || '' }}
       env:
         compliance: docker-cis-1.6.0

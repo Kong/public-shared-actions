@@ -1,6 +1,6 @@
 {
-  "name": "@slack-actions/workflow-notification",
-  "version": "4.0.1",
+  "name": "slack-workflow-notification",
+  "version": "5.0.0",
   "description": "Slack notification workflow",
   "main": "index.js",
   "repository": {

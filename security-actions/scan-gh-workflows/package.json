@@ -1,6 +1,6 @@
 {
-  "name": "@security-actions/scan-gh-workflows",
-  "version": "4.1.1",
+  "name": "scan-gh-workflows",
+  "version": "5.0.0",
   "description": "The package scans github actions and workflows for anti-patterns",
   "main": "index.js",
   "repository": {
@@ -10,5 +10,8 @@
   },
   "private": false,
   "author": "Kong, Inc.",
-  "license": "UNLICENSED"
+  "license": "UNLICENSED",
+  "scripts": {
+    "install-zizmor": "pip install -r requirements.txt"
+  }
 }
