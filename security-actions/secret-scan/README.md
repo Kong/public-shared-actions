@@ -21,8 +21,8 @@ inputs:
 
 ## Environment Variables
 You can set this optional environment variable in the workflow to control TruffleHog’s log verbosity:
-`0`	= Info (default)
-`5`	= Debug/Trace levels (higher = trace mode)
+`0` = Info (default)
+`5` = Debug/Trace levels (higher = trace mode)
 
 If `ACTIONS_STEP_DEBUG=true` in downstream workflow -> log level is set to `5`
 Else -> log level is set to `0`
