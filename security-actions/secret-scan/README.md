@@ -64,8 +64,3 @@ jobs:
           fail_on_findings: 'true'
 
 ```
-
-## Notes
-* The `base` and `head` inputs can be used to limit the scan range (ideal for PRs).
-* If `base` is left empty, TruffleHog scans the entire Git history.
-* TruffleHog verifies some secrets via in-tool logic; only verified and unknown results are reported (avoiding noisy false positives).
