@@ -68,6 +68,8 @@ importers:
 
   security-actions/scan-rust: {}
 
+  security-actions/secret-scan: {}
+
   security-actions/semgrep: {}
 
   security-actions/sign-docker-image: {}
