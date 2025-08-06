@@ -62,9 +62,7 @@ jobs:
           fail_on_findings: 'true'
         # env:
         #   ACTIONS_STEP_DEBUG: true
-
 ```
-
 
 ## Best Practices / Recommendation
 To ensure secrets do not make it into your protected branches (e.g., `main`, `master`), it is strongly recommended to enable **Branch Protection Rules** in your repository settings:
