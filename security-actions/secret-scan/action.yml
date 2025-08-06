@@ -1,0 +1,36 @@
+name: TruffleHog Secret Scanning
+description: Detect secrets in code using TruffleHog
+author: 'Kong'
+inputs:
+  base:
+    description: 'Start scanning from this base ref (e.g., main). If empty, scans full history.'
+    required: false
+    default: ''
+  head:
+    description: 'Scan commits until this ref (e.g., HEAD or branch name).'
+    required: false
+    default: HEAD
+  fail_on_findings:
+    description: 'Fail job if TruffleHog detects findings/secrets'
+    required: true
+    default: false
+
+runs:
+  using: 'composite'
+  steps:
+    - name: TruffleHog OSS 
+      id: trufflehog 
+      uses: trufflesecurity/trufflehog@a05cf0859455b5b16317ee22d809887a4043cdf0 # v3.90.2
+      continue-on-error: true 
+      with: 
+        path: ./ 
+        base: ${{ inputs.base }}
+        head: ${{ inputs.head }} 
+        extra_args: --log-level=2 --results=verified,unknown
+
+    - name: Fail on TruffleHog Findings
+      if: ${{ always() && inputs.fail_on_findings == 'true' && steps.trufflehog.outcome == 'failure' }}
+      shell: bash
+      run: |
+        echo "::error::TruffleHog detected secrets"
+        exit 1

@@ -1,0 +1,14 @@
+{
+  "name": "secret-scan",
+  "version": "1.0.0",
+  "description": "This action uses TrufflehogOSS action to scan all supported platforms on a specified scan path",
+  "main": "index.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Kong/public-shared-actions",
+    "directory": "security-actions/secret-scan"
+  },
+  "private": false,
+  "author": "Kong, Inc.",
+  "license": "UNLICENSED"
+}
