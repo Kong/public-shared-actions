@@ -11,8 +11,8 @@ runs:
   using: 'composite'
   steps:
     # Dynamically set TRUFFLEHOG_LOG_LEVEL based on env from downstream workflow
-    # - If the downstream workflow sets ACTIONS_STEP_DEBUG=true, use trace mode (5)
-    # - Else, use info level (0) for quieter logs
+    # - If the downstream workflow sets ACTIONS_STEP_DEBUG=true, uses trace mode (5)
+    # - Else, uses info level (0) for quieter logs
     - name: Set TRUFFLEHOG_LOG_LEVEL
       shell: bash
       run: |
