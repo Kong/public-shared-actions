@@ -68,6 +68,8 @@ importers:
 
   security-actions/scan-rust: {}
 
+  security-actions/secret-scan: {}
+
   security-actions/semgrep: {}
 
   security-actions/sign-docker-image: {}
@@ -206,7 +208,6 @@ packages:
 
   '@evilmartians/lefthook@1.10.10':
     resolution: {integrity: sha512-MRIA0zJzUBbmcbecI7QjI08li4ffpmZ6DeVydEiZSg0vSx5mElEMEjDEjkI60eSV0XOm7LRbQKz2rfW6NqH8Cw==}
-    cpu: [x64, arm64, ia32]
     os: [darwin, linux, win32]
     hasBin: true
 
