@@ -59,7 +59,7 @@ runs:
       run: $GITHUB_ACTION_PATH/scripts/cosign-metadata.sh
     
     - name: Install Cosign
-      uses: sigstore/cosign-installer@398d4b0eeef1380460a10c8013a76f728fb906ac
+      uses: sigstore/cosign-installer@398d4b0eeef1380460a10c8013a76f728fb906ac # v3.9.1
 
     - name: Check install!
       shell: bash
@@ -126,7 +126,7 @@ runs:
      # Upload Cosign Artifacts (public cert and signatures)
      # Uploaded artifact name must be unique across each workflow run / job
     - name: Upload Cosign Artifacts
-      uses: actions/upload-artifact@4cec3d8aa04e39d1a68397de0c4cd6fb9dce8ec1
+      uses: actions/upload-artifact@4cec3d8aa04e39d1a68397de0c4cd6fb9dce8ec1 # v4.6.1
       if: ${{ inputs.local_save_cosign_assets == 'true' && inputs.cosign_output_prefix != '' }}
       with:
         name: signed-image-assets-${{inputs.cosign_output_prefix}}
