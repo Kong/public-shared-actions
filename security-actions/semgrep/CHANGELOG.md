@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [4.0.3](https://github.com/Kong/public-shared-actions/compare/@security-actions/semgrep@4.0.2...@security-actions/semgrep@4.0.3) (2025-08-20)
+
+
+### ♻️ Chores
+
+* **deps:** pin GitHub Actions to commit SHA ([#290](https://github.com/Kong/public-shared-actions/issues/290)) ([a5cfb79](https://github.com/Kong/public-shared-actions/commit/a5cfb7971a69f2de94e2c01b333e9368d7f0f29e))
+
+
+
+
+
 ## [4.0.2](https://github.com/Kong/public-shared-actions/compare/@security-actions/semgrep@4.0.1...@security-actions/semgrep@4.0.2) (2025-04-16)
 
 
