@@ -103,8 +103,13 @@ jobs:
     - name: Push Retagged Images to ECR
       run: |
         docker pull $IMAGE
-        for tag in $TAGS; do
-          regctl -v debug image copy ${IMAGE} $tag
+        for tag in ${TAGS}; do
+          if regctl manifest head "${tag}" >/dev/null 2>&1; then
+            echo "Tag exists in ECR, skipping: ${tag}"
+          else
+            echo "Pushing missing tag: ${tag}"
+            regctl -v debug image copy "${IMAGE}" "${tag}"
+          fi
         done
       env:
         TAGS: ${{steps.meta.outputs.tags}}
