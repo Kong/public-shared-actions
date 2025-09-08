@@ -1,5 +1,5 @@
 name: SCA
-description: Generates SBOM and vulnerabiity report
+description: Generates SBOM and vulnerability report
 author: 'Kong'
 inputs:
   asset_prefix:
@@ -53,6 +53,14 @@ inputs:
     options:
       - 'true'
       - 'false'
+  codeql_upload:
+    description: 'Toggle to upload results to Github code scanning for public repositories'
+    required: false
+    default: false
+    type: choice
+    options:
+    - 'true'
+    - 'false'
 
 # Outputs to be consumed by others using this SCA action
 outputs:
@@ -159,7 +167,6 @@ runs:
     # Make a network call to anchore grype CDN.
     # This could fail when CDN is flaky for long periods of time.
     # Setting timeout for available avoids long stuck grype processes on workflow jobs
-
     ## Edgecase: Grype DB will never update if stale cache is found
     - name: Grype DB Check Updates
       id: grype_db
@@ -187,7 +194,7 @@ runs:
               echo "::warning ::${GRYPE_DB_UPDATE_MSG}"
             fi
           else
-            echo "::notice ::Grype DB is updated succesfully"
+            echo "::notice ::Grype DB is updated successfully"
           fi
         fi
         echo "::endgroup::"
@@ -204,7 +211,7 @@ runs:
     # Condition helps When this action is invoked more than once in the same workflow
     # Example: first workflow saves cache if updates available and second retries to save again even when latest updated cache is available and fails
     - name: Update Cache / Save Grype DB updates
-      if: ${{ inputs.skip_grype_db_cache != 'true' && steps.grype_db.outputs.GRYPE_DB_CHECK_UPDATE_STATUS != 0 && steps.grype_db.outputs.GRYPE_DB_UPDATE_STATUS }}
+      if: ${{ inputs.skip_grype_db_cache != 'true' && steps.grype_db.outputs.GRYPE_DB_CHECK_UPDATE_STATUS != 0 && steps.grype_db.outputs.GRYPE_DB_UPDATE_STATUS == 0 }}
       id: save_grype_db_cache_updates
       uses: actions/cache/save@d4323d4df104b026a6aa633fdb11d772146be0bf # v4.2.2
       with:
@@ -214,23 +221,25 @@ runs:
           cache_grype_${{ github.run_id }}_${{ github.run_attempt }}
 
     # Don't fail during report generation
-    - name: Vulnerability analysis of SBOM
+    - name: Vulnerability analysis of SBOM (SARIF format)
       uses: anchore/scan-action@16910ac423301c6d30554b83a7f71ac6ff4a51f3 # v6.4.0
       id: grype_analysis_sarif
-      if: ${{ steps.sbom_report.outputs.files_exists == 'true' && steps.grype_db_check_updates.outputs.GRYPE_DB_UPDATE_STATUS == 0 }} # Run only if DB is available on the runner }}
+      if: ${{ steps.sbom_report.outputs.files_exists == 'true' && steps.grype_db.outputs.GRYPE_DB_UPDATE_STATUS == 0 }} # Run only if DB is available on the runner }}
       with:
         sbom: ${{ steps.meta.outputs.sbom_spdx_file }}
         output-format: sarif
         fail-build: 'false'
         add-cpes-if-none: true
         severity-cutoff: ${{ steps.meta.outputs.global_severity_cutoff }}
+      env:
+        GRYPE_DB_AUTO_UPDATE: false
 
     # Don't fail during report generation
-    # JSON format will report  any ignored rules
-    - name: Vulnerability analysis of SBOM
+    # JSON format will report  any ignored rules  
+    - name: Vulnerability analysis of SBOM (JSON format)
       uses: anchore/scan-action@16910ac423301c6d30554b83a7f71ac6ff4a51f3 # v6.4.0
       id: grype_analysis_json
-      if: ${{ steps.sbom_report.outputs.files_exists == 'true' && steps.grype_db_check_updates.outputs.GRYPE_DB_UPDATE_STATUS == 0 }} # Run only if DB is available on the runner}}
+      if: ${{ steps.sbom_report.outputs.files_exists == 'true' && steps.grype_db.outputs.GRYPE_DB_UPDATE_STATUS == 0 }} # Run only if DB is available on the runner}}
       with:
         sbom: ${{ steps.meta.outputs.sbom_spdx_file }}
         output-format: json
@@ -241,11 +250,11 @@ runs:
         GRYPE_DB_AUTO_UPDATE: false # Use grype db cache from grype step above
 
     - name: Check vulnerability analysis report existence
-      if: ${{ steps.grype_db_check_updates.outputs.GRYPE_DB_UPDATE_STATUS == 0 }}
+      if: ${{ steps.grype_db.outputs.GRYPE_DB_UPDATE_STATUS == 0 }}
       id: grype_report
       shell: bash
       run: |
-        echo "::group::Check for Vulnerabibility report existence"
+        echo "::group::Check for Vulnerability report existence"
         sarif_file=${{ steps.grype_analysis_sarif.outputs.sarif }}
         json_file=${{ steps.grype_analysis_json.outputs.json }}
         if [[ -f "${sarif_file}" ]] && [[ -f "${json_file}" ]]; then
@@ -262,13 +271,23 @@ runs:
     # Hack to increase readability of grype artifacts attached to workflows and releases
     - name: Rename grype analysis report
       shell: bash
-      if: ${{ steps.grype_db_check_updates.outputs.GRYPE_DB_UPDATE_STATUS == 0 }} # Run only if DB is available on the runner
+      if: ${{ steps.grype_report.outputs.files_exists == 'true' }}
       run: |
         mv ${{ steps.grype_analysis_sarif.outputs.sarif }} ${{ steps.meta.outputs.grype_sarif_file }}
         mv ${{ steps.grype_analysis_json.outputs.json }} ${{ steps.meta.outputs.grype_json_file }}
 
-    - name: Upload grype analysis report
-      if: ${{ steps.grype_db_check_updates.outputs.GRYPE_DB_UPDATE_STATUS == 0 }} # Run only if DB is available on the runner
+    # Upload to GitHub Code Scanning for public repos
+    - name: Upload SARIF to GitHub Code Scanning (Public Repos)
+      if: ${{ inputs.codeql_upload == 'true' && steps.grype_analysis_sarif.conclusion == 'success' && github.event.repository.visibility == 'public' }}
+      continue-on-error: true
+      uses: github/codeql-action/upload-sarif@51f77329afa6477de8c49fc9c7046c15b9a4e79d # v3.29.7
+      with:
+        sarif_file: ${{ steps.meta.outputs.grype_sarif_file }}
+        category: sca
+
+    # Upload artifacts
+    - name: Upload grype SARIF analysis report
+      if: ${{ steps.grype_analysis_sarif.conclusion == 'success' && steps.grype_report.outputs.files_exists == 'true' }}
       uses: actions/upload-artifact@4cec3d8aa04e39d1a68397de0c4cd6fb9dce8ec1 # v4.6.1
       with:
         name: ${{ steps.meta.outputs.grype_sarif_file }}
@@ -276,9 +295,8 @@ runs:
           ${{ steps.meta.outputs.grype_sarif_file }}
         if-no-files-found: warn
 
-    # Upload grype cve reports
-    - name: Upload grype analysis report
-      if: ${{ steps.grype_db_check_updates.outputs.GRYPE_DB_UPDATE_STATUS == 0 }} # Run only if DB is available on the runner
+    - name: Upload grype JSON analysis report
+      if: ${{ steps.grype_analysis_json.conclusion == 'success' && steps.grype_report.outputs.files_exists == 'true' }}
       uses: actions/upload-artifact@4cec3d8aa04e39d1a68397de0c4cd6fb9dce8ec1 # v4.6.1
       with:
         name: ${{ steps.meta.outputs.grype_json_file }}
@@ -289,9 +307,9 @@ runs:
     # Fail based on severity and input parameters
     # Notify grype quick scan results in table format
     # Table format will supress any specified ignore rules
-    - name: Inspect Vulnerability analysis of SBOM
+    - name: Inspect Vulnerability analysis (Table format)
       uses: anchore/scan-action@16910ac423301c6d30554b83a7f71ac6ff4a51f3 # v6.4.0
-      if: ${{ steps.sbom_report.outputs.files_exists == 'true' && steps.grype_db_check_updates.outputs.GRYPE_DB_UPDATE_STATUS == 0 }}
+      if: ${{ steps.sbom_report.outputs.files_exists == 'true' && steps.grype_db.outputs.GRYPE_DB_UPDATE_STATUS == 0 }}
       with:
         sbom: ${{ steps.meta.outputs.sbom_spdx_file }}
         output-format: table
