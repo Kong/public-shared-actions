@@ -1,1 +1,1 @@
-semgrep==v1.114.0
+semgrep==v1.135.0

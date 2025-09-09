@@ -49,7 +49,7 @@ runs:
     
     # Don't fail during report generation
     - name: Vulnerability analysis of SBOM
-      uses: anchore/scan-action@4be3c24559b430723e51858969965e163b196957 # v3.3.5
+      uses: anchore/scan-action@1638637db639e0ade3258b51db49a9a137574c3e # v6.5.1
       continue-on-error: true
       id: scan
       with:
@@ -76,7 +76,7 @@ runs:
 
     - name: Publish SARIF to github workflow artifact
       if: always()
-      uses: actions/upload-artifact@4cec3d8aa04e39d1a68397de0c4cd6fb9dce8ec1 # v4.6.1
+      uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
       with:
         name: ${{ steps.meta.outputs.grype_sarif_file }}
         path: |
@@ -87,7 +87,7 @@ runs:
     # Notify grype quick scan results in table format
     # Table format will supress any specified ignore rules
     - name: Vulnerability Report
-      uses: anchore/scan-action@4be3c24559b430723e51858969965e163b196957 # v3.3.5
+      uses: anchore/scan-action@1638637db639e0ade3258b51db49a9a137574c3e # v6.5.1
       with:
         path: ${{ steps.meta.outputs.scan_dir }}
         output-format: table

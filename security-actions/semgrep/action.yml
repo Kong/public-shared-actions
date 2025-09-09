@@ -26,7 +26,7 @@ runs:
   using: 'composite'
   steps:
     - name: Install Python 
-      uses: actions/setup-python@3605726ffa6ef7750b99ff496e5b88248b414e26 # v4.9.0
+      uses: actions/setup-python@e797f83bcb11b83ae66e0230d6156d7c80228e7c # v6.0.0
       with:
         python-version: '3.12'
 
@@ -44,7 +44,7 @@ runs:
     # Upload grype cve reports
     - name: Upload Semgrep SARIF to Workflow
       if: always()
-      uses: actions/upload-artifact@4cec3d8aa04e39d1a68397de0c4cd6fb9dce8ec1 # v4.6.1
+      uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
       with:
         name: semgrep_sast.zip
         path: |
@@ -53,7 +53,7 @@ runs:
 
     - name: Upload SARIF to Github Code Scanning
       if: ${{ always() && inputs.codeql_upload == 'true' && github.event.repository.visibility == 'public' }}
-      uses: github/codeql-action/upload-sarif@5f8171a638ada777af81d42b55959a643bb29017
+      uses: github/codeql-action/upload-sarif@51f77329afa6477de8c49fc9c7046c15b9a4e79d # v3.29.7
       with:
         # Path to SARIF file relative to the root of the repository
         sarif_file: semgrep_${{github.sha}}.sarif
