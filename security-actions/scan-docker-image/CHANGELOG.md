@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [5.0.2](https://github.com/Kong/public-shared-actions/compare/scan-docker-image@5.0.1...scan-docker-image@5.0.2) (2025-09-09)
+
+
+### ♻️ Chores
+
+* **deps:** update PSA deps ([#296](https://github.com/Kong/public-shared-actions/issues/296)) ([72f8cd3](https://github.com/Kong/public-shared-actions/commit/72f8cd345ddaf10734bf8d4d4f6139892c1a4360))
+
+
+
+
+
 ## [5.0.1](https://github.com/Kong/public-shared-actions/compare/scan-docker-image@5.0.0...scan-docker-image@5.0.1) (2025-08-20)
 
 

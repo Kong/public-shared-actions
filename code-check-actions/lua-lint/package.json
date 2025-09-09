@@ -1,6 +1,6 @@
 {
   "name": "lua-lint",
-  "version": "5.0.1",
+  "version": "5.0.2",
   "description": "This action analyzes all changed lua files using [lunarmodules/luacheck](https://github.com/lunarmodules/luacheck)",
   "main": "index.js",
   "repository": {
