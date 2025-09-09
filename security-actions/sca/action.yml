@@ -98,7 +98,7 @@ runs:
 
     # Must upload artifact for output file parameter to have effect
     - name: Generate SPDX SBOM Using Syft
-      uses: anchore/sbom-action@55dc4ee22412511ee8c3142cbea40418e6cec693 # v0.17.8
+      uses: anchore/sbom-action@da167eac915b4e86f08b264dbdbc867b61be6f0c # v0.20.5
       id: sbom_spdx
       with:
         config: ${{ inputs.config }}
@@ -113,7 +113,7 @@ runs:
         github-token: ${{ inputs.github-token }}
 
     - name: Generate CycloneDX SBOM Using Syft
-      uses: anchore/sbom-action@55dc4ee22412511ee8c3142cbea40418e6cec693 # v0.17.8
+      uses: anchore/sbom-action@da167eac915b4e86f08b264dbdbc867b61be6f0c # v0.20.5
       id: sbom_cyclonedx
       with:
         config: ${{ inputs.config }}
