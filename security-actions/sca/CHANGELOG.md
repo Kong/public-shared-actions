@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [5.1.0](https://github.com/Kong/public-shared-actions/compare/sca@5.0.1...sca@5.1.0) (2025-09-09)
+
+
+### ✨ Features
+
+* **sca:** unify SCA and scan-rust actions into single  action ([#295](https://github.com/Kong/public-shared-actions/issues/295)) ([4bec0c8](https://github.com/Kong/public-shared-actions/commit/4bec0c8a25065833f7ab65e9e9bcb6a9a054832c))
+
+
+
+
+
 ## [5.0.1](https://github.com/Kong/public-shared-actions/compare/sca@5.0.0...sca@5.0.1) (2025-08-20)
 
 
