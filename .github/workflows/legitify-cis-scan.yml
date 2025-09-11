@@ -26,7 +26,7 @@ jobs:
         uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
 
       - name: Run Legitify CIS Scan
-        uses: ./security-actions/scan-cis
+        uses: ./security-actions/scan-gh-cis
         with:
           github_token: ${{ secrets.PAT-UPDATE-TBD }}
           fail_on_findings: 'false'  
