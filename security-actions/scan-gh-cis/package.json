@@ -1,0 +1,14 @@
+{
+  "name": "scan-gh-cis",
+  "version": "1.0.0",
+  "description": "Run CIS compliance scanning with report generation and artifact upload",
+  "main": "action.yml",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Kong/public-shared-actions",
+    "directory": "security-actions/scan-gh-cis"
+  },
+  "private": false,
+  "author": "Kong, Inc.",
+  "license": "UNLICENSED"
+}

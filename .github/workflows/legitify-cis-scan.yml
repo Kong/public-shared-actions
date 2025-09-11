@@ -1,0 +1,34 @@
+name: CIS GH Legitify Compliance Scan
+
+on:
+  pull_request: {}
+  push:
+    branches: 
+    - master
+    - main
+  workflow_dispatch: {}
+
+
+permissions:
+  contents: read
+  discussions: read
+  issues: read
+  pull-requests: read
+  security-events: write
+
+jobs:
+  cis-compliance-scan:
+    name: CIS Compliance Scan
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+
+      - name: Run Legitify CIS Scan
+        uses: ./security-actions/scan-cis
+        with:
+          github_token: ${{ secrets.PAT-UPDATE-TBD }}
+          fail_on_findings: 'false'  
+          upload_code_scanning: 'true'
+          repositories: "Kong/insomnia"

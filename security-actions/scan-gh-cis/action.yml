@@ -1,0 +1,99 @@
+name: 'Legitify CIS GitHub Scan'
+description: 'Run Legitify CIS compliance scan on GitHub repositories'
+author: 'Kong'
+
+inputs:
+  fail_on_findings:
+    description: 'Fail job if Legitify detects CIS compliance issues'
+    required: false
+    default: 'false'
+  upload_code_scanning:
+    description: 'Upload results to GitHub Code Scanning'
+    required: false
+    default: 'true'
+  scorecard:
+    description: 'Enable OpenSSF Scorecard integration'
+    required: false
+    default: 'no'
+  repositories:
+    description: 'Comma-separated list of repositories to scan (defaults to current repository)'
+    required: false
+    default: ''
+  artifact_name:
+    description: 'Name for the artifact containing scan results'
+    required: false
+    default: 'legitify-cis-scan-results'
+  github_token:
+    description: 'GitHub token with appropriate permissions for Legitify scan'
+    required: true
+
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Set debug logging for Legitify
+      shell: bash
+      run: |
+        if [[ "$ACTIONS_STEP_DEBUG" == "true" ]]; then
+          echo "LEGITIFY_DEBUG=true" >> $GITHUB_ENV
+          echo "::notice::Debug logging enabled for Legitify scan"
+        else
+          echo "LEGITIFY_DEBUG=false" >> $GITHUB_ENV
+        fi
+
+    - name: Run Legitify CIS Scan
+      id: legitify-scan
+      uses: Legit-Labs/legitify@002049404ef93b207048323fe996eb2330327031 # v1.0.11
+      continue-on-error: true
+      with:
+        github_token: ${{ inputs.github_token }}
+        upload_code_scanning: ${{ inputs.upload_code_scanning }}
+        scorecard: ${{ inputs.scorecard }}
+        repositories: ${{ inputs.repositories }}
+        artifact_name: ${{ inputs.artifact_name }}
+
+    - name: Check Legitify report existence
+      if: ${{ steps.legitify-scan.conclusion == 'success' }}
+      id: legitify_report
+      shell: bash
+      run: |
+        echo "::group::Check for Legitify report existence"
+        
+        # Debug: List all files in current directory
+        echo "Files in current directory:"
+        ls -la
+        
+        # Check for the specific SARIF file that Legitify generates
+        sarif_file="legitify-output.sarif"
+        if [[ -f "${sarif_file}" ]]; then
+          echo "SARIF report file exists: ${sarif_file}"
+          echo "files_exists=true" >> $GITHUB_OUTPUT
+          echo "sarif_file=${sarif_file}" >> $GITHUB_OUTPUT
+        else
+          echo "::warning::Legitify SARIF report file not found: ${sarif_file}"
+          echo "files_exists=false" >> $GITHUB_OUTPUT
+        fi
+        echo "::endgroup::"
+
+    # Upload artifacts
+    - name: Upload Legitify SARIF report
+      if: ${{ steps.legitify-scan.conclusion == 'success' && steps.legitify_report.outputs.files_exists == 'true' }}
+      uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+      with:
+        name: ${{ inputs.artifact_name }}
+        path: ${{ steps.legitify_report.outputs.sarif_file }}
+        if-no-files-found: warn
+
+    - name: Summary
+      if: always()
+      shell: bash
+      run: |
+        echo "## Legitify CIS Scan Summary" >> $GITHUB_STEP_SUMMARY
+        echo "**Repository scanned:** ${{ github.repository }}" >> $GITHUB_STEP_SUMMARY
+        echo "**Scan status:** ${{ steps.legitify-scan.outcome }}" >> $GITHUB_STEP_SUMMARY
+        echo "**Artifact name:** ${{ inputs.artifact_name }}" >> $GITHUB_STEP_SUMMARY
+        if [[ "${{ env.SCAN_FAILED }}" == "true" ]]; then
+          echo "**Result:** ⚠️ Compliance issues detected" >> $GITHUB_STEP_SUMMARY
+        else
+          echo "**Result:** ✅ No compliance issues found" >> $GITHUB_STEP_SUMMARY
+        fi
