@@ -133,6 +133,10 @@ permissions:
   trivy_db_cache_token:
     description: 'Token for accessing `trivy_db_cache`.'
     required: false
+  by_cve:
+    description: 'Specify whether to orient results by CVE rather than GHSA'
+    required: false
+    default: 'false'
 ```
 
 #### Output specification
@@ -256,8 +260,10 @@ jobs:
       uses: Kong/public-shared-actions/security-actions/scan-docker-image@main
       with:
         # Leverages trivy DB config from upstream mirror by default
+        # Results are organized by CVE IDs (Common Vulnerabilities and Exposures identifiers) when `by_cve` is set to true
         asset_prefix: kong-gateway-dev-linux-amd64
         image: ${{env.IMAGE}}@${{ steps.image_manifest_metadata.outputs.amd64_sha }}
+        by_cve: true 
 
     - name: Scan ARM64 Image digest
       if: steps.image_manifest_metadata.outputs.manifest_list_exists == 'true' && steps.image_manifest_metadata.outputs.arm64_sha != ''
@@ -267,5 +273,5 @@ jobs:
         asset_prefix: kong-gateway-dev-linux-arm64
         image: ${{env.IMAGE}}@${{ steps.image_manifest_metadata.outputs.arm64_sha }}
         trivy_db_cache: <owner/repo@ref>
-        trivy_db_cache_token: ${{ secrets.PAT }} 
+        trivy_db_cache_token: ${{ secrets.PAT }}
 ```
