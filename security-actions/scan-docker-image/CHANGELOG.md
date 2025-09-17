@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [5.1.0](https://github.com/Kong/public-shared-actions/compare/scan-docker-image@5.0.2...scan-docker-image@5.1.0) (2025-09-17)
+
+
+### ✨ Features
+
+* **scan-docker-image:** add by-cve flag to organise results by CVE ([#310](https://github.com/Kong/public-shared-actions/issues/310)) ([43a61ce](https://github.com/Kong/public-shared-actions/commit/43a61cef051b763a26057da4085e7f5e6adcad9d))
+
+
+
+
+
 ## [5.0.2](https://github.com/Kong/public-shared-actions/compare/scan-docker-image@5.0.1...scan-docker-image@5.0.2) (2025-09-09)
 
 
