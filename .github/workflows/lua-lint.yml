@@ -31,3 +31,17 @@ jobs:
       - uses: ./code-check-actions/lua-lint
         with:
           additional_args: '--no-default-config --config ${{env.TEST_REPOSITORY}}/.luacheckrc ${{env.TEST_REPOSITORY}}'
+
+  notify-slack:
+    name: Slack Notification
+    permissions: 
+      contents: read
+    needs: [test-lua-lint]
+    if: ${{ always() && github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+    uses: ./.github/workflows/workflow-notifications.yml
+    with:
+      workflow_name: "Luacheck Test Workflow"
+      job_status: ${{ contains(needs.*.result, 'failure') && 'failure' || contains(needs.*.result, 'success') && 'success' || 'failure' }}
+    secrets:
+      SLACK_WEBHOOK_URL_NOTIFY: ${{ secrets.SLACK_WEBHOOK_URL_NOTIFY_PUBLIC_SHARED_ACTIONS }}
+      SLACK_WEBHOOK_URL_ALERT: ${{ secrets.SLACK_WEBHOOK_URL_ALERT_PUBLIC_SHARED_ACTIONS }}

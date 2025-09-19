@@ -97,3 +97,17 @@ jobs:
       - name: Inspect download assets
         run: |
           ls -alR ${{ github.workspace }}/security-assets/sboms
+
+  notify-slack:
+    name: Slack Notification
+    permissions: 
+      contents: read
+    needs: [test-scan-docker-image, test-download-sbom]
+    if: ${{ always() && github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+    uses: ./.github/workflows/workflow-notifications.yml
+    with:
+      workflow_name: "Docker Image Scan Workflow"
+      job_status: ${{ contains(needs.*.result, 'failure') && 'failure' || contains(needs.*.result, 'success') && 'success' || 'failure' }}
+    secrets:
+      SLACK_WEBHOOK_URL_NOTIFY: ${{ secrets.SLACK_WEBHOOK_URL_NOTIFY_PUBLIC_SHARED_ACTIONS }}
+      SLACK_WEBHOOK_URL_ALERT: ${{ secrets.SLACK_WEBHOOK_URL_ALERT_PUBLIC_SHARED_ACTIONS }}
