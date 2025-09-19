@@ -40,6 +40,7 @@ jobs:
   ## TODO before merge: Run only on main and push event
   notify-slack:
     name: Slack Notification
+    permissions: {}
     needs: [test-sca-dir]
     # if: ${{ always() && github.event_name == 'push' && github.ref == 'refs/heads/main' }}
     if: ${{ always()  }} 

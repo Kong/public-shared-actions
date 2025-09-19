@@ -101,10 +101,11 @@ jobs:
   ## TODO before merge: Run only on main and push event
   notify-slack:
     name: Slack Notification
+    permissions: {}
     needs: [test-scan-docker-image, test-download-sbom]
     # if: ${{ always() && github.event_name == 'push' && github.ref == 'refs/heads/main' }}
     if: ${{ always()  }}
-    uses: ./.github/workflows/slack-notif-main.yml
+    uses: ./.github/workflows/workflow-notifications.yml
     with:
       workflow_name: "Docker Image Scan Workflow"
       job_status: ${{ contains(needs.*.result, 'failure') && 'failure' || contains(needs.*.result, 'success') && 'success' || 'failure' }}

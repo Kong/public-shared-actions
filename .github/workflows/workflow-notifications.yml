@@ -23,6 +23,8 @@ on:
 jobs:
   notify:
     name: Send Slack Notification
+    permissions:
+      contents: read
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
