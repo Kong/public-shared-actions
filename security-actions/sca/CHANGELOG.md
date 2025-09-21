@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [5.1.3](https://github.com/Kong/public-shared-actions/compare/sca@5.1.2...sca@5.1.3) (2025-09-21)
+
+
+### ♻️ Chores
+
+* **deps:** combine update dep versions ([#312](https://github.com/Kong/public-shared-actions/issues/312)) ([be84213](https://github.com/Kong/public-shared-actions/commit/be84213f82c250fcd4b6d89d6a26e08da4b32184))
+
+
+
+
+
 ## [5.1.2](https://github.com/Kong/public-shared-actions/compare/sca@5.1.1...sca@5.1.2) (2025-09-19)
 
 **Note:** Version bump only for package sca
