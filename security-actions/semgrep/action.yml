@@ -68,8 +68,13 @@ runs:
       shell: bash
       run: |
         echo "::group::Semgrep Findings"
-        echo "Semgrep Findings:"
-        cat semgrep_${{github.sha}}.txt
+        # Check if the file exists and is not empty before printing
+        if [ -s "semgrep_${{github.sha}}.txt" ]; then
+          echo "Semgrep Findings:"
+          cat "semgrep_${{github.sha}}.txt"
+        else
+          echo "No findings detected by Semgrep."
+        fi
         echo "::endgroup::"
 
     - name: Fail on findings
