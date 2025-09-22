@@ -1,4 +1,4 @@
-name: CIS GH Legitify Compliance Scan
+name: GitHub Configuration Scan
 
 on:
   schedule:
