@@ -16,7 +16,7 @@ A composite GitHub Action for running CIS (Center for Internet Security) complia
 
 ```yaml
 - name: Run CIS Compliance Scan
-  uses: Kong/public-shared-actions/security-actions/cis-scans@COMMIT-SHA
+  uses: Kong/public-shared-actions/security-actions/scan-gh-config@COMMIT-SHA
   with:
     github_token: ${{ secrets.CLASSIC_PAT }}
     repositories: ${{ github.repository }}
@@ -45,7 +45,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Run Legitify CIS Scan
-        uses: Kong/public-shared-actions/security-actions/cis-scans@COMMIT-SHA
+        uses: Kong/public-shared-actions/security-actions/scan-gh-config@COMMIT-SHA
         with:
           github_token: ${{ secrets.SECURITY_BOT_LEGITIFY_TOKEN }}
           repositories: "${{github.repository_owner}}/httpsnippet"

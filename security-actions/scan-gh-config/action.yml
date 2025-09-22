@@ -1,5 +1,5 @@
-name: 'CIS Scan'
-description: 'Run CIS compliance scan on Target repositories'
+name: GitHub Config Scan
+description: 'Scan GitHub repository and organization configurations for security compliance and best practices'
 author: 'Kong'
 
 inputs:
