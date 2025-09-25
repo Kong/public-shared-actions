@@ -3,12 +3,12 @@ name: SCA Docker Test
 on:
   pull_request:
     branches:
-    - main
+      - main
   push:
     branches:
-    - main
+      - main
     tags:
-    - '*'
+      - "*"
   workflow_dispatch: {}
 
 jobs:
@@ -24,59 +24,62 @@ jobs:
     env:
       IMAGE: kong/kong-gateway-dev:latest #particular reason for the choice of image: test multi arch image sbom
     steps:
-    - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
 
-    - name: Install regctl
-      uses: regclient/actions/regctl-installer@ce5fd131e371ffcdd7508b478cb223b3511a9183
+      - name: Install regctl
+        uses: regclient/actions/regctl-installer@ce5fd131e371ffcdd7508b478cb223b3511a9183
 
-    - name: Login to DockerHub
-      if: success()
-      uses: docker/login-action@184bdaa0721073962dff0199f1fb9940f07167d1 # v3.5.0
-      with:
-        username: ${{ secrets.GHA_DOCKERHUB_PULL_USER }}
-        password: ${{ secrets.GHA_KONG_ORG_DOCKERHUB_PUBLIC_TOKEN }}
+      - name: Login to DockerHub
+        if: success()
+        uses: docker/login-action@184bdaa0721073962dff0199f1fb9940f07167d1 # v3.5.0
+        with:
+          username: ${{ secrets.GHA_DOCKERHUB_PULL_USER }}
+          password: ${{ secrets.GHA_KONG_ORG_DOCKERHUB_PUBLIC_TOKEN }}
 
-    - name: Parse Architecture Specific Image Manifest Digests
-      id: image_manifest_metadata
-      run: |
-        manifest_list_exists="$(
-          if regctl manifest get "${IMAGE}" --format raw-body --require-list -v panic &> /dev/null; then
-            echo true
-          else
-            echo false
-          fi
-        )"
-        echo "manifest_list_exists=$manifest_list_exists"
-        echo "manifest_list_exists=$manifest_list_exists" >> $GITHUB_OUTPUT
+      - name: Parse Architecture Specific Image Manifest Digests
+        id: image_manifest_metadata
+        run: |
+          manifest_list_exists="$(
+            if regctl manifest get "${IMAGE}" --format raw-body --require-list -v panic &> /dev/null; then
+              echo true
+            else
+              echo false
+            fi
+          )"
+          echo "manifest_list_exists=$manifest_list_exists"
+          echo "manifest_list_exists=$manifest_list_exists" >> $GITHUB_OUTPUT
 
-        amd64_sha="$(regctl image digest "${IMAGE}" --platform linux/amd64 || echo '')"
-        arm64_sha="$(regctl image digest "${IMAGE}" --platform linux/arm64 || echo '')"
-        echo "amd64_sha=$amd64_sha"
-        echo "amd64_sha=$amd64_sha" >> $GITHUB_OUTPUT
-        echo "arm64_sha=$arm64_sha"
-        echo "arm64_sha=$arm64_sha" >> $GITHUB_OUTPUT
+          amd64_sha="$(regctl image digest "${IMAGE}" --platform linux/amd64 || echo '')"
+          arm64_sha="$(regctl image digest "${IMAGE}" --platform linux/arm64 || echo '')"
+          echo "amd64_sha=$amd64_sha"
+          echo "amd64_sha=$amd64_sha" >> $GITHUB_OUTPUT
+          echo "arm64_sha=$arm64_sha"
+          echo "arm64_sha=$arm64_sha" >> $GITHUB_OUTPUT
 
-    - name: Scan AMD64 Image digest
-      id: sbom_action_amd64
-      if: steps.image_manifest_metadata.outputs.amd64_sha != ''
-      uses: ./security-actions/scan-docker-image
-      with:
-        asset_prefix: kong-gateway-dev-linux-amd64
-        image: ${{env.IMAGE}}@${{ steps.image_manifest_metadata.outputs.amd64_sha }}
-        skip_cis_scan: false
-        trivy_db_cache: Kong/trivy-db-mirror@master
-        trivy_db_cache_token: ${{ secrets.SECURITY_BOT_PSA_PAT }}
-        by_cve: true
+      - name: Scan AMD64 Image digest
+        id: sbom_action_amd64
+        if: steps.image_manifest_metadata.outputs.amd64_sha != ''
+        uses: ./security-actions/scan-docker-image
+        with:
+          asset_prefix: kong-gateway-dev-linux-amd64
+          image: ${{env.IMAGE}}@${{ steps.image_manifest_metadata.outputs.amd64_sha }}
+          skip_cis_scan: false
+          trivy_db_cache: Kong/trivy-db-mirror@master
+          trivy_db_cache_token: ${{ secrets.SECURITY_BOT_PSA_PAT }}
+          grype_db_cache: Kong/grype-db-mirror@main
+          grype_db_cache_token: ${{ secrets.SECURITY_BOT_PSA_PAT }}
+          by_cve: true
 
-    - name: Scan ARM64 Image digest
-      if: steps.image_manifest_metadata.outputs.manifest_list_exists == 'true' && steps.image_manifest_metadata.outputs.arm64_sha != ''
-      id: sbom_action_arm64
-      uses: ./security-actions/scan-docker-image
-      with:
-        asset_prefix: test.kong-gateway-dev-linux-arm64
-        image: ${{env.IMAGE}}@${{ steps.image_manifest_metadata.outputs.arm64_sha }}
-        upload-sbom-release-assets: true
-        skip_cis_scan: false
+        # Should use git cache for grype DB due to AMD64 scan being run first
+      - name: Scan ARM64 Image digest
+        if: steps.image_manifest_metadata.outputs.manifest_list_exists == 'true' && steps.image_manifest_metadata.outputs.arm64_sha != ''
+        id: sbom_action_arm64
+        uses: ./security-actions/scan-docker-image
+        with:
+          asset_prefix: test.kong-gateway-dev-linux-arm64
+          image: ${{env.IMAGE}}@${{ steps.image_manifest_metadata.outputs.arm64_sha }}
+          upload-sbom-release-assets: true
+          skip_cis_scan: false
 
   test-download-sbom:
     if: ${{ github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository }}

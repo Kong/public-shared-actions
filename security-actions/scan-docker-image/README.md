@@ -6,7 +6,7 @@
   - Tools used:
     - [syft](https://github.com/anchore/syft) generates a Software Bill of Materials (SBOM)
     - [grype](https://github.com/anchore/grype) vulnerability scanner for CVEs in container images
-    - [trivy](https://github.com/aquasecurity/trivy)  compliance scanner for docker-cis benchmarks
+    - [trivy](https://github.com/aquasecurity/trivy) compliance scanner for docker-cis benchmarks
 
 ### Scan Docker Image
 
@@ -33,12 +33,12 @@
     - Helps developers better prioritize cve's by suppressing false positives and bypass cve's during hot fixes using break glass strategy
 
 #### Trivy Compliance Scanner Working
+
 - By default, trivy scans the docker image against `docker-cis-1.6.0` benchmarks
 - Trivy compliance scanner leverages `trivy-db` for CIS benchmarks
-  - By default, it downloads the latest DB from upstream `mirror.gcr.io/aquasec/trivy-db`  pull through cache mirror
-  - __[_OPTIONAL_]__  For more availability of `trivy-db` (**i.e bypass rate limiting issues**), refer [how to access cached trivy db for running CIS benchmarks](https://github.com/Kong/trivy-db-mirror?tab=readme-ov-file#how-to-consume-cached-trivy-db-when-invoking-public-shared-actions)
-- Trivy complaince scanner  **DOESNOT** scan for any vulnerabilities in the container image. This process is handled by [grype](https://github.com/anchore/grype)
-
+  - By default, it downloads the latest DB from upstream `mirror.gcr.io/aquasec/trivy-db` pull through cache mirror
+  - **[_OPTIONAL_]** For more availability of `trivy-db` (**i.e bypass rate limiting issues**), refer [how to access cached trivy db for running CIS benchmarks](https://github.com/Kong/trivy-db-mirror?tab=readme-ov-file#how-to-consume-cached-trivy-db-when-invoking-public-shared-actions)
+- Trivy complaince scanner **DOESNOT** scan for any vulnerabilities in the container image. This process is handled by [grype](https://github.com/anchore/grype)
 
 #### Input specification
 
@@ -57,16 +57,16 @@
 #### Global parameters
 
 ```yaml
-  global_severity_cutoff:
-    description: 'grype/trivy vulnerability severity cutoff'
-    options:
-    - 'negligible'
-    - 'low'
-    - 'medium'
-    - 'high'
-    - 'critical'
-  global_enforce_build_failure:
-    description: 'This will enforce the build failure regardless of `fail_build` external input parameter value for a specified `severity_cutoff`'
+global_severity_cutoff:
+  description: "grype/trivy vulnerability severity cutoff"
+  options:
+    - "negligible"
+    - "low"
+    - "medium"
+    - "high"
+    - "critical"
+global_enforce_build_failure:
+  description: "This will enforce the build failure regardless of `fail_build` external input parameter value for a specified `severity_cutoff`"
 ```
 
 ### Required Workflow Permissions
@@ -80,72 +80,78 @@ permissions:
 
 - Input `image` is **MANDATORY**
 
-- OCI tar balls / Docker archives (OCI compatible) are considered as input type  **Image**
+- OCI tar balls / Docker archives (OCI compatible) are considered as input type **Image**
 
 - Input `trivy_db_cache` and `trivy_db_cache_token` are **OPTIONAL**
   - Refer [how access cached trivy db for CIS benchmarks](https://github.com/Kong/trivy-db-mirror?tab=readme-ov-file#how-to-consume-cached-trivy-db-when-invoking-public-shared-actions)
 
 ```yaml
-  asset_prefix:
-    description: 'prefix for generated scan artifacts'
-    required: false
-    default: ''
-  image:
-    description: 'specify an image to be scanned. Specify registry credentials if the image is remote. Takes priority over dir and file'
-    required: 'false'
-    default: ''
-  tag:
-    description: 'specify a docker image tag / release tag / ref to be scanned'
-    required: 'false'
-    default: ''
-  registry_username:
-    description: 'docker username to login against private docker registry'
-    required: 'false'
-  registry_password:
-    description: 'docker password to login against private docker registry'
-    required: 'false'
-  config:
-    description: 'file path to syft custom configuration'
-    required: false
-  fail_build:
-    description: 'fail the build if the vulnerability is above the severity cutoff'
-    required: 'false'
-    default: 'false'
-    type: choice
-    options:
-    - 'true'
-    - 'false'
-  github-token:
-    description: "Authorized secret GitHub Personal Access Token. Defaults to github.token"
-    required: false
-    default: ${{ github.token }}
-  upload-sbom-release-assets:
-    description: 'specify to only upload sboms to GH release assets'
-    required: false
-    default: false
-    type: choice
-    options:
-    - 'true'
-    - 'false'
-  trivy_db_cache:
-    description: 'GitHub repository containing Trivy DB cache (format: owner/repo@ref). Database should be named `db.tar.gz` on the default branch.'
-    required: false
-  trivy_db_cache_token:
-    description: 'Token for accessing `trivy_db_cache`.'
-    required: false
-  by_cve:
-    description: 'Specify whether to orient results by CVE rather than GHSA'
-    required: false
-    default: 'false'
+asset_prefix:
+  description: "prefix for generated scan artifacts"
+  required: false
+  default: ""
+image:
+  description: "specify an image to be scanned. Specify registry credentials if the image is remote. Takes priority over dir and file"
+  required: "false"
+  default: ""
+tag:
+  description: "specify a docker image tag / release tag / ref to be scanned"
+  required: "false"
+  default: ""
+registry_username:
+  description: "docker username to login against private docker registry"
+  required: "false"
+registry_password:
+  description: "docker password to login against private docker registry"
+  required: "false"
+config:
+  description: "file path to syft custom configuration"
+  required: false
+fail_build:
+  description: "fail the build if the vulnerability is above the severity cutoff"
+  required: "false"
+  default: "false"
+  type: choice
+  options:
+    - "true"
+    - "false"
+github-token:
+  description: "Authorized secret GitHub Personal Access Token. Defaults to github.token"
+  required: false
+  default: ${{ github.token }}
+upload-sbom-release-assets:
+  description: "specify to only upload sboms to GH release assets"
+  required: false
+  default: false
+  type: choice
+  options:
+    - "true"
+    - "false"
+trivy_db_cache:
+  description: "GitHub repository containing Trivy DB cache (format: owner/repo@ref). Database should be named `db.tar.gz` on the default branch."
+  required: false
+trivy_db_cache_token:
+  description: "Token for accessing `trivy_db_cache`."
+  required: false
+by_cve:
+  description: "Specify whether to orient results by CVE rather than GHSA"
+  required: false
+  default: "false"
+grype_db_cache:
+  description: "GitHub repository containing Grype DB cache (format: owner/repo@ref). Database should be named `db_v*.tar.zst` on the default branch."
+  required: false
+grype_db_cache_token:
+  description: "Token for accessing `grype_db_cache`."
+  required: false
 ```
 
 #### Output specification
 
-- Generates sbom reports in **spdx.json** and **cyclonedx.xml** formats using *syft* on the inputs **image**
+- Generates sbom reports in **spdx.json** and **cyclonedx.xml** formats using _syft_ on the inputs **image**
 
-- Generates cve vulnerability analysis report based on the spdx sbom file using *grype*
+- Generates cve vulnerability analysis report based on the spdx sbom file using _grype_
 
-- Generates docker-cis analysis report using *trivy*
+- Generates docker-cis analysis report using _trivy_
 
 - Uploads all the generated ecurity assets as workflow artifacts and retained based on repo / org settings
 
@@ -154,16 +160,16 @@ permissions:
 #### Output parameters
 
 ```yaml
-    cis-json-report:
-      description: 'docker-cis json report'
-    grype-sarif-report:
-      description: 'vulnerability SARIF report'
-    grype-json-report:
-      description: 'vulnerability JSON report'
-    sbom-spdx-report:
-      description: 'SBOM spdx report'
-    sbom-cyclonedx-report:
-      description: 'SBOM cyclonedx report'
+cis-json-report:
+  description: "docker-cis json report"
+grype-sarif-report:
+  description: "vulnerability SARIF report"
+grype-json-report:
+  description: "vulnerability JSON report"
+sbom-spdx-report:
+  description: "SBOM spdx report"
+sbom-cyclonedx-report:
+  description: "SBOM cyclonedx report"
 ```
 
 ### Migration Strategy
@@ -207,12 +213,12 @@ name: SCA Docker Image Manifest
 on:
   pull_request:
     branches:
-    - main
+      - main
   push:
     branches:
-    - main
+      - main
     tags:
-    - '*'
+      - "*"
 
 jobs:
   sca-docker-image:
@@ -222,56 +228,56 @@ jobs:
     env:
       IMAGE: kong/kong-gateway-dev:latest # multi arch image input
     steps:
-    - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-    - name: Install regctl
-      uses: regclient/actions/regctl-installer@main
+      - name: Install regctl
+        uses: regclient/actions/regctl-installer@main
 
-    - name: Login to DockerHub
-      if: success()
-      uses: docker/login-action@v3
-      with:
-        username: ${{ secrets.GHA_DOCKERHUB_PULL_USER }}
-        password: ${{ secrets.GHA_KONG_ORG_DOCKERHUB_PUBLIC_TOKEN }}
+      - name: Login to DockerHub
+        if: success()
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.GHA_DOCKERHUB_PULL_USER }}
+          password: ${{ secrets.GHA_KONG_ORG_DOCKERHUB_PUBLIC_TOKEN }}
 
-    - name: Parse Architecture Specific Image Manifest Digests
-      id: image_manifest_metadata
-      run: |
-        manifest_list_exists="$(
-          if regctl manifest get "${IMAGE}" --format raw-body --require-list -v panic &> /dev/null; then
-            echo true
-          else
-            echo false
-          fi
-        )"
-        echo "manifest_list_exists=$manifest_list_exists"
-        echo "manifest_list_exists=$manifest_list_exists" >> $GITHUB_OUTPUT
+      - name: Parse Architecture Specific Image Manifest Digests
+        id: image_manifest_metadata
+        run: |
+          manifest_list_exists="$(
+            if regctl manifest get "${IMAGE}" --format raw-body --require-list -v panic &> /dev/null; then
+              echo true
+            else
+              echo false
+            fi
+          )"
+          echo "manifest_list_exists=$manifest_list_exists"
+          echo "manifest_list_exists=$manifest_list_exists" >> $GITHUB_OUTPUT
 
-        amd64_sha="$(regctl image digest "${IMAGE}" --platform linux/amd64 || echo '')"
-        arm64_sha="$(regctl image digest "${IMAGE}" --platform linux/arm64 || echo '')"
-        echo "amd64_sha=$amd64_sha"
-        echo "amd64_sha=$amd64_sha" >> $GITHUB_OUTPUT
-        echo "arm64_sha=$arm64_sha"
-        echo "arm64_sha=$arm64_sha" >> $GITHUB_OUTPUT
+          amd64_sha="$(regctl image digest "${IMAGE}" --platform linux/amd64 || echo '')"
+          arm64_sha="$(regctl image digest "${IMAGE}" --platform linux/arm64 || echo '')"
+          echo "amd64_sha=$amd64_sha"
+          echo "amd64_sha=$amd64_sha" >> $GITHUB_OUTPUT
+          echo "arm64_sha=$arm64_sha"
+          echo "arm64_sha=$arm64_sha" >> $GITHUB_OUTPUT
 
-    - name: Scan AMD64 Image digest
-      id: sbom_action_amd64
-      if: steps.image_manifest_metadata.outputs.amd64_sha != ''
-      uses: Kong/public-shared-actions/security-actions/scan-docker-image@main
-      with:
-        # Leverages trivy DB config from upstream mirror by default
-        # Results are organized by CVE IDs (Common Vulnerabilities and Exposures identifiers) when `by_cve` is set to true
-        asset_prefix: kong-gateway-dev-linux-amd64
-        image: ${{env.IMAGE}}@${{ steps.image_manifest_metadata.outputs.amd64_sha }}
-        by_cve: true 
+      - name: Scan AMD64 Image digest
+        id: sbom_action_amd64
+        if: steps.image_manifest_metadata.outputs.amd64_sha != ''
+        uses: Kong/public-shared-actions/security-actions/scan-docker-image@main
+        with:
+          # Leverages trivy DB config from upstream mirror by default
+          # Results are organized by CVE IDs (Common Vulnerabilities and Exposures identifiers) when `by_cve` is set to true
+          asset_prefix: kong-gateway-dev-linux-amd64
+          image: ${{env.IMAGE}}@${{ steps.image_manifest_metadata.outputs.amd64_sha }}
+          by_cve: true
 
-    - name: Scan ARM64 Image digest
-      if: steps.image_manifest_metadata.outputs.manifest_list_exists == 'true' && steps.image_manifest_metadata.outputs.arm64_sha != ''
-      id: sbom_action_arm64
-      uses: Kong/public-shared-actions/security-actions/scan-docker-image@main
-      with:
-        asset_prefix: kong-gateway-dev-linux-arm64
-        image: ${{env.IMAGE}}@${{ steps.image_manifest_metadata.outputs.arm64_sha }}
-        trivy_db_cache: <owner/repo@ref>
-        trivy_db_cache_token: ${{ secrets.PAT }}
+      - name: Scan ARM64 Image digest
+        if: steps.image_manifest_metadata.outputs.manifest_list_exists == 'true' && steps.image_manifest_metadata.outputs.arm64_sha != ''
+        id: sbom_action_arm64
+        uses: Kong/public-shared-actions/security-actions/scan-docker-image@main
+        with:
+          asset_prefix: kong-gateway-dev-linux-arm64
+          image: ${{env.IMAGE}}@${{ steps.image_manifest_metadata.outputs.arm64_sha }}
+          trivy_db_cache: <owner/repo@ref>
+          trivy_db_cache_token: ${{ secrets.PAT }}
 ```
