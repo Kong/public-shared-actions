@@ -3,6 +3,24 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [6.0.0](https://github.com/Kong/public-shared-actions/compare/scan-docker-image@5.1.1...scan-docker-image@6.0.0) (2025-09-26)
+
+
+### ✨ Features
+
+* **sca:** refactored grype cache ([#318](https://github.com/Kong/public-shared-actions/issues/318)) ([76168bc](https://github.com/Kong/public-shared-actions/commit/76168bc4c2baf05cf029dbd65d3c05973512b17f))
+
+
+### Breaking changes
+
+* **sca:** - Removes "force_grype_db_update" and "skip_grype_db_cache" input
+- Adds "grype_db_cache" and "grype_db_cache_token" input for private grype db mirror
+- Grype DB caching strategy: GH Cache -> Grype DB mirror (if specified) -> Grype upstream
+
+
+
+
+
 ## [5.1.1](https://github.com/Kong/public-shared-actions/compare/scan-docker-image@5.1.0...scan-docker-image@5.1.1) (2025-09-21)
 
 
