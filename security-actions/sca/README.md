@@ -49,16 +49,16 @@
 #### Global parameters
 
 ```yaml
-  global_severity_cutoff:
-    description: 'grype/trivy vulnerability severity cutoff'
-    options:
-    - 'negligible'
-    - 'low'
-    - 'medium'
-    - 'high'
-    - 'critical'
-  global_enforce_build_failure:
-    description: 'This will enforce the build failure regardless of `fail_build` external input parameter value for a specified `severity_cutoff`'
+global_severity_cutoff:
+  description: "grype/trivy vulnerability severity cutoff"
+  options:
+    - "negligible"
+    - "low"
+    - "medium"
+    - "high"
+    - "critical"
+global_enforce_build_failure:
+  description: "This will enforce the build failure regardless of `fail_build` external input parameter value for a specified `severity_cutoff`"
 ```
 
 ### Required Workflow Permissions
@@ -73,48 +73,54 @@ permissions:
 - Inputs **image / dir / file** are mutually exclusive. Any one input is mandatory
 
 ```yaml
-  asset_prefix:
-    description: 'prefix for generated scan artifacts'
-    required: false
-    default: ''
-  dir: 
-    description: 'Specify a directory to be scanned. This is mutually exclusive to file and image'
-    required: 'false'
-    default: ''
-  file:
-    description: 'Specify a file to be scanned. This is mutually exclusive to dir and image'
-    required: 'false'
-    default: ''
-  config:
-    description: 'file path to syft custom configuration'
-    required: false
-  fail_build:
-    description: 'fail the build if the vulnerability is above the severity cutoff'
-    required: 'false'
-    default: 'false'
-    type: choice
-    options:
-    - 'true'
-    - 'false'
-  github-token:
-    description: "Authorized secret GitHub Personal Access Token. Defaults to github.token"
-    required: false
-    default: ${{ github.token }}
-  upload-sbom-release-assets:
-    description: 'specify to only upload sboms to GH release assets.'
-    required: false
-    default: false
-    type: choice
-    options:
-    - 'true'
-    - 'false'
+asset_prefix:
+  description: "prefix for generated scan artifacts"
+  required: false
+  default: ""
+dir:
+  description: "Specify a directory to be scanned. This is mutually exclusive to file and image"
+  required: "false"
+  default: ""
+file:
+  description: "Specify a file to be scanned. This is mutually exclusive to dir and image"
+  required: "false"
+  default: ""
+config:
+  description: "file path to syft custom configuration"
+  required: false
+fail_build:
+  description: "fail the build if the vulnerability is above the severity cutoff"
+  required: "false"
+  default: "false"
+  type: choice
+  options:
+    - "true"
+    - "false"
+github-token:
+  description: "Authorized secret GitHub Personal Access Token. Defaults to github.token"
+  required: false
+  default: ${{ github.token }}
+upload-sbom-release-assets:
+  description: "specify to only upload sboms to GH release assets."
+  required: false
+  default: false
+  type: choice
+  options:
+    - "true"
+    - "false"
+grype_db_cache:
+  description: "GitHub repository containing Grype DB cache (format: owner/repo@ref). Database should be named `db_v*.tar.zst` on the default branch."
+  required: false
+grype_db_cache_token:
+  description: "Token for accessing `grype_db_cache`."
+  required: false
 ```
 
 #### Output specification
 
-- Generates sbom reports in **spdx.json** and **cyclonedx.xml** formats using *syft* on the inputs **image / dir / file**
+- Generates sbom reports in **spdx.json** and **cyclonedx.xml** formats using _syft_ on the inputs **image / dir / file**
 
-- Generates cve vulnerability analysis report based on the spdx sbom file using *grype*
+- Generates cve vulnerability analysis report based on the spdx sbom file using _grype_
 
 - Uploads all the generated security assets as workflow artifacts and retained based on repo / org settings
 
@@ -123,14 +129,14 @@ permissions:
 #### Output parameters
 
 ```yaml
-    grype-sarif-report:
-      description: 'vulnerability SARIF report'
-    grype-json-report:
-      description: 'vulnerability JSON report'  
-    sbom-spdx-report:
-      description: 'SBOM spdx report'
-    sbom-cyclonedx-report:
-      description: 'SBOM cyclonedx report'
+grype-sarif-report:
+  description: "vulnerability SARIF report"
+grype-json-report:
+  description: "vulnerability JSON report"
+sbom-spdx-report:
+  description: "SBOM spdx report"
+sbom-cyclonedx-report:
+  description: "SBOM cyclonedx report"
 ```
 
 ### Migration Strategy
@@ -153,7 +159,7 @@ We expect application teams to use the advanced configuration of ignore rules wi
 
 To bypass blocking builds during emergency releases/scenarios where CVE fix needs a lot of refactoring during a hotfix:
 
-#### Syft 
+#### Syft
 
 1. Generate a Syft [Override](https://github.com/anchore/syft?tab=readme-ov-file#configuration) configuration file
 2. [Select catalogers](https://github.com/anchore/syft?tab=readme-ov-file#package-cataloger-selection)
@@ -176,12 +182,12 @@ name: SCA Repository Scan
 on:
   pull_request:
     branches:
-    - main
+      - main
   push:
     branches:
-    - main
+      - main
     tags:
-    - '*'
+      - "*"
 
 jobs:
   sca:
@@ -193,13 +199,13 @@ jobs:
       pull-requests: write
     name: Repository Scan
     steps:
-        - uses: actions/checkout@v4
-        - name: Scan Repository
-          id: sca_repo
-          uses: Kong/public-shared-actions/security-actions/sca@main
-          with:
-            asset_prefix: <repo-name-slug> #output files prefix
-            dir: '.' # Path to directory where the repository is checked out
-            config: .syft.yaml # Custom config for overrides in repository root
-            fail_build: 'true' # Fail job if critical vulnerabilities are detected
+      - uses: actions/checkout@v4
+      - name: Scan Repository
+        id: sca_repo
+        uses: Kong/public-shared-actions/security-actions/sca@main
+        with:
+          asset_prefix: <repo-name-slug> #output files prefix
+          dir: "." # Path to directory where the repository is checked out
+          config: .syft.yaml # Custom config for overrides in repository root
+          fail_build: "true" # Fail job if critical vulnerabilities are detected
 ```
