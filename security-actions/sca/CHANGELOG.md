@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [6.0.1](https://github.com/Kong/public-shared-actions/compare/sca@6.0.0...sca@6.0.1) (2025-10-06)
+
+
+### 🐛 Bug Fixes
+
+* **sca:** grype db should be downloaded at least daily ([#324](https://github.com/Kong/public-shared-actions/issues/324)) ([e69fb00](https://github.com/Kong/public-shared-actions/commit/e69fb009f5f4a26f55c8658a7517b6892eba1327))
+
+
+
+
+
 # [6.0.0](https://github.com/Kong/public-shared-actions/compare/sca@5.1.3...sca@6.0.0) (2025-09-26)
 
 
