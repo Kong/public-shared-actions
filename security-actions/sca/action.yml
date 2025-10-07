@@ -302,7 +302,7 @@ runs:
     - name: Upload SARIF to GitHub Code Scanning (Public Repos)
       if: ${{ inputs.codeql_upload == 'true' && steps.grype_analysis_sarif.conclusion == 'success' && github.event.repository.visibility == 'public' }}
       continue-on-error: true
-      uses: github/codeql-action/upload-sarif@192325c86100d080feab897ff886c34abd4c83a3 # v3.30.3
+      uses: github/codeql-action/upload-sarif@e296a935590eb16afc0c0108289f68c87e2a89a5 # v4.30.7
       with:
         sarif_file: ${{ steps.meta.outputs.grype_sarif_file }}
         category: sca
