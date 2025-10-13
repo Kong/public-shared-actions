@@ -176,6 +176,11 @@ runs:
       env:
         grype: ${{ steps.grype.outputs.grype-path }}
 
+    - name: Get current date
+      id: date
+      shell: bash
+      run: echo "date=$(date +'%Y-%m-%d')" >> $GITHUB_OUTPUT
+
     # Explicitly check for Grype DB in Git Cache
     - name: Check Git Cache for Grype DB
       id: grype_db_git_cache
@@ -183,8 +188,9 @@ runs:
       with:
         # Grype cache files are stored in `~/.cache/grype/db` on Linux/macOS
         path: ~/.cache/grype/db
+        # Given the DB should not be less than 5 days old let's refetch it at least once per day
         key: |
-          cache_grype_db_v${{ steps.grype_metadata.outputs.grype_db_schema }}
+          cache_grype_db_v${{ steps.grype_metadata.outputs.grype_db_schema }}_${{ steps.date.outputs.date }}
 
     # Explicitly check for Grype DB in specified mirror
     - name: Parse Grype DB cache input
