@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [6.0.1](https://github.com/Kong/public-shared-actions/compare/scan-docker-image@6.0.0...scan-docker-image@6.0.1) (2025-10-13)
+
+
+### 🐛 Bug Fixes
+
+* **scan-docker-image:** grype DB should be downloaded at least daily ([#329](https://github.com/Kong/public-shared-actions/issues/329)) ([0d5de5a](https://github.com/Kong/public-shared-actions/commit/0d5de5a9f61eacf5724f60ffdda55d374379ad11))
+
+
+
+
+
 # [6.0.0](https://github.com/Kong/public-shared-actions/compare/scan-docker-image@5.1.1...scan-docker-image@6.0.0) (2025-09-26)
 
 
