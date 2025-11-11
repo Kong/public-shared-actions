@@ -1,0 +1,14 @@
+{
+  "name": "trigger-workflow-and-wait",
+  "version": "1.0.0",
+  "description": "This action triggers a workflow in another repository and waits for the result.",
+  "main": "index.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Kong/public-shared-actions",
+    "directory": "workflow-actions/trigger-workflow-and-wait"
+  },
+  "private": false,
+  "author": "Kong, Inc.",
+  "license": "UNLICENSED"
+}

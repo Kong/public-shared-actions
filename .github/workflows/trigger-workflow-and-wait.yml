@@ -1,0 +1,32 @@
+name: Trigger Workflow and Wait Test
+
+on:
+  pull_request:
+    branches:
+    - main
+  push:
+    branches:
+    - main
+    tags:
+    - '*'
+  workflow_dispatch: {}
+
+jobs:
+  test-trigger-workflow-and-wait:
+    permissions:
+      # required for all workflows
+      security-events: write
+      checks: write
+      pull-requests: write
+      # only required for workflows in private repositories
+      actions: write
+      contents: read
+    runs-on: ubuntu-latest
+    name: Rust code analysis and SCA checks
+    steps:
+      - uses: ./workflow-actions/trigger-workflow-and-wait
+        with:
+          owner: Kong
+          repo: public-shared-actions
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          workflow_file_name: trigger-workflow-and-wait-selftest.yml
