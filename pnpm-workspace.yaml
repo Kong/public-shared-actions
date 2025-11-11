@@ -5,3 +5,4 @@ packages:
   - pr-previews/**
   - security-actions/**
   - slack-actions/**
+  - workflow-actions/**

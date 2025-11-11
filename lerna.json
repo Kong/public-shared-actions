@@ -8,7 +8,8 @@
     "login-aws-cloud",
     "pr-previews/**",
     "security-actions/**",
-    "slack-actions/**"
+    "slack-actions/**",
+    "workflow-actions/**"
   ],
   "ignoreChanges": ["**/*.md"],
   "command": {
