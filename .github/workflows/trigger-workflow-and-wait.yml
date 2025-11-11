@@ -32,4 +32,4 @@ jobs:
           repo: public-shared-actions
           github_token: ${{ secrets.GITHUB_TOKEN }}
           workflow_file_name: trigger-workflow-and-wait-selftest.yml
-          ref: ${{ github.ref_name }}
+          ref: ${{ github.sha }}
