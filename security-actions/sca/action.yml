@@ -51,6 +51,14 @@ inputs:
   grype_db_cache_token:
     description: 'Token for accessing `grype_db_cache`.'
     required: false
+  force_cache_refresh:
+    description: 'Force ignoring cached Grype DB and re-import/update it'
+    required: false
+    default: 'false'
+    type: choice
+    options:
+      - 'true'
+      - 'false'
 
 # Outputs to be consumed by others using this SCA action
 outputs:
@@ -178,9 +186,76 @@ runs:
         key: |
           cache_grype_db_v${{ steps.grype_metadata.outputs.grype_db_schema }}_${{ steps.date.outputs.date }}
 
+    - name: Validate cached Grype DB
+      id: grype_db_cached_status
+      if: steps.grype_db_git_cache.outputs.cache-hit == 'true'
+      shell: bash
+      run: |
+        echo "::group::Validate cached Grype DB"
+        set +e
+        ${{ steps.grype_metadata.outputs.grype_cmd }} db status
+        status=$?
+        set -e
+        if [[ "$status" -ne 0 ]]; then
+          echo "Cached Grype DB is INVALID; will refetch."
+          echo "valid=false" >> $GITHUB_OUTPUT
+        else
+          echo "Cached Grype DB is valid."
+          echo "valid=true" >> $GITHUB_OUTPUT
+        fi
+        echo "::endgroup::"
+
+    - name: Compute effective Grype DB cache status
+      id: grype_db_effective_cache
+      shell: bash
+      run: |
+        echo "::group::Compute effective grype DB cache"
+        HIT="${{ steps.grype_db_git_cache.outputs.cache-hit }}"
+        VALID="${{ steps.grype_db_cached_status.outputs.valid }}"
+        FORCE="${{ inputs.force_cache_refresh }}"
+
+        if [[ "$FORCE" == "true" ]]; then
+          echo "Forcing Grype DB refresh; treating cache as miss/invalid."
+          echo "hit=false" >> $GITHUB_OUTPUT
+          echo "valid=false" >> $GITHUB_OUTPUT
+          exit 0
+        fi
+
+        if [[ "$HIT" == "true" ]]; then
+          echo "hit=true" >> $GITHUB_OUTPUT
+        else
+          echo "hit=false" >> $GITHUB_OUTPUT
+        fi
+
+        if [[ "$VALID" == "true" ]]; then
+          echo "valid=true" >> $GITHUB_OUTPUT
+        else
+          echo "valid=false" >> $GITHUB_OUTPUT
+        fi
+        echo "::endgroup::"
+
+    - name: List cache contents
+      id: grype_cache_dir
+      shell: bash
+      run: |
+        echo "::group::List cache contents"
+        ls -laR ~/.cache/grype/db
+        echo "::endgroup::"
+
+    - name: Setup Grype DB from cache repository
+      if: (steps.grype_db_effective_cache.outputs.hit != 'true' || steps.grype_db_effective_cache.outputs.valid != 'true') && inputs.grype_db_cache != ''
+      shell: bash
+      run: |
+        set -euo pipefail
+        # Import Grype DB
+        # Expected to be recent and kept up-to-date every 12 hours for specific schema
+        ${{steps.grype_metadata.outputs.grype_cmd}} db import grype-db-cache/db/db_v${{ steps.grype_metadata.outputs.grype_db_schema }}.tar.zst
+        rm -rf grype-db-cache
+        ${{steps.grype_metadata.outputs.grype_cmd}} db status
+
      # Explicitly check for Grype DB in specified mirror
     - name: Parse Grype DB cache input
-      if: steps.grype_db_git_cache.outputs.cache-hit != 'true' && inputs.grype_db_cache != ''
+      if: (steps.grype_db_effective_cache.outputs.hit != 'true' || steps.grype_db_edffective_cache.outputs.valid != 'true') && inputs.grype_db_cache != ''
       shell: bash
       id: parse_grype_cache
       run: |
@@ -190,7 +265,7 @@ runs:
         echo "ref=${REF}" >> $GITHUB_OUTPUT
 
     - name: Checkout Grype DB cache Repo
-      if: steps.grype_db_git_cache.outputs.cache-hit != 'true' && inputs.grype_db_cache != ''
+      if: (steps.grype_db_effective_cache.outputs.hit != 'true'  || steps.grype_db_effective_cache.outputs.valid != 'true') && inputs.grype_db_cache != ''
       uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
       with:
         repository: ${{ steps.parse_grype_cache.outputs.repository }}
@@ -199,22 +274,27 @@ runs:
         token: ${{ inputs.grype_db_cache_token }}
 
     - name: Setup Grype DB from cache repository
-      if: steps.grype_db_git_cache.outputs.cache-hit != 'true' && inputs.grype_db_cache != ''
+      if: (steps.grype_db_effective_cache.outputs.hit != 'true' || steps.grype_db_effective_cache.outputs.valid != 'true') && inputs.grype_db_cache != ''
       shell: bash
       run: |
+        set -euo pipefail
         # Import Grype DB
         # Expected to be recent and kept up-to-date every 12 hours for specific schema
         ${{steps.grype_metadata.outputs.grype_cmd}} db import grype-db-cache/db/db_v${{ steps.grype_metadata.outputs.grype_db_schema }}.tar.zst
         rm -rf grype-db-cache
+        ${{steps.grype_metadata.outputs.grype_cmd}} db status
 
     # Default: Grype DB update from upstream
     - name: Grype DB Update from upstream
-      if: steps.grype_db_git_cache.outputs.cache-hit != 'true' && inputs.grype_db_cache == ''
+      if: (steps.grype_db_effective_cache.outputs.hit != 'true' || steps.grype_db_effective_cache.outputs.valid != 'true') && inputs.grype_db_cache == ''
       id: grype_db_update
       shell: bash
       run: |
         echo "::group::Update Grype DB"
-        ${{steps.grype_metadata.outputs.grype_cmd}} db update -vv || true
+        set -euo pipefail
+        ${{steps.grype_metadata.outputs.grype_cmd}} db update -vv
+        # Force a DB check to ensure we don't cache an invalid DB
+        ${{ steps.grype_metadata.outputs.grype_cmd }} db status
         echo "::endgroup::"
 
     - name: Check Grype DB Status
@@ -222,8 +302,10 @@ runs:
       shell: bash
       run: |
         echo "::group::Print Grype DB status"
+        set +e
+        ${{steps.grype_metadata.outputs.grype_cmd}} db status
         db_status=$?
-        ${{steps.grype_metadata.outputs.grype_cmd}} db status || db_status=$?
+        set -e
         if [[ "${db_status}" -ne 0 ]]; then
           msg="Grype DB initialization was not successful. CVE results unavailable due to DB issues"
           if [[ ${FAIL_BUILD} -eq 1 ]]; then
