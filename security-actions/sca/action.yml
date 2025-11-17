@@ -239,7 +239,7 @@ runs:
       shell: bash
       run: |
         echo "::group::List cache contents"
-        ls -laR ~/.cache/grype/db
+        ls -laR ~/.cache/
         echo "::endgroup::"
 
     - name: Setup Grype DB from cache repository
