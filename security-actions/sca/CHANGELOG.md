@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [6.0.2](https://github.com/Kong/public-shared-actions/compare/sca@6.0.1...sca@6.0.2) (2025-11-17)
+
+
+### 🐛 Bug Fixes
+
+* improve grype caching resilience by checking for valid DB. add force grype cache refresh ([#342](https://github.com/Kong/public-shared-actions/issues/342)) ([fa2022c](https://github.com/Kong/public-shared-actions/commit/fa2022cfad48fdbc3df208f88e4c7471cc014d2c))
+* **sca:** list root cache dir ([#344](https://github.com/Kong/public-shared-actions/issues/344)) ([21df41b](https://github.com/Kong/public-shared-actions/commit/21df41b9d92ddd3785c7616a6ecd7e361fd4ce4c))
+
+
+
+
+
 ## [6.0.1](https://github.com/Kong/public-shared-actions/compare/sca@6.0.0...sca@6.0.1) (2025-10-06)
 
 
