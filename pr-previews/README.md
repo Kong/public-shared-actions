@@ -6,13 +6,31 @@ Set of action for deal with PR previews of NPM packages and  consumption of thos
 
 - [PR preview actions](#pr-preview-actions)
   - [Action implemented](#action-implemented)
-    - [Validate](#validate)
+    - [Audit](#validate)
       - [Example](#example)
     - [Up-to-date](#up-to-date)
       - [Example](#example-1)
     - [Cleanup](#cleanup)
       - [Example](#example-2)
-### Validate
+
+
+### Audit
+
+#### Example
+
+  # code should be checked in with fetch-depth=0 before up-to-date action could be used
+  - name: Check out the code
+    uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+    with:
+      fetch-depth: 0
+
+  - name: Check if PR Up to Date
+    id: 'pr-audit'
+    uses: Kong/public-shared-actions/pr-previews/audit
+    with:
+      github_token: ${{ secrets.GITHUB_TOKEN }}
+
+### Validate (deprecated)
 
 Validate that no package.json in the current repository references PR preview of dependent package.
 If PR preview of dependant package is found - action will throw an error
