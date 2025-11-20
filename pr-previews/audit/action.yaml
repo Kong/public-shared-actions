@@ -29,13 +29,13 @@ inputs:
     description: List of files to check for test coverage
     default: |
       src:
-        - **/src/**/*.vue
-        - **/src/**/*.ts
+        - '**/src/**/*.vue'
+        - '**/src/**/*.ts'
       test:
-        - **/cypress/specs/**/*
-        - **/cypress/page-objects/**/*
-        - **/src/**/*.spec.ts
-        - **/src/**/*.cy.ts
+        - '**/cypress/specs/**/*'
+        - '**/cypress/page-objects/**/*'
+        - '**/src/**/*.spec.ts'
+        - '**/src/**/*.cy.ts'
   test-coverage-exempt-approvers:
     description: List of users that can approve PRs without test coverage
     default: |
@@ -149,7 +149,7 @@ runs:
         github-token: ${{ env.GITHUB_TOKEN }}
         script: |
           // Define the list of allowed approvers (managers)
-          const allowedApprovers=`${{ inputs.test-coverage-exempt-approvers }}`.split('\n').map(item => item.trim().replace('- ', ''))
+          const allowedApprovers=`${{ inputs.test-coverage-exempt-approvers }}`.split('\n').map(item => item.trim().replace('- ', '')).filter(approver => approver !== '');
 
           console.log('allowedApprovers:' + JSON.stringify(allowedApprovers))
 

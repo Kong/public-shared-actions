@@ -16,6 +16,14 @@ Set of action for deal with PR previews of NPM packages and  consumption of thos
 
 ### Audit
 
+Audit pull requests and detects issues that blocks merging.
+workflow fails when one or more of the following conditions are met:
+
+- Open Renovate security PRs detected
+- PNPM audit detects critical or high vulnerabilities
+- No test coverage detected
+- Too many open renovate PRs detected
+
 #### Example
 
   # code should be checked in with fetch-depth=0 before up-to-date action could be used
@@ -29,21 +37,6 @@ Set of action for deal with PR previews of NPM packages and  consumption of thos
     uses: Kong/public-shared-actions/pr-previews/audit
     with:
       github_token: ${{ secrets.GITHUB_TOKEN }}
-
-### Validate (deprecated)
-
-Validate that no package.json in the current repository references PR preview of dependent package.
-If PR preview of dependant package is found - action will throw an error
-
-#### Example
-
-```yaml
-  - name: Validate No PR preview references
-    uses: Kong/public-shared-actions/pr-previews/validate@main
-```
-
-To be used `on pullrequest` to prevent merging PRs that references PR previews of depended packages
-
 
 ### Up-to-date
 
