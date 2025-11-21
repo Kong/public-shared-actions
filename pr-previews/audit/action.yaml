@@ -19,6 +19,9 @@ inputs:
   critical-number-of-renovate-prs:
     description: fail if number of open renovate PRs equal or greater than defined
     default: 10
+  critical-age-of-renovate-pr:
+    description: number of days after which renovate PR is considered old
+    default: 60
   renovate-pr-author:
     description: Check if there is one or more renovate PRs created by the defined author
     default: kong-renovate-app[bot]
@@ -122,7 +125,19 @@ runs:
           renovatePrs= pullRequests.filter(pr => pr.user.login === '${{ inputs.renovate-pr-author }}');
           console.log('renovate:', renovatePrs.length)
           if (renovatePrs.length > ${{ inputs.critical-number-of-renovate-prs }}) {
-            core.setOutput('renovate-prs', renovatePrs.length)
+            core.setOutput('renovate-prs-count', renovatePrs.length)
+          }
+          const sixtyDaysAgo = new Date();
+          sixtyDaysAgo.setDate(sixtyDaysAgo.getDate() - ${{ inputs.critical-age-of-renovate-pr }});
+
+          const oldRenovatePrs = renovatePrs.filter(pr => {
+            const createdAt = new Date(pr.created_at);
+            return createdAt < sixtyDaysAgo;
+          });
+
+          console.log('old renovate PRs (>60 days):', oldRenovatePrs.length);
+          if (oldRenovatePrs.length > 0) {
+            core.setOutput('renovate-old-prs', oldRenovatePrs.length);
           }
 
           const securityPrs = renovatePrs.filter(pr => pr.title.includes('[security]'))
@@ -279,13 +294,24 @@ runs:
               ].join('\n'))
           }
 
-          const renovatePrs = `${{ steps.renovate-prs.outputs.renovate-prs }}`
-          if (renovatePrs) {
+          const renovatePrsCount = `${{ steps.renovate-prs.outputs.renovate-prs-count }}`
+          if (renovatePrsCount) {
             results += ([
               '',
               '#### :fire: ***Too Many Open Renovate PRs*** detected.',
               '',
-              `There are ${renovatePrs} open renovate PRs. PR cannot be merged until the number of [open renovate PRs](https://github.com/${context.repo.owner}/${context.repo.repo}/pulls/${encodeURIComponent('${{inputs.renovate-pr-author}}')}) is reduced.`,
+              `There are ${renovatePrsCount} open renovate PRs. PR cannot be merged until the number of [open renovate PRs](https://github.com/${context.repo.owner}/${context.repo.repo}/pulls/${encodeURIComponent('${{inputs.renovate-pr-author}}')}) is reduced.`,
+              ''
+              ].join('\n'))
+          }
+
+          const renovatePrsOld = `${{ steps.renovate-prs.outputs.renovate-old-prs }}`
+          if (renovatePrsOld) {
+            results += ([
+              '',
+              '#### :fire: ***Old Open Renovate PRs*** detected.',
+              '',
+              `There are ${renovatePrsOld} open renovate PRs created more than ${{ inputs.critical-age-of-renovate-pr }} days ago. PR cannot be merged until those [old open renovate PRs](https://github.com/${context.repo.owner}/${context.repo.repo}/pulls/${encodeURIComponent('${{inputs.renovate-pr-author}}')}) are resolved.`,
               ''
               ].join('\n'))
           }

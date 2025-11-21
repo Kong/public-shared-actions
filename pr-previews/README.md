@@ -23,6 +23,7 @@ workflow fails when one or more of the following conditions are met:
 - PNPM audit detects critical or high vulnerabilities
 - No test coverage detected
 - Too many open renovate PRs detected
+- Renovate PRs created more than 60 days ago detected
 
 #### Example
 
