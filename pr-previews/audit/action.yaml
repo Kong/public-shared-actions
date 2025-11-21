@@ -135,7 +135,7 @@ runs:
             return createdAt < sixtyDaysAgo;
           });
 
-          console.log('old renovate PRs (>60 days):', oldRenovatePrs.length);
+          console.log('old renovate PRs (>${{ inputs.critical-age-of-renovate-pr }} days):', oldRenovatePrs.length);
           if (oldRenovatePrs.length > 0) {
             core.setOutput('renovate-old-prs', oldRenovatePrs.length);
           }
