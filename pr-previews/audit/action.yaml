@@ -18,7 +18,7 @@ inputs:
     default: true
   critical-number-of-renovate-prs:
     description: fail if number of open renovate PRs equal or greater than defined
-    default: 5
+    default: 10
   renovate-pr-author:
     description: Check if there is one or more renovate PRs created by the defined author
     default: kong-renovate-app[bot]
