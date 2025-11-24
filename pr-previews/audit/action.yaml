@@ -283,13 +283,16 @@ runs:
 
           const testCoverageFailed = `${{ steps.test-coverage.outputs.failed }}`
           if (testCoverageFailed) {
+
+            const allowedApprovers=`${{ inputs.test-coverage-exempt-approvers }}`.split('\n').map(item => item.trim().replace('- ', '')).filter(approver => approver !== '').map(approver => `\`${approver}\``).join(', ');
+
             results += ([
               '',
               '#### :fire: ***No test coverage*** detected.',
               '',
               'This PR does not include any test coverage changes, but it modifies source code. Please add appropriate tests to cover the changes made in this PR.',
               '',
-              'If you believe this is a false positive or if there are valid reasons for not including test coverage changes, please request an exemption by adding the `test-coverage-exempt` label to the PR and ensure it is approved by your manager.',
+              `If you believe this is a false positive or if there are valid reasons for not including test coverage changes, please request an exemption by adding the \`test-coverage-exempt\` label to the PR and ensure it is approved by one of those managers ${allowedApprovers}.`,
               ''
               ].join('\n'))
           }
