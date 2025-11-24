@@ -131,10 +131,6 @@ runs:
           renovatePrs= pullRequests.filter(pr => pr.user.login === '${{ inputs.renovate-pr-author }}');
 
           console.log('renovate:', renovatePrs.length)
-          if () {
-            core.setOutput('renovate-prs-count', renovatePrs.length)
-          }
-
 
           const criticalDaysAgo = new Date();
           criticalDaysAgo.setDate(criticalDaysAgo.getDate() - ${{ inputs.critical-age-of-renovate-pr }});
@@ -159,7 +155,7 @@ runs:
             return createdAt < criticalSecurityDaysAgo;
           });
 
-          console.log('old security PRs (>=${{ inputs.critical-age-of-renovate-security-pr }} days): :', oldSecurityPrs.length)
+          console.log('old security PRs (>=${{ inputs.critical-age-of-renovate-security-pr }} days)', oldSecurityPrs.length)
           if (oldSecurityPrs.length >= ${{ inputs.critical-number-of-renovate-security-prs }}) {
             core.setOutput('renovate-security-prs', oldSecurityPrs.length)
           }
@@ -281,11 +277,11 @@ runs:
               '```',
               '',
               'PR with those issues cannot be merged.',
-              ''
+              '',
               'How to resolve:',
               '- Check open renovate PRs for updates to the dependencies mentioned in the audit report',
               '- try to update dependencies listed in the audit report to the latest versions',
-              '- use \`pnpm audit --fix\` to automatically fix issues'
+              '- use `pnpm audit --fix` to automatically fix issues'
 
               ].join('\n'))
           }
