@@ -75,7 +75,7 @@ runs:
       continue-on-error: true
       shell: bash
       run: |
-        pnpm audit --audit-level ${{inputs.pnpm-audit-level}} --ignore-unfixable > audit_res.txt || true
+        pnpm audit --audit-level ${{inputs.pnpm-audit-level}} > audit_res.txt || true
         if [[ -n $(cat audit_res.txt|grep "├") ]]; then
           echo "detected=$(cat audit_res.txt|base64 -w 0)" >> $GITHUB_OUTPUT
         fi
