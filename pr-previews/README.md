@@ -19,11 +19,10 @@ Set of action for deal with PR previews of NPM packages and  consumption of thos
 Audit pull requests and detects issues that blocks merging.
 workflow fails when one or more of the following conditions are met:
 
-- Open Renovate security PRs detected
+- 1 or more Open Renovate security PRs creted 3 days or more ago detected
 - PNPM audit detects critical or high vulnerabilities
-- No test coverage detected
-- Too many open renovate PRs detected
-- Renovate PRs created more than 60 days ago detected
+- No test coverage detected and no test-exempt conditions met
+- More than 5 open renovate PRs created more than 30 days
 
 #### Example
 
