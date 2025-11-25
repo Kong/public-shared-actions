@@ -71,15 +71,76 @@ runs:
     - name: Run PNPM audit
       if: |
         inputs.pnpm-audit == 'true'
-      id: pnpm-audit
+      id: run-pnpm-audit
       continue-on-error: true
       shell: bash
       run: |
         pnpm audit --audit-level ${{inputs.pnpm-audit-level}} > audit_res.txt || true
-        if [[ -n $(cat audit_res.txt|grep "├") ]]; then
-          echo "detected=$(cat audit_res.txt|base64 -w 0)" >> $GITHUB_OUTPUT
-        fi
-        rm audit_res.txt
+
+    - name: Parse PNPM audit
+      if: |
+        inputs.pnpm-audit == 'true'
+      id: pnpm-audit
+      continue-on-error: true
+      uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b #7.1.0
+      with:
+        github-token: ${{ env.GITHUB_TOKEN }}
+        script: |
+          const fs = require('fs')
+          const readline = require('readline')
+
+          const fileStream = fs.createReadStream('audit_res.txt')
+
+          const rl = readline.createInterface({
+            input: fileStream,
+            crlfDelay: Infinity,
+          })
+
+          let nexLineIsVulnerabilityType = false
+          let vulnerabilityHasNoPatch = false
+          let res = ''
+          const counter = {}
+          let vulnerabilityBlock = ''
+          let vulnType = ''
+          for await (const line of rl) {
+
+            if (line.startsWith('┌─')) {
+              vulnerabilityBlock = line + '\n'
+              vulnType = ''
+              nexLineIsVulnerabilityType = true
+              vulnerabilityHasNoPatch = false
+              continue
+            }
+            vulnerabilityBlock += line + '\n'
+            if (nexLineIsVulnerabilityType) {
+              vulnType = line.trim().split('│')[1].trim()
+              nexLineIsVulnerabilityType = false
+            }
+            if (line.startsWith('│ Patched versions    │ <0.0.0')) {
+              vulnerabilityHasNoPatch = true
+            }
+            if (line.startsWith('└─')) {
+              if (!vulnerabilityHasNoPatch && vulnType) {
+                counter[vulnType] = (counter[vulnType] || 0) + 1
+                res += vulnerabilityBlock
+              }
+            }
+          }
+          if (res === '') {
+            console.log('No vulnerabilities found')
+            return
+          }
+          let counterArr = []
+          let total = 0
+          Object.keys(counter).forEach((key) => {
+            total += counter[key]
+            counterArr.push(`${counter[key]} ${key}`)
+          })
+
+          res += `${total} vulnerabilities found\n`
+          res += `Severity: ${counterArr.reverse().join(' | ')}`
+          const encodedResults = Buffer.from(res).toString('base64')
+          core.setOutput('detected', encodedResults)
 
     - name: Search for PR versions in dependencies
       if: |
