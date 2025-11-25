@@ -1,0 +1,416 @@
+name: Audit Pull Request
+description: Checks pull requests against defined criteria and fail if issues are found
+inputs:
+  check-pr-previews:
+    description: Check if PR previews are used in the PR dependencies
+    default: true
+  pnpm-audit:
+    description: Do pnpm audit and fail when issues  above defined level are found
+    default: true
+  pnpm-audit-level:
+    description: level of pnpm issues to detect
+    default: high
+  check-renovate-security-pr:
+    description: Fail if there is one or more renovate security PR
+    default: true
+  critical-number-of-renovate-security-prs:
+    description: fail if number of open renovate security PRs equal or greater than defined
+    default: 1
+  critical-age-of-renovate-security-pr:
+    description: number of days after which renovate security PR is considered old
+    default: 3
+  check-renovate:
+    description: Check defined number of open renovate PRs, fail if number is higher than defined
+    default: true
+  critical-number-of-renovate-prs:
+    description: fail if number of open renovate PRs equal or greater than defined
+    default: 5
+  critical-age-of-renovate-pr:
+    description: number of days after which renovate PR is considered old
+    default: 30
+  renovate-pr-author:
+    description: Check if there is one or more renovate PRs created by the defined author
+    default: kong-renovate-app[bot]
+  check-test-coverage:
+    description: Check test coverage in PR, fail if not detected
+    default: true
+  test-coverage-files:
+    description: List of files to check for test coverage
+    default: |
+      src:
+        - '**/src/**/*.vue'
+        - '**/src/**/*.ts'
+      test:
+        - '**/cypress/specs/**/*'
+        - '**/cypress/page-objects/**/*'
+        - '**/src/**/*.spec.ts'
+        - '**/src/**/*.cy.ts'
+  test-coverage-exempt-approvers:
+    description: List of users that can approve PRs without test coverage
+    default: |
+      - jillztom
+      - nateslo
+      - erichsend
+      - lahabana
+      - hangrao
+      - ryanmoore
+      - elen4
+      - DaniellaFreese
+      - mfollett
+
+runs:
+  using: composite
+  steps:
+    - name: Remove audit PR comments
+      uses: Kong/sticky-pull-request-comment@67d0dec7b07ed060a405f9b2a64b8ab319fdd7db # v2.9.2
+      with:
+        header: pr-audit
+        delete: true
+        GITHUB_TOKEN: ${{ env.GITHUB_TOKEN }}
+
+    - name: Run PNPM audit
+      if: |
+        inputs.pnpm-audit == 'true'
+      id: run-pnpm-audit
+      continue-on-error: true
+      shell: bash
+      run: |
+        pnpm audit --audit-level ${{inputs.pnpm-audit-level}} > audit_res.txt || true
+
+    - name: Parse PNPM audit
+      if: |
+        inputs.pnpm-audit == 'true'
+      id: pnpm-audit
+      continue-on-error: true
+      uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b #7.1.0
+      with:
+        github-token: ${{ env.GITHUB_TOKEN }}
+        script: |
+          const fs = require('fs')
+          const readline = require('readline')
+
+          const fileStream = fs.createReadStream('audit_res.txt')
+
+          const rl = readline.createInterface({
+            input: fileStream,
+            crlfDelay: Infinity,
+          })
+
+          let nexLineIsVulnerabilityType = false
+          let vulnerabilityHasNoPatch = false
+          let res = ''
+          const counter = {}
+          let vulnerabilityBlock = ''
+          let vulnType = ''
+          for await (const line of rl) {
+
+            if (line.startsWith('┌─')) {
+              vulnerabilityBlock = line + '\n'
+              vulnType = ''
+              nexLineIsVulnerabilityType = true
+              vulnerabilityHasNoPatch = false
+              continue
+            }
+            vulnerabilityBlock += line + '\n'
+            if (nexLineIsVulnerabilityType) {
+              vulnType = line.trim().split('│')[1].trim()
+              nexLineIsVulnerabilityType = false
+            }
+            if (line.startsWith('│ Patched versions    │ <0.0.0')) {
+              vulnerabilityHasNoPatch = true
+            }
+            if (line.startsWith('└─')) {
+              if (!vulnerabilityHasNoPatch && vulnType) {
+                counter[vulnType] = (counter[vulnType] || 0) + 1
+                res += vulnerabilityBlock
+              }
+            }
+          }
+          if (res === '') {
+            console.log('No vulnerabilities found')
+            return
+          }
+          let counterArr = []
+          let total = 0
+          Object.keys(counter).forEach((key) => {
+            total += counter[key]
+            counterArr.push(`${counter[key]} ${key}`)
+          })
+
+          res += `${total} vulnerabilities found\n`
+          res += `Severity: ${counterArr.reverse().join(' | ')}`
+          const encodedResults = Buffer.from(res).toString('base64')
+          core.setOutput('detected', encodedResults)
+
+    - name: Search for PR versions in dependencies
+      if: |
+        inputs.check-pr-previews == 'true'
+      shell: bash
+      id: pr-previews
+      continue-on-error: true
+      run: |
+
+        previewPkgsDetected=""
+
+        for pkg in $(find ./ -name package.json ! -path '*/node_modules/*' ! -path '*/__template__/*')
+        do
+          inPackage=$(jq -r '{dependencies: .dependencies, devDependencies: .devDependencies, peerDependencies: .peerDependencies}' ${pkg} | jq '.[]' | cut -d":" -f2 | grep -E "(\-pr\.[0-9]+\.|@pr\-[0-9]+)" || true)
+          if [[ "${inPackage}" != "" ]]; then
+            if [[ "${previewPkgsDetected}" != "" ]]; then
+              previewPkgsDetected="${previewPkgsDetected}\n"
+            fi
+            previewPkgsDetected="${previewPkgsDetected}\nPR preview package version found in ${pkg}:"
+            for ver in $(echo -e ${inPackage})
+            do
+              previewPkgsDetected="${previewPkgsDetected}\n$(grep ${ver} ${pkg})"
+            done
+          fi
+        done
+
+        if [[ "${previewPkgsDetected}" != "" ]]; then
+          echo "detected=${previewPkgsDetected}" >> $GITHUB_OUTPUT
+        fi
+
+    - name: Get renovate PRs
+      id: renovate-prs
+      continue-on-error: true
+      if: |
+        inputs.check-renovate-security-pr == 'true' ||
+        inputs.check-renovate == 'true'
+      uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b #7.1.0
+      with:
+        github-token: ${{ env.GITHUB_TOKEN }}
+        script: |
+          // get open renovate PRs
+          const { data: pullRequests } = (await github.rest.pulls.list({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            state: 'open',
+            per_page: 100
+          }))
+          console.log('pullRequests:', pullRequests.length, JSON.stringify(pullRequests.map(pr => pr.user.login)))
+          renovatePrs= pullRequests.filter(pr => pr.user.login === '${{ inputs.renovate-pr-author }}');
+
+          console.log('renovate:', renovatePrs.length)
+
+          const criticalDaysAgo = new Date();
+          criticalDaysAgo.setDate(criticalDaysAgo.getDate() - ${{ inputs.critical-age-of-renovate-pr }});
+
+          const oldRenovatePrs = renovatePrs.filter(pr => {
+            const createdAt = new Date(pr.created_at);
+            return createdAt < criticalDaysAgo;
+          });
+
+          console.log('old renovate PRs (>=${{ inputs.critical-age-of-renovate-pr }} days):', oldRenovatePrs.length);
+          if (oldRenovatePrs.length >= ${{ inputs.critical-number-of-renovate-prs}}) {
+            core.setOutput('renovate-old-prs', oldRenovatePrs.length);
+          }
+
+          const securityPrs = renovatePrs.filter(pr => pr.title.includes('[security]'))
+
+          const criticalSecurityDaysAgo = new Date();
+          criticalDaysAgo.setDate( criticalSecurityDaysAgo.getDate() - ${{ inputs.critical-age-of-renovate-security-pr }} );
+
+          const oldSecurityPrs = securityPrs.filter(pr => {
+            const createdAt = new Date(pr.created_at);
+            return createdAt < criticalSecurityDaysAgo;
+          });
+
+          console.log('old security PRs (>=${{ inputs.critical-age-of-renovate-security-pr }} days)', oldSecurityPrs.length)
+          if (oldSecurityPrs.length >= ${{ inputs.critical-number-of-renovate-security-prs }}) {
+            core.setOutput('renovate-security-prs', oldSecurityPrs.length)
+          }
+
+    - name: Get Changed files
+      id: test-coverage-changed
+      continue-on-error: true
+      if: |
+        inputs.check-test-coverage == 'true'
+      uses: Kong/changed-files@4edd678ac3f81e2dc578756871e4d00c19191daf
+      with:
+        files_yaml: ${{ inputs.test-coverage-files }}
+
+
+    - name: Check for test coverage
+      id: test-coverage
+      continue-on-error: true
+      uses: actions/github-script@v7
+      with:
+        github-token: ${{ env.GITHUB_TOKEN }}
+        script: |
+          // Define the list of allowed approvers (managers)
+          const allowedApprovers=`${{ inputs.test-coverage-exempt-approvers }}`.split('\n').map(item => item.trim().replace('- ', '')).filter(approver => approver !== '');
+
+          console.log('allowedApprovers:' + JSON.stringify(allowedApprovers))
+
+          const { data: reviews } = await github.rest.pulls.listReviews({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            pull_number: context.issue.number,
+          })
+
+          const latestByUser = reviews.reduce((acc, r) => {
+            const login = r.user && r.user.login
+            if (!login) return acc;
+            if (!allowedApprovers.includes(login)) return acc;
+            const submitted = r.submitted_at ? new Date(r.submitted_at) : new Date(0);
+            const prevSubmitted = acc[login] && acc[login].submitted_at ? new Date(acc[login].submitted_at) : new Date(0);
+            if (!acc[login] || submitted > prevSubmitted) {
+            acc[login] = r
+            }
+            return acc
+          }, {})
+
+          const approvers = Object.values(latestByUser)
+            .filter(review => review.state === 'APPROVED')
+            .map(review => review.user.login)
+
+          console.log('approved by:' + JSON.stringify(approvers))
+
+          const managerApproved = approvers.length > 0
+
+          console.log('src: ${{steps.test-coverage-changed.outputs.src_any_changed}}')
+          console.log('test: ${{steps.test-coverage-changed.outputs.test_any_changed}}')
+          console.log('managerApproved: ' + managerApproved)
+
+          // if there is something in tests - we are ok for now
+          if  ('${{steps.test-coverage-changed.outputs.test_any_changed}}' == 'true') {
+            console.log('test presence detected, we are ok')
+            return
+          }
+
+          // if there is nothing in src, we might not need anything in tests, we are ok for now
+          if ('${{steps.test-coverage-changed.outputs.src_any_changed}}' == 'false' ) {
+            console.log('no source changes detected, we are ok')
+            return
+          }
+
+          // now at this point we know there are src changes but no tests changes
+          // let's see do we have test-coverage-exempt, if we don't - we are failing
+          if ("${{contains(github.event.pull_request.labels.*.name, 'test-coverage-exempt')}}" == 'true') {
+
+            if (managerApproved) {
+              console.log('PR is approved by a manager for test-coverage-exempt.')
+              return
+            }
+          }
+          console.log('PR doesn\'t have any test coverage or test-coverage-exempt approval. See [details](https://github.com/Kong/konnect-ui-apps/blob/main/docs/test-coverage-pr-guard.md)')
+          core.setOutput('failed', 'failed')
+
+
+
+    - name: Collect results
+      id: collect-results
+      uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b #7.1.0
+      with:
+        github-token: ${{ env.GITHUB_TOKEN }}
+        script: |
+
+          let results=''
+
+          const securityPrs = `${{ steps.renovate-prs.outputs.renovate-security-prs }}`
+
+          if (securityPrs) {
+            results += ([
+              '',
+              '#### :fire: ***Renovate Security PRs*** detected.',
+              '',
+              `There are ${securityPrs} open renovate security PRs older than ${{ inputs.critical-age-of-renovate-security-pr }} days.`,
+              '',
+              `This PR cannot be merged until [all renovate security PRs](https://github.com/${context.repo.owner}/${context.repo.repo}/pulls?q=is%3Aopen+is%3Apr+author%3A${encodeURIComponent('${{inputs.renovate-pr-author}}')}+%5Bsecurity%5D) created more than ${{ inputs.critical-age-of-renovate-security-pr }} days ago are resolved.`,
+              ''
+              ].join('\n'))
+          }
+
+          const pnpmAudit = `${{ steps.pnpm-audit.outputs.detected }}`
+
+          if (pnpmAudit) {
+            const decodedBinary = atob(pnpmAudit)
+            const decoder = new TextDecoder()
+            const decodedResults = decoder.decode(new Uint8Array(decodedBinary.split('').map(char => char.charCodeAt(0))))
+
+            results += ([
+              '',
+              '#### :fire: ***PNPM Audit*** issues detected.',
+              '',
+              '```',
+              decodedResults,
+              '```',
+              '',
+              'PR with those issues cannot be merged.',
+              '',
+              'How to resolve:',
+              '- Check open renovate PRs for updates to the dependencies mentioned in the audit report',
+              '- try to update dependencies listed in the audit report to the latest versions',
+              '- use `pnpm audit --fix` to automatically fix issues'
+
+              ].join('\n'))
+          }
+          const prPreviews = `${{ steps.pr-previews.outputs.detected }}`
+
+          if (prPreviews) {
+            results += ([
+              '',
+              '#### :fire: ***PR preview packages*** detected.',
+              '',
+              '```',
+              prPreviews,
+              '```',
+              '',
+              'PR with those dependencies cannot be merged.',
+              ''
+              ].join('\n'))
+          }
+
+          const testCoverageFailed = `${{ steps.test-coverage.outputs.failed }}`
+          if (testCoverageFailed) {
+
+            const allowedApprovers=`${{ inputs.test-coverage-exempt-approvers }}`.split('\n').map(item => item.trim().replace('- ', '')).filter(approver => approver !== '').map(approver => `\`${approver}\``).join(', ');
+
+            results += ([
+              '',
+              '#### :fire: ***No test coverage*** detected.',
+              '',
+              'This PR does not include any test coverage changes, but it modifies source code. Please add appropriate tests to cover the changes made in this PR.',
+              '',
+              `If you believe this is a false positive or if there are valid reasons for not including test coverage changes, please request an exemption by adding the \`test-coverage-exempt\` label to the PR and ensure it is approved by one of those managers ${allowedApprovers}.`,
+              ''
+              ].join('\n'))
+          }
+
+          const renovatePrsOld = `${{ steps.renovate-prs.outputs.renovate-old-prs }}`
+          if (renovatePrsOld) {
+            results += ([
+              '',
+              '#### :fire: ***Old Open Renovate PRs*** detected.',
+              '',
+              `There are ${renovatePrsOld} open renovate PRs created more than ${{ inputs.critical-age-of-renovate-pr }} days ago. PR cannot be merged until those [old open renovate PRs](https://github.com/${context.repo.owner}/${context.repo.repo}/pulls/${encodeURIComponent('${{inputs.renovate-pr-author}}')}) are resolved.`,
+              ''
+              ].join('\n'))
+          }
+
+          if (results) {
+            results = `### :red_circle: PR audit failed. :red_circle:\n${results}`
+
+            await core.summary
+              .addRaw(results)
+              .write()
+          }
+          core.setOutput('results', results)
+
+    - name: Create PR comment
+      if: |
+        steps.collect-results.outputs.results != ''
+      uses: Kong/sticky-pull-request-comment@67d0dec7b07ed060a405f9b2a64b8ab319fdd7db # v2.9.2
+      with:
+        header: pr-audit
+        GITHUB_TOKEN: ${{ env.GITHUB_TOKEN }}
+        message: |
+          ${{ steps.collect-results.outputs.results }}
+
+    - name: Exit with the error
+      if: |
+        steps.collect-results.outputs.results != ''
+      shell: bash
+      run: |
+        exit 1

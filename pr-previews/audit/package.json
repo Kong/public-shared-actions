@@ -1,0 +1,14 @@
+{
+  "name": "pr-audit",
+  "version": "1.0.0",
+  "description": "Audits pull-requests and detects issues that blocks merging",
+  "main": "index.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Kong/public-shared-actions",
+    "directory": "pr-previews/audit"
+  },
+  "private": false,
+  "author": "Kong, Inc.",
+  "license": "UNLICENSED"
+}
