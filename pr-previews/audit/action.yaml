@@ -288,7 +288,7 @@ runs:
           // now at this point we know there are src changes but no tests changes
           // let's see do we have test-coverage-exempt, if we don't - we are failing
           const prLabels = "${{github.event.pull_request.labels.*.name}}".split(' ').filter(label => label !== '').join(', ');
-          console.log('here:' , prLabels)
+          console.log('here:' , prLabels, ' and this way:', JSON.stringify(github.event.pull_request.labels))
           if ("${{contains(github.event.pull_request.labels.*.name, 'test-coverage-exempt')}}" == 'true') {
 
             if (managerApproved) {
