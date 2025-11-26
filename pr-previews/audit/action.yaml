@@ -230,7 +230,6 @@ runs:
       with:
         files_yaml: ${{ inputs.test-coverage-files }}
 
-
     - name: Check for test coverage
       id: test-coverage
       continue-on-error: true
@@ -287,9 +286,18 @@ runs:
 
           // now at this point we know there are src changes but no tests changes
           // let's see do we have test-coverage-exempt, if we don't - we are failing
-          const prLabels = "${{github.event.pull_request.labels.*.name}}".split(' ').filter(label => label !== '').join(', ');
-          console.log('here:' , prLabels, ' and this way:', JSON.stringify(github.event.pull_request.labels))
-          if ("${{contains(github.event.pull_request.labels.*.name, 'test-coverage-exempt')}}" == 'true') {
+
+          const { data: pr } = await github.rest.pulls.get({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            pull_number: context.issue.number,
+          })
+
+          const labels = pr.labels.map(label => label.name)
+
+          console.log('PR labels:', JSON.stringify(labels))
+
+          if (labels.includes('test-coverage-exempt')) {
 
             if (managerApproved) {
               console.log('PR is approved by a manager for test-coverage-exempt.')
