@@ -57,6 +57,7 @@ inputs:
       - elen4
       - DaniellaFreese
       - mfollett
+      - ValeryG
 
 runs:
   using: composite
