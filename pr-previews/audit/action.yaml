@@ -239,7 +239,11 @@ runs:
     - name: Check for test coverage
       id: test-coverage
       if: |
-        inputs.check-test-coverage == 'true'
+        inputs.check-test-coverage == 'true' &&
+        (
+          steps.test-coverage-changed.outputs.test_any_changed != 'true' ||
+          steps.test-coverage-changed.outputs.src_any_changed != 'false'
+        )
       continue-on-error: true
       uses: actions/github-script@v7
       with:
@@ -279,18 +283,6 @@ runs:
           console.log('src: ${{steps.test-coverage-changed.outputs.src_any_changed}}')
           console.log('test: ${{steps.test-coverage-changed.outputs.test_any_changed}}')
           console.log('managerApproved: ' + managerApproved)
-
-          // if there is something in tests - we are ok for now
-          if  ('${{steps.test-coverage-changed.outputs.test_any_changed}}' == 'true') {
-            console.log('test presence detected, we are ok')
-            return
-          }
-
-          // if there is nothing in src, we might not need anything in tests, we are ok for now
-          if ('${{steps.test-coverage-changed.outputs.src_any_changed}}' == 'false' ) {
-            console.log('no source changes detected, we are ok')
-            return
-          }
 
           // now at this point we know there are src changes but no tests changes
           // let's see do we have test-coverage-exempt, if we don't - we are failing
