@@ -183,7 +183,7 @@ runs:
         github-token: ${{ env.GITHUB_TOKEN }}
         script: |
           const { pull_request } = context.payload
-          if (pull_request && pull_request.user.login === ${{ inputs.renovate-pr-author }}) {
+          if (pull_request && pull_request.user.login === '${{ inputs.renovate-pr-author }}') {
             console.log('This PR is created by renovate, skipping renovate PR checks.')
             return
           }
