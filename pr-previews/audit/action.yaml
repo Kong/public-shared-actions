@@ -239,16 +239,24 @@ runs:
     - name: Check for test coverage
       id: test-coverage
       if: |
-        inputs.check-test-coverage == 'true' &&
-        (
-          steps.test-coverage-changed.outputs.test_any_changed != 'true' ||
-          steps.test-coverage-changed.outputs.src_any_changed != 'false'
-        )
+        inputs.check-test-coverage == 'true'
       continue-on-error: true
       uses: actions/github-script@v7
       with:
         github-token: ${{ env.GITHUB_TOKEN }}
         script: |
+          // if there is something in tests - we are ok for now
+          if  ('${{steps.test-coverage-changed.outputs.test_any_changed}}' == 'true') {
+            console.log('test presence detected, we are ok')
+            return
+          }
+
+          // if there is nothing in src, we might not need anything in tests, we are ok for now
+          if ('${{steps.test-coverage-changed.outputs.src_any_changed}}' == 'false' ) {
+            console.log('no source changes detected, we are ok')
+            return
+          }
+
           // Define the list of allowed approvers (managers)
           const allowedApprovers=`${{ inputs.test-coverage-exempt-approvers }}`.split('\n').map(item => item.trim().replace('- ', '')).filter(approver => approver !== '');
 
