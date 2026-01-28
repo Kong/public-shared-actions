@@ -208,7 +208,6 @@ runs:
           const criticalDaysAgo = new Date();
           criticalDaysAgo.setDate(criticalDaysAgo.getDate() - ${{ inputs.critical-age-of-renovate-pr }});
 
-          cons
           const oldRenovatePrs = renovatePrs.filter(pr => {
             const createdAt = new Date(pr.created_at);
             return createdAt < criticalDaysAgo;
