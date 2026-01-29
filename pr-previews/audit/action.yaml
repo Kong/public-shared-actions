@@ -221,7 +221,7 @@ runs:
           const securityPrs = renovatePrs.filter(pr => pr.title.includes('[security]'))
 
           const criticalSecurityDaysAgo = new Date();
-          criticalDaysAgo.setDate( criticalSecurityDaysAgo.getDate() - ${{ inputs.critical-age-of-renovate-security-pr }} );
+          criticalSecurityDaysAgo.setDate( criticalSecurityDaysAgo.getDate() - ${{ inputs.critical-age-of-renovate-security-pr }} );
 
           const oldSecurityPrs = securityPrs.filter(pr => {
             const createdAt = new Date(pr.created_at);
