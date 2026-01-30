@@ -174,11 +174,13 @@ runs:
           fi
         done
 
-        if [[ "${previewPkgsDetected}" == "" ]]; then
+        if [[ "${previewPkgsDetected}" == "" && -f pnpm-lock.yaml ]]; then
           echo "No PR preview packages detected in packages.json , checking pnpm-lock.yaml ..."
+          echo "detected_in_lock=$(cat pnpm-lock.yaml- |  cut -d"(" -f2 | cut -d"(" -f2 | grep -E "(\-pr\.[0-9]+\.|@pr\-[0-9]+)" | sed "s/': /@/g" | sed "s/[ ':\^]//g" |  sort | uniq)" >> $GITHUB_OUTPUT"
+
         fi
 
-        if [[ "${previewPkgsDetected}" != "" ]]; then
+        if [[ "${previewPkgsDetected}" != "ZZZ" ]]; then
           echo "detected=${previewPkgsDetected}" >> $GITHUB_OUTPUT
         fi
 
@@ -375,14 +377,15 @@ runs:
               ].join('\n'))
           }
           const prPreviews = `${{ steps.pr-previews.outputs.detected }}`
+          const prPreviewsInLock = `${{ steps.pr-previews.outputs.detected_in_lock }}`
 
-          if (prPreviews) {
+          if (prPreviews || prPreviewsInLock) {
             results += ([
               '',
-              '#### :fire: ***PR preview packages*** detected.',
+              `#### :fire: ***PR preview packages*** detected ${prPreviewsInLock ? ' in pnpm-lock.yaml' : ''}.`,
               '',
               '```',
-              prPreviews,
+              prPreviews || prPreviewsInLock,
               '```',
               '',
               'PR with those dependencies cannot be merged.',
