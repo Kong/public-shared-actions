@@ -389,7 +389,7 @@ runs:
               (prPreviews || prPreviewsInLock).replace(/ /g, '\n'),
               '```',
               '',
-              'PR with those dependencies cannot be merged.',
+              prPreviews ? 'PR with those dependencies cannot be merged.' : 'PR cannot be merged until those preview packages are removed from pnpm-lock.yaml.',
               ''
               ].join('\n'))
           }
