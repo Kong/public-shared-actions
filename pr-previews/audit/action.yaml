@@ -386,7 +386,7 @@ runs:
               `#### :fire: ***PR preview packages*** detected ${prPreviewsInLock ? ' in pnpm-lock.yaml' : ''}.`,
               '',
               '```',
-              (prPreviews || prPreviewsInLock).replace(/ /g, '\n'),
+              prPreviews || prPreviewsInLock.replace(/ /g, '\n'),
               '```',
               '',
               prPreviews ? 'PR with those dependencies cannot be merged.' : 'PR cannot be merged until those preview packages are removed from pnpm-lock.yaml.',
