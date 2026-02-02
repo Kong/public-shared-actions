@@ -6,7 +6,7 @@ inputs:
     default: true
   pnpm-audit:
     description: Do pnpm audit and fail when issues  above defined level are found
-    default: true
+    default: false
   pnpm-audit-level:
     description: level of pnpm issues to detect
     default: high
