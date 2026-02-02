@@ -176,7 +176,7 @@ runs:
 
         if [[ "${previewPkgsDetected}" == "" && -f pnpm-lock.yaml ]]; then
           echo "No PR preview packages detected in packages.json , checking pnpm-lock.yaml ..."
-          detectedInLock=$(cat pnpm-lock.yaml |  cut -d"(" -f2 | cut -d"(" -f2 | grep -E "(\-pr\.[0-9]+\.|@pr\-[0-9]+)" | sed "s/': /@/g" | sed "s/[ ':\^]//g" |  sort | uniq|sed 's/\n/ /g')
+          detectedInLock=$(cat pnpm-lock.yaml |  cut -d"(" -f2 | cut -d"(" -f2 | grep -E "(\-pr\.[0-9]+\.|@pr\-[0-9]+)" | sed "s/': /@/g" | sed "s/[ ':\^]//g" |  sort | uniq | tr '\n' ' ')
           echo "detected_in_lock=${detectedInLock}" >> $GITHUB_OUTPUT
 
         fi
