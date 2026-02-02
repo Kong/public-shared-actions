@@ -6,7 +6,7 @@ inputs:
     default: true
   pnpm-audit:
     description: Do pnpm audit and fail when issues  above defined level are found
-    default: false
+    default: true
   pnpm-audit-level:
     description: level of pnpm issues to detect
     default: high
@@ -181,7 +181,7 @@ runs:
 
         fi
 
-        if [[ "${previewPkgsDetected}" != "ZZZ" ]]; then
+        if [[ "${previewPkgsDetected}" != "" ]]; then
           echo "detected=${previewPkgsDetected}" >> $GITHUB_OUTPUT
         fi
 
