@@ -76,6 +76,7 @@ runs:
       continue-on-error: true
       shell: bash
       run: |
+        pnpm audit --audit-level ${{inputs.pnpm-audit-level}}
         pnpm audit --audit-level ${{inputs.pnpm-audit-level}} > audit_res.txt
         cat audit_res.txt
 
