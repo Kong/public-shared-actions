@@ -76,7 +76,10 @@ runs:
       continue-on-error: true
       shell: bash
       run: |
-        pnpm audit --audit-level ${{inputs.pnpm-audit-level}} > audit_res.txt || true
+
+        res=$(pnpm audit --audit-level high || true)
+        echo "${res}" > audit_res.txt
+        cat audit_res.txt
 
     - name: Parse PNPM audit
       if: |
