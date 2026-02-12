@@ -77,7 +77,7 @@ runs:
       shell: bash
       run: |
         pnpm audit --audit-level ${{inputs.pnpm-audit-level}}
-        pnpm audit --audit-level ${{inputs.pnpm-audit-level}} > audit_res.txt
+        pnpm audit --audit-level ${{inputs.pnpm-audit-level}} > audit_res.txt 2>&1
         cat audit_res.txt
 
     - name: Parse PNPM audit
