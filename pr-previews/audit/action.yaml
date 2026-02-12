@@ -73,14 +73,13 @@ runs:
       if: |
         inputs.pnpm-audit == 'true'
       id: run-pnpm-audit
-      # continue-on-error: true
+      continue-on-error: true
       shell: bash
       run: |
 
         res=$(pnpm audit --audit-level high || true)
-        echo "here:${res}"
         echo "${res}" > audit_res.txt
-
+        cat audit_res.txt
 
     - name: Parse PNPM audit
       if: |
