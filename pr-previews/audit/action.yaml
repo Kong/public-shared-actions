@@ -77,7 +77,7 @@ runs:
       shell: bash
       run: |
 
-        res=$(pnpm audit --audit-level high)
+        res=$(pnpm audit --audit-level high || true)
         echo "here:${res}"
         echo "${res}" > audit_res.txt
 
