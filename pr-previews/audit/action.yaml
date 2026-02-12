@@ -78,8 +78,8 @@ runs:
       run: |
 
         res=$(pnpm audit --audit-level high)
-        echo "$res"
-        echo "$res" > audit_res.txt
+        echo here:${res}"
+        echo "${res}" > audit_res.txt
 
 
     - name: Parse PNPM audit
