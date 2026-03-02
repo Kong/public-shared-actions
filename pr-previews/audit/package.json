@@ -1,6 +1,6 @@
 {
   "name": "pr-audit",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Audits pull-requests and detects issues that blocks merging",
   "main": "index.js",
   "repository": {

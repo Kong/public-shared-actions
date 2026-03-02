@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [6.0.2](https://github.com/Kong/public-shared-actions/compare/scan-docker-image@6.0.1...scan-docker-image@6.0.2) (2026-03-02)
+
+
+### 🐛 Bug Fixes
+
+* **scan-docker-image:** upgrade trivy from v0.60.0 to v0.69.2 ([#364](https://github.com/Kong/public-shared-actions/issues/364)) ([29c2e41](https://github.com/Kong/public-shared-actions/commit/29c2e411476e0c756f6d3fdec6e4881d8d724f5c))
+
+
+
+
+
 ## [6.0.1](https://github.com/Kong/public-shared-actions/compare/scan-docker-image@6.0.0...scan-docker-image@6.0.1) (2025-10-13)
 
 
