@@ -1,5 +1,5 @@
 name: Docker SCA and CIS scan
-description: Generates SBOM and vulnerabiity report
+description: Generates SBOM and vulnerability report
 author: 'Kong'
 inputs:
   asset_prefix:
