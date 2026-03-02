@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [6.1.0](https://github.com/Kong/public-shared-actions/compare/scan-docker-image@6.0.2...scan-docker-image@6.1.0) (2026-03-02)
+
+
+### ✨ Features
+
+* **scan-docker-image:** fix typo so new version is published ([#366](https://github.com/Kong/public-shared-actions/issues/366)) ([99c1514](https://github.com/Kong/public-shared-actions/commit/99c1514d1d2b0cb472e6872a838a6c91bc7ed929))
+
+
+
+
+
 ## [6.0.2](https://github.com/Kong/public-shared-actions/compare/scan-docker-image@6.0.1...scan-docker-image@6.0.2) (2026-03-02)
 
 
