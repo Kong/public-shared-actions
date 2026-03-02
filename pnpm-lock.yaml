@@ -54,6 +54,8 @@ importers:
 
   code-check-actions/rust-lint: {}
 
+  pr-previews/audit: {}
+
   pr-previews/cleanup: {}
 
   pr-previews/up-to-date: {}
