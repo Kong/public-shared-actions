@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.1.1](https://github.com/Kong/public-shared-actions/compare/pr-audit@1.1.0...pr-audit@1.1.1) (2026-03-24)
+
+
+### 🐛 Bug Fixes
+
+* **ci:** add playwright patterns to detect tests ([#367](https://github.com/Kong/public-shared-actions/issues/367)) ([ba9893a](https://github.com/Kong/public-shared-actions/commit/ba9893a661d7b207c72514285228061dfd598ad9))
+
+
+
+
+
 # 1.1.0 (2026-03-02)
 
 
