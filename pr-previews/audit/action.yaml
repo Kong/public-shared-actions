@@ -41,6 +41,10 @@ inputs:
         - '**/src/**/*.vue'
         - '**/src/**/*.ts'
       test:
+        - '**/playwright/specs/**/*'
+        - '**/playwright/page-objects/**/*'
+        - '**/playwright/fixtures/**/*'
+        - '**/playwright/utils/**/*'
         - '**/cypress/specs/**/*'
         - '**/cypress/page-objects/**/*'
         - '**/src/**/*.spec.ts'
