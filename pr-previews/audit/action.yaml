@@ -90,7 +90,7 @@ runs:
         inputs.pnpm-audit == 'true'
       id: pnpm-audit
       continue-on-error: true
-      uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b #7.1.0
+      uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
       with:
         github-token: ${{ env.GITHUB_TOKEN }}
         script: |
@@ -198,7 +198,7 @@ runs:
       if: |
         inputs.check-renovate-security-pr == 'true' ||
         inputs.check-renovate == 'true'
-      uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b #7.1.0
+      uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
       with:
         github-token: ${{ env.GITHUB_TOKEN }}
         script: |
@@ -252,7 +252,7 @@ runs:
       continue-on-error: true
       if: |
         inputs.check-test-coverage == 'true'
-      uses: Kong/changed-files@4edd678ac3f81e2dc578756871e4d00c19191daf
+      uses: Kong/changed-files@cd69b79ca4e2a1198064c5e6564cce68920df311
       with:
         files_yaml: ${{ inputs.test-coverage-files }}
 
@@ -261,7 +261,7 @@ runs:
       if: |
         inputs.check-test-coverage == 'true'
       continue-on-error: true
-      uses: actions/github-script@v7
+      uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
       with:
         github-token: ${{ env.GITHUB_TOKEN }}
         script: |
@@ -339,7 +339,7 @@ runs:
 
     - name: Collect results
       id: collect-results
-      uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b #7.1.0
+      uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
       with:
         github-token: ${{ env.GITHUB_TOKEN }}
         script: |
