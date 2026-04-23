@@ -67,7 +67,7 @@ runs:
   using: composite
   steps:
     - name: Remove audit PR comments
-      uses: Kong/sticky-pull-request-comment@67d0dec7b07ed060a405f9b2a64b8ab319fdd7db # v2.9.2
+      uses: Kong/sticky-pull-request-comment@0ea0beb66eb9baf113663a64ec522f60e49231c0 # v3.0.4
       with:
         header: pr-audit
         delete: true
@@ -440,7 +440,7 @@ runs:
     - name: Create PR comment
       if: |
         steps.collect-results.outputs.results != ''
-      uses: Kong/sticky-pull-request-comment@67d0dec7b07ed060a405f9b2a64b8ab319fdd7db # v2.9.2
+      uses: Kong/sticky-pull-request-comment@0ea0beb66eb9baf113663a64ec522f60e49231c0 # v3.0.4
       with:
         header: pr-audit
         GITHUB_TOKEN: ${{ env.GITHUB_TOKEN }}
