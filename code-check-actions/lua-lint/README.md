@@ -9,10 +9,10 @@ This action looks for any `cli` arguments and a deafult `.luacheckrc` config to 
 ## Inputs
 
 ```yaml
-additional_args: 
+additional_args:
     description: 'Arguments to luacheck'
     required: 'false'
-    default: '.' # Default: Run luacheck on workspace dir 
+    default: '.' # Default: Run luacheck on workspace dir
 ```
 
 ## Outputs
@@ -55,15 +55,15 @@ jobs:
     steps:
     - name: Checkout source code
       uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
-    
+
     # Optional step to run on only changed files
     - name: Get changed files
       id: changed-files
-      uses: kong/changed-files@4edd678ac3f81e2dc578756871e4d00c19191daf
-      with: 
+      uses: Kong/changed-files@cd69b79ca4e2a1198064c5e6564cce68920df311
+      with:
         files: |
           **.lua
-    
+
     - name: Lua Check
       if: steps.changed-files.outputs.any_changed == 'true'
       uses: Kong/public-shared-actions/code-check-actions/luacheck@main
