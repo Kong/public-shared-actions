@@ -143,3 +143,4 @@ runs:
         SLACK_WEBHOOK_TYPE: 'INCOMING_WEBHOOK'
       with:
         payload: ${{ inputs.payload != '' && inputs.payload || steps.slack-payload.outputs.payload }}
+        webhook-type: incoming-webhook
