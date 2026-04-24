@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [5.0.2](https://github.com/Kong/public-shared-actions/compare/slack-workflow-notification@5.0.1...slack-workflow-notification@5.0.2) (2026-04-24)
+
+
+### 🐛 Bug Fixes
+
+* **ci:** bumping slackapi/slack-github-action [KHCP-20416] ([#369](https://github.com/Kong/public-shared-actions/issues/369)) ([1817957](https://github.com/Kong/public-shared-actions/commit/181795782517d00eb0d968d7e0b28a9d180b4f76))
+* **ci:** missing required parm for slackapi/slack-github-action [KHCP-20416] ([#370](https://github.com/Kong/public-shared-actions/issues/370)) ([8d98bc1](https://github.com/Kong/public-shared-actions/commit/8d98bc15a5143332a36f206e6699296e6cc2adac))
+
+
+
+
+
 ## [5.0.1](https://github.com/Kong/public-shared-actions/compare/slack-workflow-notification@5.0.0...slack-workflow-notification@5.0.1) (2025-08-20)
 
 

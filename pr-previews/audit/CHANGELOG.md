@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.1.2](https://github.com/Kong/public-shared-actions/compare/pr-audit@1.1.1...pr-audit@1.1.2) (2026-04-24)
+
+
+### 🐛 Bug Fixes
+
+* **ci:** bumping actions to prevent node 20 warning []KHCP-20416] ([#368](https://github.com/Kong/public-shared-actions/issues/368)) ([c421c23](https://github.com/Kong/public-shared-actions/commit/c421c237521965b47a3713fe2f1e7b4aeaf9d8e8))
+
+
+
+
+
 ## [1.1.1](https://github.com/Kong/public-shared-actions/compare/pr-audit@1.1.0...pr-audit@1.1.1) (2026-03-24)
 
 
