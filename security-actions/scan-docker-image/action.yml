@@ -100,7 +100,7 @@ runs:
 
     # Must upload artifact for output file parameter to have effect
     - name: Generate SPDX SBOM Using Syft
-      uses: anchore/sbom-action@f8bdd1d8ac5e901a77a92f111440fdb1b593736b # v0.20.6
+      uses: anchore/sbom-action@e22c389904149dbc22b58101806040fa8d37a610 # v0.24.0
       id: sbom_spdx
       with:
         config: ${{ inputs.config }}
@@ -116,7 +116,7 @@ runs:
         github-token: ${{ inputs.github-token }}
 
     - name: Generate CycloneDX SBOM Using Syft
-      uses: anchore/sbom-action@f8bdd1d8ac5e901a77a92f111440fdb1b593736b # v0.20.6
+      uses: anchore/sbom-action@e22c389904149dbc22b58101806040fa8d37a610 # v0.24.0
       id: sbom_cyclonedx
       with:
         config: ${{ inputs.config }}
@@ -152,7 +152,7 @@ runs:
     # Instead handled explicitly to try from mirror before reaching upstream for more realiability
     - name: Install Grype
       id: grype_install
-      uses: anchore/scan-action/download-grype@f6601287cdb1efc985d6b765bbf99cb4c0ac29d8 # v7.0.0
+      uses: anchore/scan-action/download-grype@e1165082ffb1fe366ebaf02d8526e7c4989ea9d2 # v7.4.0
       with:
         cache-db: false
 
@@ -184,7 +184,7 @@ runs:
     # Explicitly check for Grype DB in Git Cache
     - name: Check Git Cache for Grype DB
       id: grype_db_git_cache
-      uses: actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809 # v4.2.4
+      uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
       with:
         # Grype cache files are stored in `~/.cache/grype/db` on Linux/macOS
         path: ~/.cache/grype/db
@@ -257,7 +257,7 @@ runs:
     # Grype is invoked first time ever
     # Don't fail during report generation
     - name: Vulnerability analysis of SBOM
-      uses: anchore/scan-action@f6601287cdb1efc985d6b765bbf99cb4c0ac29d8 # v7.0.0
+      uses: anchore/scan-action@e1165082ffb1fe366ebaf02d8526e7c4989ea9d2 # v7.4.0
       id: grype_analysis_sarif
       if: ${{ steps.sbom_report.outputs.files_exists == 'true' && steps.grype_db_status.outputs.db_status == '0' }}
       with:
@@ -274,7 +274,7 @@ runs:
     # Don't fail during report generation
     # JSON format will report  any ignored rules
     - name: Vulnerability analysis of SBOM
-      uses: anchore/scan-action@f6601287cdb1efc985d6b765bbf99cb4c0ac29d8 # v7.0.0
+      uses: anchore/scan-action@e1165082ffb1fe366ebaf02d8526e7c4989ea9d2 # v7.4.0
       id: grype_analysis_json
       if: ${{ steps.sbom_report.outputs.files_exists == 'true' && steps.grype_db_status.outputs.db_status == '0' }}
       with:
@@ -314,7 +314,7 @@ runs:
         mv ${{ steps.grype_analysis_json.outputs.json }} ${{ steps.meta.outputs.grype_json_file }}
 
     - name: Upload grype analysis report
-      uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+      uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
       with:
         name: ${{ steps.meta.outputs.grype_sarif_file }}
         path: |
@@ -323,7 +323,7 @@ runs:
 
     # Upload grype cve reports
     - name: Upload grype analysis report
-      uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+      uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
       with:
         name: ${{ steps.meta.outputs.grype_json_file }}
         path: |
@@ -334,7 +334,7 @@ runs:
     # Notify grype quick scan results in table format
     # Table format will supress any specified ignore rules
     - name: Inspect Vulnerability analysis of SBOM
-      uses: anchore/scan-action@f6601287cdb1efc985d6b765bbf99cb4c0ac29d8 # v7.0.0
+      uses: anchore/scan-action@e1165082ffb1fe366ebaf02d8526e7c4989ea9d2 # v7.4.0
       if: ${{ steps.sbom_report.outputs.files_exists == 'true' && steps.grype_db_status.outputs.db_status == '0' }}
       with:
         sbom: ${{ steps.meta.outputs.sbom_spdx_file }}
@@ -423,7 +423,7 @@ runs:
 
     - name: upload docker-cis JSON report
       if: ${{ inputs.skip_cis_scan != 'true' && steps.meta.outputs.scan_image != '' }}
-      uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+      uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
       with:
         name: ${{ steps.meta.outputs.cis_json_file }}
         path: |

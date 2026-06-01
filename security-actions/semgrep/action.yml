@@ -46,7 +46,7 @@ runs:
     # Upload grype cve reports
     - name: Upload Semgrep to Workflow
       if: always()
-      uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+      uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
       with:
         name: semgrep_sast.zip
         path: |
@@ -56,7 +56,7 @@ runs:
 
     - name: Upload SARIF to Github Code Scanning
       if: ${{ always() && inputs.codeql_upload == 'true' && github.event.repository.visibility == 'public' }}
-      uses: github/codeql-action/upload-sarif@51f77329afa6477de8c49fc9c7046c15b9a4e79d # v3.29.7
+      uses: github/codeql-action/upload-sarif@f52b05f4acaaa234e44466e66d29050e135ea9ef # v4.36.0
       with:
         # Path to SARIF file relative to the root of the repository
         sarif_file: semgrep_${{github.sha}}.sarif
