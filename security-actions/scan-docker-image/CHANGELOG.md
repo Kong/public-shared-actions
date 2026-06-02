@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [6.1.1](https://github.com/Kong/public-shared-actions/compare/scan-docker-image@6.1.0...scan-docker-image@6.1.1) (2026-06-02)
+
+
+### ♻️ Chores
+
+* **ci:** bump node.js to 24 ([a5e0aa6](https://github.com/Kong/public-shared-actions/commit/a5e0aa61ab5a50cfc14126d0e3970fa6ae337007))
+
+
+
+
+
 # [6.1.0](https://github.com/Kong/public-shared-actions/compare/scan-docker-image@6.0.2...scan-docker-image@6.1.0) (2026-03-02)
 
 

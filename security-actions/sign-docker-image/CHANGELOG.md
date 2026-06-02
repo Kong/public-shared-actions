@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [5.0.4](https://github.com/Kong/public-shared-actions/compare/sign-docker-image@5.0.3...sign-docker-image@5.0.4) (2026-06-02)
+
+
+### ♻️ Chores
+
+* **ci:** bump node.js to 24 ([a5e0aa6](https://github.com/Kong/public-shared-actions/commit/a5e0aa61ab5a50cfc14126d0e3970fa6ae337007))
+
+
+
+
+
 ## [5.0.3](https://github.com/Kong/public-shared-actions/compare/sign-docker-image@5.0.2...sign-docker-image@5.0.3) (2025-09-21)
 
 

@@ -3,6 +3,22 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [5.0.3](https://github.com/Kong/public-shared-actions/compare/lua-lint@5.0.2...lua-lint@5.0.3) (2026-06-02)
+
+
+### 🐛 Bug Fixes
+
+* **ci:** bumping actions to prevent node 20 warning []KHCP-20416] ([#368](https://github.com/Kong/public-shared-actions/issues/368)) ([c421c23](https://github.com/Kong/public-shared-actions/commit/c421c237521965b47a3713fe2f1e7b4aeaf9d8e8))
+
+
+### ♻️ Chores
+
+* **ci:** bump node.js to 24 ([a5e0aa6](https://github.com/Kong/public-shared-actions/commit/a5e0aa61ab5a50cfc14126d0e3970fa6ae337007))
+
+
+
+
+
 ## [5.0.2](https://github.com/Kong/public-shared-actions/compare/lua-lint@5.0.1...lua-lint@5.0.2) (2025-09-09)
 
 

@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [5.0.2](https://github.com/Kong/public-shared-actions/compare/semgrep@5.0.1...semgrep@5.0.2) (2026-06-02)
+
+
+### ♻️ Chores
+
+* **ci:** bump node.js to 24 ([a5e0aa6](https://github.com/Kong/public-shared-actions/commit/a5e0aa61ab5a50cfc14126d0e3970fa6ae337007))
+
+
+
+
+
 ## [5.0.1](https://github.com/Kong/public-shared-actions/compare/semgrep@5.0.0...semgrep@5.0.1) (2025-09-22)
 
 
