@@ -32,10 +32,23 @@ inputs:
     description: The message to display when the workflow is skipped. Accepts markdown syntax.
     required: false
     default: ':white_circle: Workflow skipped'
+  tag:
+    description: |
+      Override the commit hash displayed in the notification by resolving this tag to its commit hash.
+      If provided, this will be resolved to the actual commit hash.
+      If the tag cannot be resolved, the notification will fallback to using the current commit hash.
+    required: false
+    default: ''
 
 runs:
   using: composite
   steps:
+    - name: Checkout repository
+      if: ${{ inputs.tag != '' }}
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0  # Fetch full history to ensure all tags are available
+
     - name: Construct Slack variables
       id: slack-variables
       shell: bash
@@ -43,6 +56,17 @@ runs:
         # Git Variables
         fallbackBranchName=$(echo "${{ github.ref }}" | cut -c12-)
         shortCommitHash=$(echo "${{ github.sha }}" | cut -c1-7)
+        
+        # Resolve tag to commit hash if provided, otherwise use default commit hash
+        if [[ -n "${{ inputs.tag }}" ]]; then
+          if lookupCommitHashForTag=$(git rev-parse "${{ inputs.tag }}" 2>&1); then
+            shortCommitHash=$(echo "${lookupCommitHashForTag}" | cut -c1-7)
+            echo "Resolved tag '${{ inputs.tag }}' to commit hash: ${lookupCommitHashForTag}"
+          else
+            echo "Error resolving tag '${{ inputs.tag }}': ${lookupCommitHashForTag}"
+            echo "Falling back to current workflow commit hash: ${{ github.sha }}"
+          fi
+        fi
 
         # Determine status message
         if [[ "${{ inputs.status }}" == 'success' ]]; then
