@@ -370,6 +370,7 @@ runs:
               'If you believe this is a false positive or if there are valid reasons for not including test coverage changes, please add the `test-coverage-exempt` label to the PR and include a `[TEST-COVERAGE-EXEMPT-REASON]` tag followed by your reason in the PR description.',
               '',
               'example:',
+              '',
               '`[TEST-COVERAGE-EXEMPT-REASON] This change does not require test coverage because it only affects documentation.`',
               ''
               ].join('\n'))
