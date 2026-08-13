@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.1.3](https://github.com/Kong/public-shared-actions/compare/pr-audit@1.1.2...pr-audit@1.1.3) (2026-08-13)
+
+
+### 🐛 Bug Fixes
+
+* **ci:** instead of manager approval require test-exempt description [KHCP-21463] ([#374](https://github.com/Kong/public-shared-actions/issues/374)) ([cbbbf31](https://github.com/Kong/public-shared-actions/commit/cbbbf31a69c4f38d1803ededb69acb2a86836f85))
+
+
+
+
+
 ## [1.1.2](https://github.com/Kong/public-shared-actions/compare/pr-audit@1.1.1...pr-audit@1.1.2) (2026-04-24)
 
 

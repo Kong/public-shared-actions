@@ -3,6 +3,14 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [6.0.3](https://github.com/Kong/public-shared-actions/compare/sca@6.0.2...sca@6.0.3) (2026-08-13)
+
+**Note:** Version bump only for package sca
+
+
+
+
+
 ## [6.0.2](https://github.com/Kong/public-shared-actions/compare/sca@6.0.1...sca@6.0.2) (2025-11-17)
 
 
