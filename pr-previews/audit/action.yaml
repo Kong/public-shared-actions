@@ -49,20 +49,6 @@ inputs:
         - '**/cypress/page-objects/**/*'
         - '**/src/**/*.spec.ts'
         - '**/src/**/*.cy.ts'
-  test-coverage-exempt-approvers:
-    description: List of users that can approve PRs without test coverage
-    default: |
-      - jillztom
-      - nateslo
-      - erichsend
-      - lahabana
-      - hangrao
-      - ryanmoore
-      - elen4
-      - DaniellaFreese
-      - mfollett
-      - ValeryG
-
 runs:
   using: composite
   steps:
@@ -265,40 +251,8 @@ runs:
       with:
         github-token: ${{ env.GITHUB_TOKEN }}
         script: |
-          // Define the list of allowed approvers (managers)
-          const allowedApprovers=`${{ inputs.test-coverage-exempt-approvers }}`.split('\n').map(item => item.trim().replace('- ', '')).filter(approver => approver !== '');
-
-          console.log('allowedApprovers:' + JSON.stringify(allowedApprovers))
-
-          const { data: reviews } = await github.rest.pulls.listReviews({
-            owner: context.repo.owner,
-            repo: context.repo.repo,
-            pull_number: context.issue.number,
-          })
-
-          const latestByUser = reviews.reduce((acc, r) => {
-            const login = r.user && r.user.login
-            if (!login) return acc;
-            if (!allowedApprovers.includes(login)) return acc;
-            const submitted = r.submitted_at ? new Date(r.submitted_at) : new Date(0);
-            const prevSubmitted = acc[login] && acc[login].submitted_at ? new Date(acc[login].submitted_at) : new Date(0);
-            if (!acc[login] || submitted > prevSubmitted) {
-            acc[login] = r
-            }
-            return acc
-          }, {})
-
-          const approvers = Object.values(latestByUser)
-            .filter(review => review.state === 'APPROVED')
-            .map(review => review.user.login)
-
-          console.log('approved by:' + JSON.stringify(approvers))
-
-          const managerApproved = approvers.length > 0
-
           console.log('src: ${{steps.test-coverage-changed.outputs.src_any_changed}}')
           console.log('test: ${{steps.test-coverage-changed.outputs.test_any_changed}}')
-          console.log('managerApproved: ' + managerApproved)
 
           // if there is something in tests - we are ok for now
           if  ('${{steps.test-coverage-changed.outputs.test_any_changed}}' == 'true') {
@@ -325,14 +279,17 @@ runs:
 
           console.log('PR labels:', JSON.stringify(labels))
 
+          const reasonMatch = (pr.body || '').match(/\[TEST-EXEMPT-REASON\]\s*:?\s*(\S.*)/i)
+          const hasExemptReason = reasonMatch && reasonMatch[1].trim().length > 0
+
           if (labels.includes('test-coverage-exempt')) {
 
-            if (managerApproved) {
-              console.log('PR is approved by a manager for test-coverage-exempt.')
+            if (hasExemptReason) {
+              console.log('PR is exempt from test coverage: ' + reasonMatch[1].trim())
               return
             }
           }
-          console.log('PR doesn\'t have any test coverage or test-coverage-exempt approval. See [details](https://github.com/Kong/konnect-ui-apps/blob/main/docs/test-coverage-pr-guard.md)')
+          console.log('PR doesn\'t have any test coverage or a [TEST-EXEMPT-REASON] in the description. See [details](https://github.com/Kong/konnect-ui-apps/blob/main/docs/test-coverage-pr-guard.md)')
           core.setOutput('failed', 'failed')
 
 
@@ -404,15 +361,15 @@ runs:
           const testCoverageFailed = `${{ steps.test-coverage.outputs.failed }}`
           if (testCoverageFailed) {
 
-            const allowedApprovers=`${{ inputs.test-coverage-exempt-approvers }}`.split('\n').map(item => item.trim().replace('- ', '')).filter(approver => approver !== '').map(approver => `\`${approver}\``).join(', ');
-
             results += ([
               '',
               '#### :fire: ***No test coverage*** detected.',
               '',
               'This PR does not include any test coverage changes, but it modifies source code. Please add appropriate tests to cover the changes made in this PR.',
               '',
-              `If you believe this is a false positive or if there are valid reasons for not including test coverage changes, please request an exemption by adding the \`test-coverage-exempt\` label to the PR and ensure it is approved by one of those managers ${allowedApprovers}.`,
+              'If you believe this is a false positive or if there are valid reasons for not including test coverage changes, please add the `test-coverage-exempt` label to the PR and include a `[TEST-EXEMPT-REASON]` tag followed by your reason in the PR description.',
+              '',
+              'example: `[TEST-EXEMPT-REASON] This change does not require test coverage because it only affects documentation.`',
               ''
               ].join('\n'))
           }
