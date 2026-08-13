@@ -279,7 +279,7 @@ runs:
 
           console.log('PR labels:', JSON.stringify(labels))
 
-          const reasonMatch = (pr.body || '').match(/\[TEST-EXEMPT-REASON\]\s*:?\s*(\S.*)/i)
+          const reasonMatch = (pr.body || '').match(/\[TEST-COVERAGE-EXEMPT-REASON\]\s*:?\s*(\S.*)/i)
           const hasExemptReason = reasonMatch && reasonMatch[1].trim().length > 0
 
           if (labels.includes('test-coverage-exempt')) {
