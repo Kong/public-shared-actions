@@ -279,7 +279,7 @@ runs:
 
           console.log('PR labels:', JSON.stringify(labels))
 
-          const reasonMatch = (pr.body || '').match(/\[TEST-COVERAGE-EXEMPT-REASON\]\s*:?\s*(\S.*)/i)
+          const reasonMatch = (pr.body || '').match(/\[TEST_COVERAGE_EXEMPT_REASON\]\s*:?\s*(\S.*)/i)
           const hasExemptReason = reasonMatch && reasonMatch[1].trim().length > 0
 
           if (labels.includes('test-coverage-exempt')) {
@@ -289,7 +289,7 @@ runs:
               return
             }
           }
-          console.log('PR doesn\'t have any test coverage or a [TEST-COVERAGE-EXEMPT-REASON] in the description. See [details](https://github.com/Kong/konnect-ui-apps/blob/main/docs/test-coverage-pr-guard.md)')
+          console.log('PR doesn\'t have any test coverage or a [TEST_COVERAGE_EXEMPT_REASON] in the description. See [details](https://github.com/Kong/konnect-ui-apps/blob/main/docs/test-coverage-pr-guard.md)')
           core.setOutput('failed', 'failed')
 
 
@@ -367,11 +367,11 @@ runs:
               '',
               'This PR does not include any test coverage changes, but it modifies source code. Please add appropriate tests to cover the changes made in this PR.',
               '',
-              'If you believe this is a false positive or if there are valid reasons for not including test coverage changes, please add the `test-coverage-exempt` label to the PR and include a `[TEST-COVERAGE-EXEMPT-REASON]` tag followed by your reason in the PR description.',
+              'If you believe this is a false positive or if there are valid reasons for not including test coverage changes, please add the `test-coverage-exempt` label to the PR and include a `[TEST_COVERAGE_EXEMPT_REASON]` tag followed by your reason in the PR description.',
               '',
               'example:',
               '',
-              '`[TEST-COVERAGE-EXEMPT-REASON] This change does not require test coverage because it only affects documentation.`',
+              '`[TEST_COVERAGE_EXEMPT_REASON] This change does not require test coverage because it only affects documentation.`',
               ''
               ].join('\n'))
           }
