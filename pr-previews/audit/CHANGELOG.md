@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.1.4](https://github.com/Kong/public-shared-actions/compare/pr-audit@1.1.3...pr-audit@1.1.4) (2026-08-25)
+
+
+### 🐛 Bug Fixes
+
+* **ci:** stripping the comments before searching for test-except pattern [KHCP-21643] ([#375](https://github.com/Kong/public-shared-actions/issues/375)) ([d757e86](https://github.com/Kong/public-shared-actions/commit/d757e8696f74386840be751a2362e86b4781e35d))
+
+
+
+
+
 ## [1.1.3](https://github.com/Kong/public-shared-actions/compare/pr-audit@1.1.2...pr-audit@1.1.3) (2026-08-13)
 
 
