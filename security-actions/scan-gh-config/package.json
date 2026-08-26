@@ -1,0 +1,14 @@
+{
+  "name": "scan-gh-config",
+  "version": "1.0.0",
+  "description": "Scan GitHub repository and organization configurations for security compliance and best practices",
+  "main": "action.yml",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Kong/public-shared-actions",
+    "directory": "security-actions/scan-gh-config"
+  },
+  "private": false,
+  "author": "Kong, Inc.",
+  "license": "UNLICENSED"
+}

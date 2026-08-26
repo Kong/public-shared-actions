@@ -1,0 +1,28 @@
+name: GitHub Configuration Scan
+
+on:
+  schedule:
+    - cron: '0 6 * * 1' 
+  workflow_dispatch: {}
+
+
+permissions:
+  contents: read
+  security-events: write
+
+jobs:
+  cis-compliance-scan:
+    name: GH CIS Compliance Scan
+    runs-on: ubuntu-latest
+    env:
+      TEST_REPOSITORY: "${{github.repository_owner}}/public-shared-actions"
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+
+      - name: Run Legitify CIS Scan
+        uses: ./security-actions/scan-gh-config
+        with:
+          github_token: ${{ secrets.SECURITY_BOT_LEGITIFY_TOKEN }}
+          codeql_upload: 'false'  
+          repositories: ${{env.TEST_REPOSITORY}}
