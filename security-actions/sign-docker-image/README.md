@@ -67,6 +67,10 @@ permissions:
   registry_password:
     description: 'docker password to login against private docker registry'
     required: false
+  registry_oidc_connection_id:
+    description: 'Docker Hub OIDC connection ID. Use instead of registry_password.'
+    required: false
+    default: ''
   image_registry_domain:
     description: 'image registry domain'
     required: false
@@ -77,10 +81,32 @@ permissions:
   signature_registry_password:
     description: 'password to login to publish image signatures to separate signature registry'
     required: false
+  signature_registry_oidc_connection_id:
+    description: 'Docker Hub OIDC connection ID for the signature registry. Use instead of signature_registry_password.'
+    required: false
+    default: ''
   signature_registry_domain:
     description: 'signature registry domain for images'
     required: false
     default: 'docker.io'
+
+```
+
+Do not set a password and an OIDC connection ID for the same registry. The action rejects an ambiguous configuration.
+
+For Docker Hub OIDC authentication, grant the calling job `id-token: write`. Pass the organization name as the username and the connection ID as an action input:
+
+```yaml
+- name: Sign Image digest
+  uses: Kong/public-shared-actions/security-actions/sign-docker-image@sign-docker-image@5.1.0
+  with:
+    tags: kong/example
+    image_digest: ${{ steps.image_manifest_metadata.outputs.manifest_sha }}
+    registry_username: kong
+    registry_oidc_connection_id: ${{ vars.DOCKERHUB_OIDC_CONN_PUSH }}
+    signature_registry: kong/notary
+    signature_registry_username: kong
+    signature_registry_oidc_connection_id: ${{ vars.DOCKERHUB_OIDC_CONN_PUSH }}
 
 ```
 #### Output specification

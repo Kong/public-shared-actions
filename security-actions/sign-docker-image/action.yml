@@ -26,6 +26,10 @@ inputs:
   registry_password:
     description: 'password to login against private image registry'
     required: false
+  registry_oidc_connection_id:
+    description: 'Docker Hub OIDC connection ID. Use instead of registry_password.'
+    required: false
+    default: ''
   image_registry_domain:
     description: 'image registry domain'
     required: false
@@ -36,6 +40,10 @@ inputs:
   signature_registry_password:
     description: 'password to login to publish image signatures to separate signature registry'
     required: false
+  signature_registry_oidc_connection_id:
+    description: 'Docker Hub OIDC connection ID for the signature registry. Use instead of signature_registry_password.'
+    required: false
+    default: ''
   signature_registry_domain:
     description: 'signature registry domain for images'
     required: false
@@ -49,6 +57,26 @@ inputs:
 runs:
   using: composite
   steps:
+
+    - name: Validate registry authentication inputs
+      shell: bash
+      env:
+        REGISTRY_PASSWORD: ${{ inputs.registry_password }}
+        REGISTRY_OIDC_CONNECTION_ID: ${{ inputs.registry_oidc_connection_id }}
+        SIGNATURE_REGISTRY_PASSWORD: ${{ inputs.signature_registry_password }}
+        SIGNATURE_REGISTRY_OIDC_CONNECTION_ID: ${{ inputs.signature_registry_oidc_connection_id }}
+      run: |
+        set -euo pipefail
+
+        if [[ -n "$REGISTRY_PASSWORD" && -n "$REGISTRY_OIDC_CONNECTION_ID" ]]; then
+          echo '::error::Set only one of registry_password or registry_oidc_connection_id.'
+          exit 1
+        fi
+
+        if [[ -n "$SIGNATURE_REGISTRY_PASSWORD" && -n "$SIGNATURE_REGISTRY_OIDC_CONNECTION_ID" ]]; then
+          echo '::error::Set only one of signature_registry_password or signature_registry_oidc_connection_id.'
+          exit 1
+        fi
 
     - name: Set Cosign metadata
       shell: bash
@@ -87,21 +115,25 @@ runs:
     # By default cosign publishes image signatures alongside image repositories in the same registry
     # This step is needed for pulling image from / pushing image sig to private registry
     - name: Login to Image Registry - ${{ inputs.image_registry_domain }}
-      uses: docker/login-action@650006c6eb7dba73a995cc03b0b2d7f5ca915bee # v4.2.0
-      if: ${{ inputs.registry_username != '' && inputs.registry_password != '' }}
+      uses: docker/login-action@06fb636fac595d6fb4b28a5dfcb21a6f5091859c # v4.5.0
+      if: ${{ inputs.registry_username != '' && (inputs.registry_password != '' || inputs.registry_oidc_connection_id != '') }}
       with:
         registry: ${{ inputs.image_registry_domain }}
         username: ${{ inputs.registry_username }}
         password: ${{ inputs.registry_password }}
+      env:
+        DOCKERHUB_OIDC_CONNECTIONID: ${{ inputs.registry_oidc_connection_id }}
     
     # This step runs if signature registry is different from image registry
     - name: Login to Signature Registry - ${{ inputs.signature_registry_domain }}
-      uses: docker/login-action@650006c6eb7dba73a995cc03b0b2d7f5ca915bee # v4.2.0
-      if: ${{ inputs.signature_registry_username != '' && inputs.signature_registry_password != '' }}
+      uses: docker/login-action@06fb636fac595d6fb4b28a5dfcb21a6f5091859c # v4.5.0
+      if: ${{ inputs.signature_registry_username != '' && (inputs.signature_registry_password != '' || inputs.signature_registry_oidc_connection_id != '') }}
       with:
         registry: ${{ inputs.signature_registry_domain }}
         username: ${{ inputs.signature_registry_username }}
         password: ${{ inputs.signature_registry_password }}
+      env:
+        DOCKERHUB_OIDC_CONNECTIONID: ${{ inputs.signature_registry_oidc_connection_id }}
 
     - name: Sign the images with GitHub OIDC Token 
       id: sign
