@@ -147,6 +147,7 @@ runs:
         set -euox pipefail
         for img in $IMAGES; do
           cosign sign ${{ env.COSIGN_ARGS }} \
+          --timeout 10m \
           -a "repo=${{ github.repository }}" \
           -a "workflow=${{ github.workflow }}" \
           -a "sha=${{ github.sha }}" \
