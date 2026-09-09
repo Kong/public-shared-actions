@@ -48,6 +48,10 @@ inputs:
     description: 'signature registry domain for images'
     required: false
     default: 'docker.io'
+  dockerhub_oidc_expires_in:
+    description: 'Docker Hub OIDC token lifetime in seconds for both registry logins. Valid range: 300-3600. Does not change the signing timeout.'
+    required: false
+    default: '900'
 
 #outputs:
   # sbom-cyclonedx-report:
@@ -123,6 +127,7 @@ runs:
         password: ${{ inputs.registry_password }}
       env:
         DOCKERHUB_OIDC_CONNECTIONID: ${{ inputs.registry_oidc_connection_id }}
+        DOCKERHUB_OIDC_EXPIREIN: ${{ inputs.dockerhub_oidc_expires_in }}
     
     # This step runs if signature registry is different from image registry
     - name: Login to Signature Registry - ${{ inputs.signature_registry_domain }}
@@ -134,6 +139,7 @@ runs:
         password: ${{ inputs.signature_registry_password }}
       env:
         DOCKERHUB_OIDC_CONNECTIONID: ${{ inputs.signature_registry_oidc_connection_id }}
+        DOCKERHUB_OIDC_EXPIREIN: ${{ inputs.dockerhub_oidc_expires_in }}
 
     - name: Sign the images with GitHub OIDC Token 
       id: sign

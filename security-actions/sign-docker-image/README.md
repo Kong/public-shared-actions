@@ -89,10 +89,20 @@ permissions:
     description: 'signature registry domain for images'
     required: false
     default: 'docker.io'
+  dockerhub_oidc_expires_in:
+    description: 'Docker Hub OIDC token lifetime in seconds for both registry logins. Valid range: 300-3600. Does not change the signing timeout.'
+    required: false
+    default: '900'
 
 ```
 
 Do not set a password and an OIDC connection ID for the same registry. The action rejects an ambiguous configuration.
+
+Docker Hub OIDC tokens default to 900 seconds (15 minutes) for both registry logins.
+For longer signing batches, set `dockerhub_oidc_expires_in: '3600'` under `with` to request one hour.
+Choose a lifetime that covers the entire signing batch. Tokens do not refresh automatically.
+The supported range is 300-3600 seconds. The login action validates this range when it uses Docker Hub OIDC.
+This input does not affect password authentication or the ten-minute timeout for each signing command.
 
 For Docker Hub OIDC authentication, grant the calling job `id-token: write`. Pass the organization name as the username and the connection ID as an action input:
 
