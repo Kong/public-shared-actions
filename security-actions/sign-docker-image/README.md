@@ -67,6 +67,10 @@ permissions:
   registry_password:
     description: 'docker password to login against private docker registry'
     required: false
+  registry_oidc_connection_id:
+    description: 'Docker Hub OIDC connection ID. Use instead of registry_password.'
+    required: false
+    default: ''
   image_registry_domain:
     description: 'image registry domain'
     required: false
@@ -77,10 +81,42 @@ permissions:
   signature_registry_password:
     description: 'password to login to publish image signatures to separate signature registry'
     required: false
+  signature_registry_oidc_connection_id:
+    description: 'Docker Hub OIDC connection ID for the signature registry. Use instead of signature_registry_password.'
+    required: false
+    default: ''
   signature_registry_domain:
     description: 'signature registry domain for images'
     required: false
     default: 'docker.io'
+  dockerhub_oidc_expires_in:
+    description: 'Docker Hub OIDC token lifetime in seconds for both registry logins. Valid range: 300-3600. Does not change the signing timeout.'
+    required: false
+    default: '900'
+
+```
+
+Do not set a password and an OIDC connection ID for the same registry. The action rejects an ambiguous configuration.
+
+Docker Hub OIDC tokens default to 900 seconds (15 minutes) for both registry logins.
+For longer signing batches, set `dockerhub_oidc_expires_in: '3600'` under `with` to request one hour.
+Choose a lifetime that covers the entire signing batch. Tokens do not refresh automatically.
+The supported range is 300-3600 seconds. The login action validates this range when it uses Docker Hub OIDC.
+This input does not affect password authentication or the ten-minute timeout for each signing command.
+
+For Docker Hub OIDC authentication, grant the calling job `id-token: write`. Pass the organization name as the username and the connection ID as an action input:
+
+```yaml
+- name: Sign Image digest
+  uses: Kong/public-shared-actions/security-actions/sign-docker-image@sign-docker-image@5.1.0
+  with:
+    tags: kong/example
+    image_digest: ${{ steps.image_manifest_metadata.outputs.manifest_sha }}
+    registry_username: kong
+    registry_oidc_connection_id: ${{ vars.DOCKERHUB_OIDC_CONN_PUSH }}
+    signature_registry: kong/notary
+    signature_registry_username: kong
+    signature_registry_oidc_connection_id: ${{ vars.DOCKERHUB_OIDC_CONN_PUSH }}
 
 ```
 #### Output specification

@@ -31,6 +31,40 @@ jobs:
 
     - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
 
+    - name: Reject password and OIDC for the image registry
+      id: ambiguous-image-registry-auth
+      continue-on-error: true
+      uses: ./security-actions/sign-docker-image
+      with:
+        tags: example/image
+        image_digest: sha256:unused
+        registry_username: kong
+        registry_password: unused
+        registry_oidc_connection_id: 123e4567-e89b-42d3-a456-426614174000
+
+    - name: Check image registry authentication validation
+      if: ${{ steps.ambiguous-image-registry-auth.outcome != 'failure' }}
+      run: |
+        echo 'The action accepted both image registry credential types.'
+        exit 1
+
+    - name: Reject password and OIDC for the signature registry
+      id: ambiguous-signature-registry-auth
+      continue-on-error: true
+      uses: ./security-actions/sign-docker-image
+      with:
+        tags: example/image
+        image_digest: sha256:unused
+        signature_registry_username: kong
+        signature_registry_password: unused
+        signature_registry_oidc_connection_id: 123e4567-e89b-42d3-a456-426614174000
+
+    - name: Check signature registry authentication validation
+      if: ${{ steps.ambiguous-signature-registry-auth.outcome != 'failure' }}
+      run: |
+        echo 'The action accepted both signature registry credential types.'
+        exit 1
+
     - name: Install regctl
       uses: regclient/actions/regctl-installer@ce5fd131e371ffcdd7508b478cb223b3511a9183
 

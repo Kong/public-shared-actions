@@ -66,8 +66,6 @@ jobs:
           skip_cis_scan: false
           trivy_db_cache: Kong/trivy-db-mirror@master
           trivy_db_cache_token: ${{ secrets.SECURITY_BOT_PSA_PAT }}
-          grype_db_cache: Kong/grype-db-mirror@main
-          grype_db_cache_token: ${{ secrets.SECURITY_BOT_PSA_PAT }}
           by_cve: true
 
         # Should use git cache for grype DB due to AMD64 scan being run first
