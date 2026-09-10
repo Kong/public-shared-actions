@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [5.1.0](https://github.com/Kong/public-shared-actions/compare/sign-docker-image@5.0.4...sign-docker-image@5.1.0) (2026-09-10)
+
+
+### ✨ Features
+
+* **sign-docker-image:** support Docker OIDC ([#376](https://github.com/Kong/public-shared-actions/issues/376)) ([9c55316](https://github.com/Kong/public-shared-actions/commit/9c5531624ac2b95359c897c64a2de86f6e6cea70))
+
+
+
+
+
 ## [5.0.4](https://github.com/Kong/public-shared-actions/compare/sign-docker-image@5.0.3...sign-docker-image@5.0.4) (2026-06-02)
 
 
