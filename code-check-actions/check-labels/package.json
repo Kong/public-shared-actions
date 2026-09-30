@@ -1,6 +1,6 @@
 {
   "name": "check-labels",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "This action fails a pull request check when a specified blocking label is applied to the PR",
   "main": "index.js",
   "repository": {
