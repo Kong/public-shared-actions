@@ -50,6 +50,8 @@ importers:
 
   code-build-actions/build-js-sdk: {}
 
+  code-check-actions/check-labels: {}
+
   code-check-actions/lua-lint: {}
 
   code-check-actions/rust-lint: {}

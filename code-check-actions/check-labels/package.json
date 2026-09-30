@@ -1,0 +1,14 @@
+{
+  "name": "check-labels",
+  "version": "1.0.0",
+  "description": "This action fails a pull request check when a specified blocking label is applied to the PR",
+  "main": "index.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Kong/public-shared-actions",
+    "directory": "code-check-actions/check-labels"
+  },
+  "private": false,
+  "author": "Kong, Inc.",
+  "license": "UNLICENSED"
+}
