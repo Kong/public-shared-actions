@@ -56,7 +56,9 @@ jobs:
         uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
         with:
           fetch-depth: 0
-          token: ${{ secrets.SECURITY_BOT_PSA_PAT }}
+          # Native token avoids the PAT; recursion protection means the
+          # pushed version commit does not re-trigger ci/release.
+          token: ${{ github.token }}
 
       - uses: pnpm/action-setup@a7487c7e89a18df4991f7f222e4898a00d66ddda
         name: Install pnpm
@@ -84,7 +86,7 @@ jobs:
       - name: Provision tags and make a release
         if: ${{ github.ref == 'refs/heads/main' }}
         env:
-          GH_TOKEN: ${{ secrets.SECURITY_BOT_PSA_PAT }}
+          GH_TOKEN: ${{ github.token }}
         shell: bash
         run: |
           pnpm version:ci
