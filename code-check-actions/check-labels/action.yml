@@ -1,0 +1,32 @@
+name: 'Check PR Labels'
+description: 'Fails the pull request check when a specified blocking label is applied'
+author: 'Kong'
+
+inputs:
+  label:
+    description: 'PR label that blocks the merge'
+    required: false
+    default: 'do not merge'
+
+runs:
+  using: composite
+  steps:
+    # Label state comes from the event payload, so no checkout is needed.
+    # 'labels' reflects the current state on labeled/unlabeled events, so
+    # adding or removing the label flips this check on the next run.
+    - name: Fail on blocking label
+      shell: bash
+      env:
+        LABEL: ${{ inputs.label }}
+        LABEL_PRESENT: ${{ contains(github.event.pull_request.labels.*.name, inputs.label) }}
+      run: |
+        # Escape workflow command data to prevent log injection.
+        # Ref: https://docs.github.com/actions/reference/workflow-commands-for-github-actions
+        ESCAPED_LABEL=${LABEL//'%'/'%25'}
+        ESCAPED_LABEL=${ESCAPED_LABEL//$'\r'/'%0D'}
+        ESCAPED_LABEL=${ESCAPED_LABEL//$'\n'/'%0A'}
+        if [[ "${LABEL_PRESENT}" == "true" ]]; then
+          echo "::error::PR cannot merge while '${ESCAPED_LABEL}' label is applied"
+          exit 1
+        fi
+        echo "Label '${ESCAPED_LABEL}' not applied, check passed"
