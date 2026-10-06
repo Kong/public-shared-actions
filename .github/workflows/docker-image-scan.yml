@@ -65,7 +65,7 @@ jobs:
           image: ${{env.IMAGE}}@${{ steps.image_manifest_metadata.outputs.amd64_sha }}
           skip_cis_scan: false
           trivy_db_cache: Kong/trivy-db-mirror@master
-          trivy_db_cache_token: ${{ secrets.SECURITY_BOT_PSA_PAT }}
+          trivy_db_cache_token: ${{ github.token }}
           by_cve: true
 
         # Should use git cache for grype DB due to AMD64 scan being run first
