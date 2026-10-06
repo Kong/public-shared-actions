@@ -116,8 +116,11 @@ runs:
               vulnType = line.trim().split('│')[1].trim()
               nexLineIsVulnerabilityType = false
             }
-            if (line.startsWith('│ Patched versions    │ <0.0.0')) {
-              vulnerabilityHasNoPatch = true
+            if (line.startsWith('│ Patched versions')) {
+              const patchedVersions = (line.split('│')[2] || '').trim()
+              if (patchedVersions.startsWith('<0.0.0') || patchedVersions.toLowerCase() === 'none') {
+                vulnerabilityHasNoPatch = true
+              }
             }
             if (line.startsWith('└─')) {
               if (!vulnerabilityHasNoPatch && vulnType) {
