@@ -25,11 +25,31 @@ jobs:
         with:
           fetch-depth: 0
 
+      - uses: pnpm/action-setup@a7487c7e89a18df4991f7f222e4898a00d66ddda
+        name: Install pnpm
+        with:
+          version: 9
+          run_install: false
+
+      - name: Install Node.js
+        uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
+        with:
+          node-version: 24
+          cache: 'pnpm'
+
+      # lerna is no longer preinstalled on the runner image; use the repo-pinned version
+      - name: Install dependencies
+        run: pnpm install
+
       - name: Check new releases
         shell: bash
         id: lerna-check
         run: |
-          changed=$(lerna changed || true)
+          # Fail loudly if lerna is unavailable instead of silently reporting no changes
+          pnpm exec lerna --version
+
+          # `lerna changed` exits non-zero when nothing changed
+          changed=$(pnpm exec lerna changed || true)
 
           echo "Changed packages:"
           echo "$changed"
@@ -69,7 +89,7 @@ jobs:
       - name: Install Node.js
         uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
         with:
-          node-version: 20
+          node-version: 24
           cache: 'pnpm'
       
       # This is needed since we only cache ~/.pnpm_store instead of entire node_modules    
