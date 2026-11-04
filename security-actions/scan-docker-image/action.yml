@@ -362,13 +362,46 @@ runs:
         fi
         echo "::endgroup::"
 
-      # Issue: https://github.com/aquasecurity/trivy/issues/7938
-      # Discussion: https://github.com/aquasecurity/trivy/discussions/7668
-      # Fix: Refer https://github.com/aquasecurity/trivy/discussions/7951 usign mirror.gcr.io
     - name: Install Trivy
       shell: bash
       run: |
-        curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin v0.69.2
+        set -euo pipefail
+        version=0.76.1
+        case "$(uname -s)" in
+          Linux) os=Linux ;;
+          Darwin) os=macOS ;;
+          FreeBSD) os=FreeBSD ;;
+          *) echo "::error::Unsupported Trivy runner OS: $(uname -s)"; exit 1 ;;
+        esac
+        case "$(uname -m)" in
+          x86_64|amd64) arch=64bit ;;
+          aarch64|arm64) arch=ARM64 ;;
+          i386|i686) arch=32bit ;;
+          armv6*|armv7*) arch=ARM ;;
+          ppc64le) arch=PPC64LE ;;
+          s390x) arch=s390x ;;
+          *) echo "::error::Unsupported Trivy runner architecture: $(uname -m)"; exit 1 ;;
+        esac
+
+        archive="trivy_${version}_${os}-${arch}.tar.gz"
+        checksums="trivy_${version}_checksums.txt"
+        base_url="https://github.com/aquasecurity/trivy/releases/download/v${version}"
+        download_dir=$(mktemp -d)
+        trap 'rm -rf "$download_dir"' EXIT
+        cd "$download_dir"
+
+        curl -fsSL --retry 3 -o "$archive" "${base_url}/${archive}"
+        curl -fsSL --retry 3 -o "$checksums" "${base_url}/${checksums}"
+        # Verify only the selected archive, before extracting or installing it.
+        awk -v archive="$archive" '$2 == archive { print; found = 1 } END { if (!found) exit 1 }' \
+          "$checksums" > selected-checksum.txt
+        if command -v sha256sum >/dev/null 2>&1; then
+          sha256sum -c selected-checksum.txt
+        else
+          shasum -a 256 -c selected-checksum.txt
+        fi
+        tar -xzf "$archive" trivy
+        install -m 0755 trivy /usr/local/bin/trivy
 
     - name: Parse Trivy DB cache input
       if: inputs.trivy_db_cache != ''
@@ -403,6 +436,7 @@ runs:
         rm -rf trivy-db-cache
 
     # Issue: https://github.com/aquasecurity/trivy/issues/7938
+    # Discussion: https://github.com/aquasecurity/trivy/discussions/7668
     # Fix: Refer https://github.com/aquasecurity/trivy/discussions/7951 usign mirror.gcr.io
     - name: Generate docker-cis JSON report
       if: ${{ inputs.skip_cis_scan != 'true' && steps.meta.outputs.scan_image != '' }}
@@ -413,6 +447,8 @@ runs:
           ${{ steps.meta.outputs.scan_image }} \
           --compliance ${{ env.compliance }} \
           -f json \
+          --skip-version-check \
+          --disable-telemetry \
           --debug \
           --ignore-unfixed \
           -o ${{ steps.meta.outputs.cis_json_file }} \
@@ -445,6 +481,8 @@ runs:
           ${{ steps.meta.outputs.scan_image }} \
           --compliance ${{ env.compliance }} \
           -f table \
+          --skip-version-check \
+          --disable-telemetry \
           --ignore-unfixed \
           --debug \
           ${{ inputs.trivy_db_cache != '' && '--cache-dir ~/.cache/trivy --skip-db-update' || '' }}
