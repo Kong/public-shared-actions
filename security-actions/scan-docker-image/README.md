@@ -34,6 +34,7 @@
 
 #### Trivy Compliance Scanner Working
 
+- Installs Trivy v0.76.1 directly from GitHub Releases and verifies the archive against the release's SHA-256 checksums before installation, without using `get.trivy.dev`.
 - By default, trivy scans the docker image against `docker-cis-1.6.0` benchmarks
 - Trivy compliance scanner leverages `trivy-db` for CIS benchmarks
   - By default, it downloads the latest DB from upstream `mirror.gcr.io/aquasec/trivy-db` pull through cache mirror
